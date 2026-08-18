@@ -45,6 +45,7 @@ AWS CDK TypeScript가 네트워크, 보안 그룹, RDS, Cognito, SQS, EventBridg
 
 - PR 제목, 대상 브랜치, Issue 기반 브랜치 이름을 검사한다.
 - Markdown 링크·형식 검사
+- 환경 설정 계약·필수값 실패 케이스·추적 파일 secret 패턴 검사
 - TypeScript lint·typecheck·unit test
 - Spring compile·unit·integration test
 - OpenAPI 생성 후 변경 여부 검사

@@ -28,6 +28,7 @@ Run the checks relevant to the changed area. For the current workspace baseline,
 
 ```bash
 pnpm check:toolchain
+pnpm check:configuration
 pnpm check:db
 pnpm check:api
 pnpm check:shared-config

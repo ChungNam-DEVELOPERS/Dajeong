@@ -22,6 +22,7 @@
 8. [로드맵과 테스트](./07-roadmap-testing.md)
 9. [0~1단계 실행 백로그](./08-execution-backlog.md) - 다음 10개 개발일의 작업 순서·완료 조건·검증 증거
 10. [외부 서비스·비밀정보 대장](./09-external-services.md) - 신청 상태·할당량·환경 변수·보관 위치
+11. [환경 설정 계약](./10-environment-configuration.md) - 환경별 활성 변수·공개 경계·검증 명령
 
 ## 확정 결정
 

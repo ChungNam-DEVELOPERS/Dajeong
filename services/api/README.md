@@ -66,3 +66,15 @@ pnpm api:local
 ```
 
 `bootRun`은 `Ctrl+C`로 정상 종료한다. 생성된 JAR, Gradle 캐시, `.env`와 PostgreSQL 데이터는 Git에 포함하지 않는다.
+
+## Staging과 Production 설정
+
+`staging`과 `production` 프로필에는 DB 기본값이 없다. 다음 변수를 runtime에 모두 주입해야 하며, 누락되면 Spring 시작 단계에서 실패한다.
+
+- `DAJEONG_DB_HOST`
+- `DAJEONG_DB_PORT`
+- `DAJEONG_DB_NAME`
+- `DAJEONG_DB_USER`
+- `DAJEONG_DB_PASSWORD`
+
+비민감 값은 SSM Parameter Store, 비밀번호는 Secrets Manager에 환경별로 분리한다. 전체 공개 범위와 보관 계약은 [`docs/10-environment-configuration.md`](../../docs/10-environment-configuration.md)를 따른다.
