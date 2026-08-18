@@ -122,7 +122,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | `DONE` | FND-04 | Next.js 웹 부트스트랩 | 0.5일 | FND-02~03 |
 | `DOING` | FND-05 | Expo 앱 부트스트랩 | 0.5일 | FND-02~03 |
 | `DONE` | FND-06 | Spring Boot API 부트스트랩 | 0.5일 | FND-01~02 |
-| `TODO` | FND-07 | 로컬 PostgreSQL 16 구성 | 0.5일 | FND-06 |
+| `DONE` | FND-07 | 로컬 PostgreSQL 16 구성 | 0.5일 | FND-06 |
 | `TODO` | FND-08 | Flyway·Testcontainers·health API | 0.5일 | FND-07 |
 | `TODO` | FND-09 | local·staging·production 환경 계약 | 0.25일 | FND-04~08 |
 | `TODO` | FND-10 | OpenAPI → TypeScript client 생성 | 0.5일 | FND-08~09 |
@@ -187,6 +187,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - **완료:** 동일한 명령으로 시작·정지·상태 확인이 되고 DB 재시작 후 볼륨이 유지됨
 - **검증:** DB healthcheck 통과와 Spring 연결 확인
 - **학습 포인트:** container 생명주기와 DB volume 지속성
+- **2026-08-18 검증 증거:** `pnpm check:db`, PostgreSQL 16.15 healthcheck, 컨테이너 재생성 후 검증 데이터 유지, Spring `local` 프로필의 Hikari·Flyway 연결과 `/actuator/health` `UP` 확인
 
 ### FND-08. Flyway·Testcontainers·health API
 
@@ -293,6 +294,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-18 | FND-03 | 웹·앱 공통 TypeScript·ESLint 설정과 의미 기반 색상·간격 토큰 구성 | `pnpm check:shared-config` 통과, 의도적 오류 fixture가 `TS2322`로 실패 | FND-04 |
 | 2026-08-18 | FND-04 | Next.js 16 App Router·Tailwind CSS 4 기반과 반응형 최소 홈 구성 | lint·typecheck·production build 통과, 데스크톱·390px 브라우저 오류 0건 | FND-05 |
 | 2026-08-18 | FND-06 | Java 21·Spring Boot 4.1 API와 재현 가능한 Gradle wrapper, Actuator·OpenAPI 기반 구성 | `pnpm check:api`, `bootRun`, `/actuator/health` `UP`, `/v3/api-docs` OpenAPI 3.1 응답 통과 | FND-07 |
+| 2026-08-18 | FND-07 | PostgreSQL 16.15 Compose, healthcheck, named volume과 Spring `local` DataSource 구성 | `pnpm check:db`, DB healthy, 컨테이너 재생성 후 데이터 유지, API health `UP` | FND-08 |
 
 ## 9. 2단계 상세화 시점
 

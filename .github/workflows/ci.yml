@@ -55,6 +55,9 @@ jobs:
       - name: Verify toolchain
         run: pnpm check:toolchain
 
+      - name: Validate PostgreSQL Compose configuration
+        run: pnpm check:db
+
       - name: Test and package API
         run: pnpm check:api
 

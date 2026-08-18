@@ -1,0 +1,16 @@
+spring:
+  autoconfigure:
+    exclude: ""
+  config:
+    import:
+      - "optional:file:./.env[.properties]"
+      - "optional:file:../../.env[.properties]"
+  datasource:
+    url: jdbc:postgresql://${DAJEONG_DB_HOST:localhost}:${DAJEONG_DB_PORT:5432}/${DAJEONG_DB_NAME:dajeong}
+    username: ${DAJEONG_DB_USER:dajeong}
+    password: ${DAJEONG_DB_PASSWORD:dajeong-local-only}
+    hikari:
+      pool-name: DajeongLocalPool
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 5000
