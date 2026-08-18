@@ -36,9 +36,29 @@ class DajeongApiApplicationTests {
     }
 
     @Test
+    void healthProbesStayAvailableWithoutADatabaseProfile() throws Exception {
+        mockMvc.perform(get("/actuator/health/liveness"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+
+        mockMvc.perform(get("/actuator/health/readiness"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+    }
+
+    @Test
+    void systemHealthIsDownWithoutADatabaseProfile() throws Exception {
+        mockMvc.perform(get("/api/v1/system/health"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.status").value("DOWN"))
+                .andExpect(jsonPath("$.database").value("DOWN"));
+    }
+
+    @Test
     void openApiDocumentIsAvailable() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.openapi").value("3.1.0"));
+                .andExpect(jsonPath("$.openapi").value("3.1.0"))
+                .andExpect(jsonPath("$.paths['/api/v1/system/health'].get").exists());
     }
 }

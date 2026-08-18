@@ -315,7 +315,7 @@
 - [ ] Next.js 15 웹 생성
 - [ ] Expo 앱 생성
 - [ ] Java 21·Spring Boot 4.1 API 생성
-- [ ] 로컬 PostgreSQL과 최초 Flyway migration 생성
+- [x] 로컬 PostgreSQL과 최초 Flyway migration 생성
 - [ ] 웹·앱에서 `/actuator/health` 확인
 - [ ] GitHub Actions 기본 build·test 구성
 
