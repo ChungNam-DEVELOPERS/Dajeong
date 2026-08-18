@@ -1,4 +1,19 @@
 {
-  "extends": "@dajeong/config/typescript/react-native.json",
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "extends": [
+    "@dajeong/config/typescript/react-native.json",
+    "expo/tsconfig.base"
+  ],
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "strict": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
 }

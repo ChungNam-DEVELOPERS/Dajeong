@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "다정",
+    "slug": "dajeong",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "dajeong",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "bundleIdentifier": "com.chungnamdevelopers.dajeong",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.chungnamdevelopers.dajeong",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./eslint/base": "./eslint/base.mjs",
+    "./eslint/shared": "./eslint/shared.mjs",
     "./typescript/base.json": "./typescript/base.json",
     "./typescript/nextjs.json": "./typescript/nextjs.json",
     "./typescript/react-native.json": "./typescript/react-native.json"

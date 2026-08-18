@@ -120,7 +120,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | `DONE` | FND-02 | 모노레포 골격·workspace | 0.5일 | FND-01 |
 | `DONE` | FND-03 | 공통 TypeScript·lint·디자인 토큰 최소 구성 | 0.25일 | FND-02 |
 | `DONE` | FND-04 | Next.js 웹 부트스트랩 | 0.5일 | FND-02~03 |
-| `NEXT` | FND-05 | Expo 앱 부트스트랩 | 0.5일 | FND-02~03 |
+| `DOING` | FND-05 | Expo 앱 부트스트랩 | 0.5일 | FND-02~03 |
 | `TODO` | FND-06 | Spring Boot API 부트스트랩 | 0.5일 | FND-01~02 |
 | `TODO` | FND-07 | 로컬 PostgreSQL 16 구성 | 0.5일 | FND-06 |
 | `TODO` | FND-08 | Flyway·Testcontainers·health API | 0.5일 | FND-07 |
@@ -171,6 +171,8 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - **완료:** iOS·Android 중 최소 하나의 로컬 runtime과 양쪽 export smoke가 통과
 - **검증:** 홈 화면의 실제 런타임 스크린샷과 export 명령 결과 기록
 - **학습 포인트:** Expo Go, development build, production build의 차이
+- **2026-08-18 진행 증거:** Expo doctor 21/21, lint·typecheck, Android·iOS·web export, 390px 웹 런타임과 브라우저 오류 0건 통과
+- **남은 완료 조건:** 현재 개발 Mac에 Xcode Simulator·Android SDK가 없으므로 Expo Go 실기기 또는 네이티브 개발 환경에서 홈 화면을 1회 실행하고 스크린샷을 남긴다.
 
 ### FND-06. Spring Boot API 부트스트랩
 
