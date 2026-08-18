@@ -1,0 +1,17 @@
+{
+  "name": "dajeong",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": "24.19.x",
+    "pnpm": "11.22.0"
+  },
+  "scripts": {
+    "check:toolchain": "node scripts/doctor.mjs",
+    "workspace:list": "turbo ls"
+  },
+  "devDependencies": {
+    "turbo": "2.10.10"
+  }
+}

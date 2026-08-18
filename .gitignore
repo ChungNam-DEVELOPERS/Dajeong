@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+
+# JavaScript / TypeScript
+node_modules/
+.pnpm-store/
+.turbo/
+.next/
+dist/
+coverage/
+
+# Expo / React Native
+.expo/
+web-build/
+
+# Java / Gradle
+.gradle/
+**/build/
+
+# AWS CDK
+cdk.out/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Logs
+*.log
