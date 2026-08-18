@@ -104,6 +104,7 @@ Run the checks relevant to the changed area. The current workspace baseline is:
 
 ```bash
 pnpm check:toolchain
+pnpm check:configuration
 pnpm check:db
 pnpm check:api
 pnpm check:shared-config

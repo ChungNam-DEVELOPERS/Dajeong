@@ -203,6 +203,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - **완료:** 필수값 누락 시 각 앱이 명확한 오류로 실패하고 실제 secret이 Git에 없음
 - **검증:** secret scan과 누락 변수 실패 케이스 확인
 - **학습 포인트:** build-time 설정과 runtime secret의 차이
+- **2026-08-18 검증 증거:** 환경별 활성 변수와 공개 경계 문서화, 웹·모바일·API 누락 변수 실패 재현, `pnpm check:configuration`, Spring 테스트·bootJar, 웹 production build, Expo web export 통과
 
 ### FND-10. OpenAPI → TypeScript client 생성
 
@@ -297,6 +298,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-18 | FND-06 | Java 21·Spring Boot 4.1 API와 재현 가능한 Gradle wrapper, Actuator·OpenAPI 기반 구성 | `pnpm check:api`, `bootRun`, `/actuator/health` `UP`, `/v3/api-docs` OpenAPI 3.1 응답 통과 | FND-07 |
 | 2026-08-18 | FND-07 | PostgreSQL 16.15 Compose, healthcheck, named volume과 Spring `local` DataSource 구성 | `pnpm check:db`, DB healthy, 컨테이너 재생성 후 데이터 유지, API health `UP` | FND-08 |
 | 2026-08-18 | FND-08 | Flyway `V1`, 시스템 Health API와 DB 연동 readiness 구성 | PostgreSQL 16.15 Testcontainers에서 빈 DB migration, 정상·DB 중단 health 통합 테스트 통과 | FND-09 |
+| 2026-08-18 | FND-09 | Local·Staging·Production 환경 설정 계약과 공개 경계, fail-fast 검증, secret 검사 구성 | `pnpm check:configuration`, 누락 변수 실패, Spring·웹·Expo 검증 통과 | FND-10 |
 
 ## 9. 2단계 상세화 시점
 

@@ -8,10 +8,13 @@
     "pnpm": "11.22.0"
   },
   "scripts": {
-    "api:local": "./services/api/gradlew -p services/api bootRun --args=--spring.profiles.active=local",
+    "api:local": "node scripts/check-env.mjs --app api --environment local && ./services/api/gradlew -p services/api bootRun --args=--spring.profiles.active=local",
     "check:api": "./services/api/gradlew -p services/api test bootJar",
+    "check:configuration": "node --test scripts/environment-contract.test.mjs && pnpm check:env && pnpm check:secrets",
     "check:db": "docker compose config --quiet",
+    "check:env": "node scripts/check-env.mjs --app all --environment local --source example",
     "check:pr-policy": "node scripts/check-pr-policy.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs",
     "check:toolchain": "node scripts/doctor.mjs",
     "check:shared-config": "pnpm --filter @dajeong/config --filter @dajeong/design-tokens --filter @dajeong/web --filter @dajeong/mobile --if-present run lint && pnpm --filter @dajeong/design-tokens --filter @dajeong/web --filter @dajeong/mobile run typecheck && pnpm verify:typecheck-failure",
     "db:start": "docker compose up --detach --wait postgres",
