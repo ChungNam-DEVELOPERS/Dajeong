@@ -50,11 +50,12 @@ Use the connected GitHub app for Issue and PR operations. Fall back to authentic
 2. Push the Issue branch with upstream tracking.
 3. Open a PR targeting `dev`.
 4. Use a Conventional Commit PR title because GitHub uses it as the squash commit.
-5. Include the matching Issue number, change summary, impact, and validation evidence in the PR body.
-6. Default to a draft PR unless the work is complete and the user requested a ready PR.
-7. Wait for `CI` and `Branch policy` checks.
-8. Squash-merge only when the user authorizes the merge and all required checks and conversations are complete.
-9. Never push directly to `dev`.
+5. Write the PR body, change summary, impact, and validation evidence in Korean unless the user explicitly requests another language.
+6. Include the matching Issue number, change summary, impact, and validation evidence in the PR body.
+7. Default to a draft PR unless the work is complete and the user requested a ready PR.
+8. Wait for `CI` and `Branch policy` checks.
+9. Squash-merge only when the user authorizes the merge and all required checks and conversations are complete.
+10. Never push directly to `dev`.
 
 ## Release dev to main
 
@@ -62,7 +63,7 @@ Use the connected GitHub app for Issue and PR operations. Fall back to authentic
 2. Confirm `dev` is current, clean, and green.
 3. Open a PR from `dev` to `main`.
 4. Title it `chore(release): <description>`.
-5. Include the release scope and validation evidence.
+5. Write the release scope and validation evidence in Korean unless the user explicitly requests another language.
 6. Use a merge commit. Never squash or rebase `dev` into `main`.
 7. Confirm Production deployment approval separately when CD is connected.
 8. Synchronize the resulting `main` commit back to `dev` when needed.

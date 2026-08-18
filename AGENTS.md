@@ -15,6 +15,7 @@
 - Target release pull requests from `dev` to `main`; title them `chore(release): <description>` and use a merge commit, never squash.
 - After a hotfix reaches `main`, also synchronize that fix into `dev`.
 - Use Conventional Commits for commit and pull-request titles.
+- Write pull-request descriptions, change summaries, and validation notes in Korean unless the user explicitly requests another language.
 - Link the branch Issue in the pull-request body and run all relevant local checks before publishing.
 - Do not merge a pull request or trigger a deployment unless the user explicitly requests that external action.
 

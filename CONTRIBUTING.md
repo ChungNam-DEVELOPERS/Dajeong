@@ -62,12 +62,15 @@ chore(ci): cache pnpm dependencies
 
 The PR title becomes the squash commit for normal work, so it must also follow the convention.
 
+Write the pull-request description, change summary, impact, and validation evidence in Korean by default. Keep the Conventional Commit type and optional scope in the title; the title description may also be written in Korean.
+
 ## Pull requests into dev
 
 - Source: `feat/*`, `fix/*`, `chore/*`, or `hotfix/*`
 - Target: `dev`
 - Merge method: Squash merge
 - Required body content: linked Issue, summary, validation evidence, and deployment impact
+- Language: Korean for the PR description and work summary unless another language is explicitly requested
 - Required checks: `CI` and `Branch policy`
 
 Open a draft PR while work is incomplete. Mark it ready only after the described acceptance criteria and checks are satisfied.
