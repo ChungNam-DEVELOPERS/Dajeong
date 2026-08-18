@@ -1,0 +1,4 @@
+{
+  "extends": "@dajeong/config/typescript/nextjs.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

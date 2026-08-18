@@ -1,5 +1,21 @@
 {
   "name": "@dajeong/design-tokens",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@dajeong/config": "workspace:*",
+    "eslint": "10.8.1",
+    "typescript": "6.0.3"
+  }
 }

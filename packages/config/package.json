@@ -1,5 +1,27 @@
 {
   "name": "@dajeong/config",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./eslint/base": "./eslint/base.mjs",
+    "./typescript/base.json": "./typescript/base.json",
+    "./typescript/nextjs.json": "./typescript/nextjs.json",
+    "./typescript/react-native.json": "./typescript/react-native.json"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings=0"
+  },
+  "dependencies": {
+    "@eslint/js": "10.0.1",
+    "typescript-eslint": "8.67.0"
+  },
+  "devDependencies": {
+    "eslint": "10.8.1",
+    "typescript": "6.0.3"
+  },
+  "peerDependencies": {
+    "eslint": "^10.8.1",
+    "typescript": ">=6.0.0 <6.1.0"
+  }
 }

@@ -1,0 +1,4 @@
+{
+  "extends": "@dajeong/config/typescript/react-native.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}
