@@ -10,8 +10,10 @@ Java 21과 Spring Boot 4.1 기반의 다정 백엔드 API다. 시스템 Gradle �
 - springdoc OpenAPI와 Swagger UI
 - Flyway와 PostgreSQL 드라이버 의존성
 - Docker Compose PostgreSQL 16과 `local` DataSource 프로필
+- Actuator liveness·readiness와 시스템 Health API
+- Testcontainers PostgreSQL 통합 테스트
 
-DB가 필요 없는 기본 테스트에서는 DataSource 자동 구성을 비활성화한다. `local` 프로필은 이 제외를 해제하고 Docker Compose PostgreSQL에 연결한다. 최초 migration과 Testcontainers 검증은 `FND-08`에서 추가한다.
+DB가 필요 없는 기본 실행에서는 DataSource 자동 구성을 비활성화한다. `local` 프로필은 이 제외를 해제하고 Docker Compose PostgreSQL에 연결한다. Flyway는 시작할 때 `db/migration`의 버전 마이그레이션을 적용한다.
 
 ## 로컬 PostgreSQL
 
@@ -25,6 +27,12 @@ pnpm db:status
 ```
 
 `pnpm db:stop`은 컨테이너만 중지하고 `dajeong_postgres-data` named volume은 보존한다. `docker compose down`으로 컨테이너를 다시 만들어도 데이터는 유지된다. `docker compose down --volumes`는 로컬 DB 데이터를 삭제하므로 초기화할 때만 사용한다.
+
+## 데이터베이스 마이그레이션
+
+첫 마이그레이션 `V1__initialize_system_health.sql`은 `system_health` 표식을 만들며 시스템 Health API가 DB 연결과 스키마 준비 상태를 함께 확인할 때 사용한다. 적용된 버전 마이그레이션은 수정하지 않고, 스키마 변경은 다음 버전 파일을 추가해 앞으로만 진행한다.
+
+통합 테스트는 Testcontainers가 매번 만든 빈 PostgreSQL 16.15 DB에 Flyway 마이그레이션을 적용한다. 따라서 `pnpm check:api`를 실행할 때는 Docker가 실행 중이어야 한다.
 
 ## 실행과 검사
 
@@ -41,8 +49,20 @@ pnpm api:local
 
 애플리케이션이 시작되면 다음 엔드포인트를 확인할 수 있다.
 
-- Actuator health: `http://localhost:8080/actuator/health`
+- Actuator liveness: `http://localhost:8080/actuator/health/liveness`
+- Actuator readiness: `http://localhost:8080/actuator/health/readiness`
+- 시스템·DB 상태: `http://localhost:8080/api/v1/system/health`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
+
+`local` 프로필의 readiness에는 DB 상태가 포함되지만 liveness에는 포함되지 않는다. DB가 중단되면 readiness와 시스템 Health API는 HTTP 503 `DOWN`을 반환하고 liveness는 HTTP 200 `UP`을 유지한다. 시스템 Health API의 응답은 다음 두 형태로 고정한다.
+
+```json
+{"status":"UP","database":"UP"}
+```
+
+```json
+{"status":"DOWN","database":"DOWN"}
+```
 
 `bootRun`은 `Ctrl+C`로 정상 종료한다. 생성된 JAR, Gradle 캐시, `.env`와 PostgreSQL 데이터는 Git에 포함하지 않는다.

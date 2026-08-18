@@ -16,6 +16,13 @@ management:
         include: health,info
   endpoint:
     health:
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState
       show-details: never
 
 springdoc:
