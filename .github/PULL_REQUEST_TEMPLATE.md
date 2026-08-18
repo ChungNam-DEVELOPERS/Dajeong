@@ -15,6 +15,7 @@ Closes #
 ## 검증
 
 - [ ] `pnpm check:toolchain`
+- [ ] `pnpm check:api`
 - [ ] `pnpm check:shared-config`
 - [ ] `pnpm --filter @dajeong/web build`
 - [ ] `pnpm --filter @dajeong/mobile run export:web`
