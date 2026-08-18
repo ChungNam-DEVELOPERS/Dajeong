@@ -27,6 +27,7 @@ Run the checks relevant to the changed area. For the current workspace baseline,
 
 ```bash
 pnpm check:toolchain
+pnpm check:db
 pnpm check:api
 pnpm check:shared-config
 pnpm --filter @dajeong/web build
