@@ -1,0 +1,51 @@
+name: Bug
+description: Report reproducible incorrect behavior
+title: "fix: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provide a reproducible report. The Issue number will be used in the `fix/<issue>-<slug>` branch name.
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+      description: What happened, including the exact error or incorrect state?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, app version, device, or API environment.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Fix acceptance criteria
+      placeholder: |
+        - [ ] Regression test or reproducible verification added
+        - [ ] Original failure no longer occurs
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs and evidence
+      description: Add sanitized logs, screenshots, or links. Never include credentials or personal data.

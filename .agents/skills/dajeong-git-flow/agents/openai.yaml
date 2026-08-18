@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dajeong Git Flow"
+  short_description: "Run Dajeong issue, branch, PR, and release flow"
+  default_prompt: "Use $dajeong-git-flow to start and publish this Dajeong repository change through the correct issue and branch flow."

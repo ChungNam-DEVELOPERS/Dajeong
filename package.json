@@ -8,6 +8,7 @@
     "pnpm": "11.22.0"
   },
   "scripts": {
+    "check:pr-policy": "node scripts/check-pr-policy.mjs",
     "check:toolchain": "node scripts/doctor.mjs",
     "check:shared-config": "pnpm --filter @dajeong/config --filter @dajeong/design-tokens --filter @dajeong/web --filter @dajeong/mobile --if-present run lint && pnpm --filter @dajeong/design-tokens --filter @dajeong/web --filter @dajeong/mobile run typecheck && pnpm verify:typecheck-failure",
     "verify:typecheck-failure": "node scripts/verify-typecheck-failure.mjs",
