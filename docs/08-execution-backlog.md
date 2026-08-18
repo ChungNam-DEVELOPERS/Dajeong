@@ -119,8 +119,8 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | `DONE` | FND-01 | 툴체인 버전 기준 고정 | 0.25일 | - |
 | `DONE` | FND-02 | 모노레포 골격·workspace | 0.5일 | FND-01 |
 | `DONE` | FND-03 | 공통 TypeScript·lint·디자인 토큰 최소 구성 | 0.25일 | FND-02 |
-| `NEXT` | FND-04 | Next.js 웹 부트스트랩 | 0.5일 | FND-02~03 |
-| `TODO` | FND-05 | Expo 앱 부트스트랩 | 0.5일 | FND-02~03 |
+| `DONE` | FND-04 | Next.js 웹 부트스트랩 | 0.5일 | FND-02~03 |
+| `NEXT` | FND-05 | Expo 앱 부트스트랩 | 0.5일 | FND-02~03 |
 | `TODO` | FND-06 | Spring Boot API 부트스트랩 | 0.5일 | FND-01~02 |
 | `TODO` | FND-07 | 로컬 PostgreSQL 16 구성 | 0.5일 | FND-06 |
 | `TODO` | FND-08 | Flyway·Testcontainers·health API | 0.5일 | FND-07 |
@@ -289,6 +289,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-18 | FND-01 | Node 24.19.0, pnpm 11.22.0, Java 21 버전 고정과 검사기 구성 | `pnpm check:toolchain` 통과, 의도적 Node 23 불일치 실패 | FND-02 |
 | 2026-08-18 | FND-02 | pnpm workspace 6개와 Turborepo 2.10.10 골격 구성 | `pnpm workspace:list`, workspace 6개 탐색, 루트 lockfile 1개 확인 | FND-03 |
 | 2026-08-18 | FND-03 | 웹·앱 공통 TypeScript·ESLint 설정과 의미 기반 색상·간격 토큰 구성 | `pnpm check:shared-config` 통과, 의도적 오류 fixture가 `TS2322`로 실패 | FND-04 |
+| 2026-08-18 | FND-04 | Next.js 16 App Router·Tailwind CSS 4 기반과 반응형 최소 홈 구성 | lint·typecheck·production build 통과, 데스크톱·390px 브라우저 오류 0건 | FND-05 |
 
 ## 9. 2단계 상세화 시점
 

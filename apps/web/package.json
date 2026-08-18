@@ -3,15 +3,28 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "build": "next build --webpack",
+    "build:turbopack": "next build",
+    "dev": "next dev",
     "lint": "eslint . --max-warnings=0",
+    "start": "next start",
     "typecheck": "tsc --project tsconfig.json"
   },
   "dependencies": {
-    "@dajeong/design-tokens": "workspace:*"
+    "@dajeong/design-tokens": "workspace:*",
+    "next": "16.3.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@dajeong/config": "workspace:*",
-    "eslint": "10.8.1",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.1",
+    "tailwindcss": "4.3.3",
     "typescript": "6.0.3"
   }
 }
