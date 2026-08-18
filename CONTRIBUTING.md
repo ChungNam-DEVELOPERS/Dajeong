@@ -34,8 +34,11 @@ AWS and EAS deployment credentials are not connected yet. Until those deployment
 5. Commit with Conventional Commits.
 6. Push the branch and open a pull request targeting `dev`.
 7. Include the Issue number in the PR body, allow CI and review conversations to finish, then squash-merge.
+8. After the merge, close each fully completed linked Issue as `completed` and leave a Korean comment that references the merged PR.
 
 Do not commit or push directly to `dev` or `main`.
+
+GitHub interprets closing keywords such as `Closes #123` only when a pull request targets the repository's default branch. Normal work targets `dev`, so the merge operator must verify and close the completed Issue explicitly. If a pull request resolves only part of an Issue, keep the Issue open and record the remaining work instead.
 
 ## Branch naming
 
@@ -72,6 +75,7 @@ Write the pull-request description, change summary, impact, and validation evide
 - Required body content: linked Issue, summary, validation evidence, and deployment impact
 - Language: Korean for the PR description and work summary unless another language is explicitly requested
 - Required checks: `CI` and `Branch policy`
+- Merge completion: close the fully completed linked Issue as `completed` with a Korean comment that references the merged PR
 
 Open a draft PR while work is incomplete. Mark it ready only after the described acceptance criteria and checks are satisfied.
 
@@ -100,12 +104,14 @@ Run the checks relevant to the changed area. The current workspace baseline is:
 
 ```bash
 pnpm check:toolchain
+pnpm check:db
+pnpm check:api
 pnpm check:shared-config
 pnpm --filter @dajeong/web build
 pnpm --filter @dajeong/mobile run export:web
 ```
 
-Spring, OpenAPI, CDK, and deployment checks must be added to the same CI gate as those components are implemented.
+OpenAPI generation, CDK, and deployment checks must be added to the same CI gate as those components are implemented.
 
 ## Protected branches
 

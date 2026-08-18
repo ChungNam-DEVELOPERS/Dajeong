@@ -33,10 +33,12 @@ Use the connected GitHub app for Issue and PR operations. Fall back to authentic
 1. Make the smallest coherent change that satisfies the Issue.
 2. Read any applicable nested `AGENTS.md` before editing within that scope.
 3. Run the checks relevant to changed components.
-4. For the current TypeScript baseline, run:
+4. For the current repository baseline, run:
 
    ```bash
    pnpm check:toolchain
+   pnpm check:db
+   pnpm check:api
    pnpm check:shared-config
    pnpm --filter @dajeong/web build
    pnpm --filter @dajeong/mobile run export:web
@@ -55,7 +57,9 @@ Use the connected GitHub app for Issue and PR operations. Fall back to authentic
 7. Default to a draft PR unless the work is complete and the user requested a ready PR.
 8. Wait for `CI` and `Branch policy` checks.
 9. Squash-merge only when the user authorizes the merge and all required checks and conversations are complete.
-10. Never push directly to `dev`.
+10. After a successful merge into `dev`, close each fully completed linked Issue as `completed` and leave a Korean comment that references the merged PR.
+11. Verify the linked Issue is closed. If the PR resolves only part of the Issue, keep it open and record the remaining work instead.
+12. Never push directly to `dev`.
 
 ## Release dev to main
 
@@ -79,4 +83,4 @@ Use the connected GitHub app for Issue and PR operations. Fall back to authentic
 
 ## Finish
 
-Report the Issue, branch, commit, PR target, merge method, validation results, and whether Staging or Production deployment actually ran. Never describe a branch update as a deployment when deployment automation is not connected.
+Report the Issue and its final state, branch, commit, PR target, merge method, validation results, and whether Staging or Production deployment actually ran. Never describe a branch update as a deployment when deployment automation is not connected.

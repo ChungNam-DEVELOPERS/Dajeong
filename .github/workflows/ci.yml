@@ -36,6 +36,11 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
       - name: Set up pnpm and Node.js
         uses: pnpm/setup@v2
         with:
@@ -49,6 +54,12 @@ jobs:
 
       - name: Verify toolchain
         run: pnpm check:toolchain
+
+      - name: Validate PostgreSQL Compose configuration
+        run: pnpm check:db
+
+      - name: Test and package API
+        run: pnpm check:api
 
       - name: Lint and typecheck
         run: pnpm check:shared-config

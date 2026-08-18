@@ -8,9 +8,15 @@
     "pnpm": "11.22.0"
   },
   "scripts": {
+    "api:local": "./services/api/gradlew -p services/api bootRun --args=--spring.profiles.active=local",
+    "check:api": "./services/api/gradlew -p services/api test bootJar",
+    "check:db": "docker compose config --quiet",
     "check:pr-policy": "node scripts/check-pr-policy.mjs",
     "check:toolchain": "node scripts/doctor.mjs",
     "check:shared-config": "pnpm --filter @dajeong/config --filter @dajeong/design-tokens --filter @dajeong/web --filter @dajeong/mobile --if-present run lint && pnpm --filter @dajeong/design-tokens --filter @dajeong/web --filter @dajeong/mobile run typecheck && pnpm verify:typecheck-failure",
+    "db:start": "docker compose up --detach --wait postgres",
+    "db:status": "docker compose ps postgres",
+    "db:stop": "docker compose stop postgres",
     "verify:typecheck-failure": "node scripts/verify-typecheck-failure.mjs",
     "workspace:list": "turbo ls"
   },

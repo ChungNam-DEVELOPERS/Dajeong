@@ -121,15 +121,15 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | `DONE` | FND-03 | 공통 TypeScript·lint·디자인 토큰 최소 구성 | 0.25일 | FND-02 |
 | `DONE` | FND-04 | Next.js 웹 부트스트랩 | 0.5일 | FND-02~03 |
 | `DOING` | FND-05 | Expo 앱 부트스트랩 | 0.5일 | FND-02~03 |
-| `TODO` | FND-06 | Spring Boot API 부트스트랩 | 0.5일 | FND-01~02 |
-| `TODO` | FND-07 | 로컬 PostgreSQL 16 구성 | 0.5일 | FND-06 |
-| `TODO` | FND-08 | Flyway·Testcontainers·health API | 0.5일 | FND-07 |
+| `DONE` | FND-06 | Spring Boot API 부트스트랩 | 0.5일 | FND-01~02 |
+| `DONE` | FND-07 | 로컬 PostgreSQL 16 구성 | 0.5일 | FND-06 |
+| `DONE` | FND-08 | Flyway·Testcontainers·health API | 0.5일 | FND-07 |
 | `TODO` | FND-09 | local·staging·production 환경 계약 | 0.25일 | FND-04~08 |
 | `TODO` | FND-10 | OpenAPI → TypeScript client 생성 | 0.5일 | FND-08~09 |
 | `TODO` | FND-11 | 웹 health 세로 슬라이스 | 0.25일 | FND-04, FND-10 |
 | `TODO` | FND-12 | 앱 health 세로 슬라이스 | 0.25일 | FND-05, FND-10 |
-| `TODO` | FND-13 | 루트 품질 명령·Turbo 파이프라인 | 0.5일 | FND-03~12 |
-| `TODO` | FND-14 | GitHub Actions PR CI | 0.5일 | FND-13 |
+| `DOING` | FND-13 | 루트 품질 명령·Turbo 파이프라인 | 0.5일 | FND-03~12 |
+| `DOING` | FND-14 | GitHub Actions PR CI | 0.5일 | FND-13 |
 | `TODO` | FND-15 | CDK staging 기반·synth·diff | 0.5일 | FND-14, EXT-02 |
 | `TODO` | FND-16 | GitHub Actions OIDC 배포 인증 | 0.5일 | FND-15 |
 | `TODO` | FND-17 | 최소 staging 배포·health smoke | 1일 | FND-11~16 |
@@ -187,6 +187,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - **완료:** 동일한 명령으로 시작·정지·상태 확인이 되고 DB 재시작 후 볼륨이 유지됨
 - **검증:** DB healthcheck 통과와 Spring 연결 확인
 - **학습 포인트:** container 생명주기와 DB volume 지속성
+- **2026-08-18 검증 증거:** `pnpm check:db`, PostgreSQL 16.15 healthcheck, 컨테이너 재생성 후 검증 데이터 유지, Spring `local` 프로필의 Hikari·Flyway 연결과 `/actuator/health` `UP` 확인
 
 ### FND-08. Flyway·Testcontainers·health API
 
@@ -194,6 +195,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - **완료:** 빈 DB에 migration이 순서대로 적용되고, DB 중단 시 liveness와 readiness가 다르게 반응함
 - **검증:** Testcontainers PostgreSQL 테스트, health 정상·DB 중단 케이스 통과
 - **학습 포인트:** liveness와 readiness의 차이, schema migration을 코드로 관리하는 이유
+- **2026-08-18 검증 증거:** PostgreSQL 16.15 Testcontainer의 빈 DB에 Flyway `V1` 적용, DB 정상 시 liveness·readiness·시스템 Health `UP`, 컨테이너 중단 시 liveness `UP`·readiness와 시스템 Health `DOWN/503` 확인
 
 ### FND-09. 환경 설정 계약
 
@@ -270,8 +272,8 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 다음 항목이 모두 통과해야 2단계 백로그를 확정한다.
 
 - [ ] 새 환경에서 툴체인 확인과 루트 install을 재현했다.
-- [ ] PostgreSQL 16을 시작하고 빈 DB에 Flyway migration을 적용했다.
-- [ ] API liveness·readiness·`/api/v1/system/health`가 정해진 스키마로 응답한다.
+- [x] PostgreSQL 16을 시작하고 빈 DB에 Flyway migration을 적용했다.
+- [x] API liveness·readiness·`/api/v1/system/health`가 정해진 스키마로 응답한다.
 - [ ] OpenAPI에서 TypeScript client를 재생성해도 추가 diff가 없다.
 - [ ] 웹과 앱이 생성 client로 로컬 API의 loading·up·error·retry를 표시한다.
 - [ ] lint, typecheck, unit·integration test, Spring build, web build, Expo export를 루트에서 실행한다.
@@ -292,6 +294,9 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-18 | FND-02 | pnpm workspace 6개와 Turborepo 2.10.10 골격 구성 | `pnpm workspace:list`, workspace 6개 탐색, 루트 lockfile 1개 확인 | FND-03 |
 | 2026-08-18 | FND-03 | 웹·앱 공통 TypeScript·ESLint 설정과 의미 기반 색상·간격 토큰 구성 | `pnpm check:shared-config` 통과, 의도적 오류 fixture가 `TS2322`로 실패 | FND-04 |
 | 2026-08-18 | FND-04 | Next.js 16 App Router·Tailwind CSS 4 기반과 반응형 최소 홈 구성 | lint·typecheck·production build 통과, 데스크톱·390px 브라우저 오류 0건 | FND-05 |
+| 2026-08-18 | FND-06 | Java 21·Spring Boot 4.1 API와 재현 가능한 Gradle wrapper, Actuator·OpenAPI 기반 구성 | `pnpm check:api`, `bootRun`, `/actuator/health` `UP`, `/v3/api-docs` OpenAPI 3.1 응답 통과 | FND-07 |
+| 2026-08-18 | FND-07 | PostgreSQL 16.15 Compose, healthcheck, named volume과 Spring `local` DataSource 구성 | `pnpm check:db`, DB healthy, 컨테이너 재생성 후 데이터 유지, API health `UP` | FND-08 |
+| 2026-08-18 | FND-08 | Flyway `V1`, 시스템 Health API와 DB 연동 readiness 구성 | PostgreSQL 16.15 Testcontainers에서 빈 DB migration, 정상·DB 중단 health 통합 테스트 통과 | FND-09 |
 
 ## 9. 2단계 상세화 시점
 

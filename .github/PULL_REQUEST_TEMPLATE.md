@@ -1,8 +1,9 @@
 ## 연결된 이슈
 
-Closes #
+완료할 이슈: #
 
 `dev`에서 `main`으로 보내는 릴리스 PR은 이슈 링크 대신 릴리스 범위를 작성할 수 있습니다.
+일반 PR을 `dev`에 병합한 담당자는 완료 이슈를 `completed`로 닫고 병합된 PR을 한글 댓글로 남깁니다. 일부 작업만 끝났다면 이슈를 열어 두고 남은 범위를 기록합니다.
 
 ## 작업 내용
 
@@ -15,6 +16,8 @@ Closes #
 ## 검증
 
 - [ ] `pnpm check:toolchain`
+- [ ] `pnpm check:db`
+- [ ] `pnpm check:api`
 - [ ] `pnpm check:shared-config`
 - [ ] `pnpm --filter @dajeong/web build`
 - [ ] `pnpm --filter @dajeong/mobile run export:web`

@@ -12,6 +12,7 @@
 - Create `hotfix/<issue-number>-<slug>` from the latest `origin/main` only for urgent Production fixes.
 - Never commit or push directly to `main` or `dev`.
 - Target normal pull requests at `dev` and squash-merge them.
+- After a normal pull request is merged into `dev`, close each fully completed linked Issue with a Korean comment that references the merged PR. Keep partially completed Issues open and record the remaining work.
 - Target release pull requests from `dev` to `main`; title them `chore(release): <description>` and use a merge commit, never squash.
 - After a hotfix reaches `main`, also synchronize that fix into `dev`.
 - Use Conventional Commits for commit and pull-request titles.
@@ -23,10 +24,12 @@ Use the repository-scoped `dajeong-git-flow` skill for Issue, branch, pull-reque
 
 ## Verification
 
-Run the checks relevant to the changed area. For the current TypeScript workspace baseline, use:
+Run the checks relevant to the changed area. For the current workspace baseline, use:
 
 ```bash
 pnpm check:toolchain
+pnpm check:db
+pnpm check:api
 pnpm check:shared-config
 pnpm --filter @dajeong/web build
 pnpm --filter @dajeong/mobile run export:web
