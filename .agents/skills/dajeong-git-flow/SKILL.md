@@ -33,10 +33,11 @@ Use the connected GitHub app for Issue and PR operations. Fall back to authentic
 1. Make the smallest coherent change that satisfies the Issue.
 2. Read any applicable nested `AGENTS.md` before editing within that scope.
 3. Run the checks relevant to changed components.
-4. For the current TypeScript baseline, run:
+4. For the current repository baseline, run:
 
    ```bash
    pnpm check:toolchain
+   pnpm check:api
    pnpm check:shared-config
    pnpm --filter @dajeong/web build
    pnpm --filter @dajeong/mobile run export:web

@@ -23,10 +23,11 @@ Use the repository-scoped `dajeong-git-flow` skill for Issue, branch, pull-reque
 
 ## Verification
 
-Run the checks relevant to the changed area. For the current TypeScript workspace baseline, use:
+Run the checks relevant to the changed area. For the current workspace baseline, use:
 
 ```bash
 pnpm check:toolchain
+pnpm check:api
 pnpm check:shared-config
 pnpm --filter @dajeong/web build
 pnpm --filter @dajeong/mobile run export:web

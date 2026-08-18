@@ -100,12 +100,13 @@ Run the checks relevant to the changed area. The current workspace baseline is:
 
 ```bash
 pnpm check:toolchain
+pnpm check:api
 pnpm check:shared-config
 pnpm --filter @dajeong/web build
 pnpm --filter @dajeong/mobile run export:web
 ```
 
-Spring, OpenAPI, CDK, and deployment checks must be added to the same CI gate as those components are implemented.
+OpenAPI generation, CDK, and deployment checks must be added to the same CI gate as those components are implemented.
 
 ## Protected branches
 
