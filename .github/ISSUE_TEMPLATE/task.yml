@@ -1,0 +1,37 @@
+name: Engineering task
+description: Track maintenance, documentation, infrastructure, or CI work
+title: "chore: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for work that belongs on a `chore/<issue>-<slug>` branch.
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why is this task necessary now?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Describe included work and non-goals.
+    validations:
+      required: true
+  - type: textarea
+    id: completion
+    attributes:
+      label: Completion criteria
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation plan
+    validations:
+      required: true

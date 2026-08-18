@@ -34,8 +34,16 @@ AWS CDK TypeScript가 네트워크, 보안 그룹, RDS, Cognito, SQS, EventBridg
 
 ## 4. CI/CD
 
+### Branch flow
+
+- Issue별 `feat/*`, `fix/*`, `chore/*` 브랜치는 `dev`에서 만들고 PR로 다시 `dev`에 squash merge한다.
+- `dev`는 통합·Staging 기준 브랜치다. 실제 staging 자동 배포는 CDK·OIDC가 준비된 뒤 `dev` push에 연결한다.
+- Production 릴리스는 `dev → main` PR로만 진행하고 장기 브랜치의 조상 관계를 유지하도록 merge commit을 사용한다.
+- 긴급 수정은 `main`에서 `hotfix/*`를 만들고 Production 반영 뒤 같은 변경을 `dev`에도 동기화한다.
+
 ### Pull request
 
+- PR 제목, 대상 브랜치, Issue 기반 브랜치 이름을 검사한다.
 - Markdown 링크·형식 검사
 - TypeScript lint·typecheck·unit test
 - Spring compile·unit·integration test
@@ -43,8 +51,15 @@ AWS CDK TypeScript가 네트워크, 보안 그룹, RDS, Cognito, SQS, EventBridg
 - 웹 production build와 Expo export smoke test
 - 의존성·비밀·컨테이너가 추가된 이후 이미지 취약점 검사
 
+### Dev 배포
+
+- `dev` 갱신과 필수 CI 통과 후 staging 환경을 배포한다.
+- 배포 후 웹·API liveness와 CORS smoke를 실행한다.
+- 현재는 AWS CDK·OIDC 기반이 준비되지 않아 이 자동 배포를 활성화하지 않는다.
+
 ### Main 배포
 
+- `main` 갱신은 승인된 `dev → main` 릴리스 PR 또는 긴급 `hotfix/*` PR로 제한한다.
 - Amplify가 `apps/web`을 자동 배포한다.
 - GitHub Actions OIDC가 Spring JAR를 S3에 올리고 Beanstalk application version을 갱신한다.
 - Flyway는 애플리케이션 시작 시 잠금을 잡고 한 번만 실행한다.

@@ -1,0 +1,45 @@
+name: Feature
+description: Propose a user-facing capability or product improvement
+title: "feat: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem first. The Issue number will be used in the `feat/<issue>-<slug>` branch name.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user or product problem should this change solve?
+      placeholder: Describe the current limitation and who experiences it.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is included and explicitly excluded?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable conditions that must be true when the work is complete.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation plan
+      description: Which automated checks and manual scenarios will prove the change works?
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and risks
+      description: Note blockers, external services, migrations, security concerns, or rollout risks.

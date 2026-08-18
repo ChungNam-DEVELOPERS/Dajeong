@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+  push:
+    branches:
+      - dev
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      EXPO_NO_TELEMETRY: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up pnpm and Node.js
+        uses: pnpm/setup@v2
+        with:
+          version: 11.22.0
+          runtime: node@24.19.0
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify toolchain
+        run: pnpm check:toolchain
+
+      - name: Lint and typecheck
+        run: pnpm check:shared-config
+
+      - name: Build web
+        run: pnpm --filter @dajeong/web build
+
+      - name: Export Expo web bundle
+        run: pnpm --filter @dajeong/mobile run export:web
