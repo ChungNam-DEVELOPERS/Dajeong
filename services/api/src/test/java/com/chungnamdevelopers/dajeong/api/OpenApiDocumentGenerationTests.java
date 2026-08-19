@@ -48,6 +48,13 @@ class OpenApiDocumentGenerationTests {
                         .value("listTrips"))
                 .andExpect(jsonPath("$.paths['/api/v1/trips'].get.security[0].bearerAuth")
                         .isArray())
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/invites'].post.operationId")
+                        .value("issueTripInvite"))
+                .andExpect(jsonPath("$.paths['/api/v1/invites/{code}/join'].post.operationId")
+                        .value("joinTripByInvite"))
+                .andExpect(jsonPath("$.paths['/api/v1/invites/{code}/join'].post.responses['409']"
+                        + ".content['application/json'].schema['$ref']")
+                        .value("#/components/schemas/ApiErrorResponse"))
                 .andReturn()
                 .getResponse()
                 .getContentAsString(StandardCharsets.UTF_8);
