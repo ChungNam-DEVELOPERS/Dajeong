@@ -1,6 +1,7 @@
 {
   "extends": "@dajeong/config/typescript/nextjs.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "incremental": true,
     "paths": {
       "@/*": ["./src/*"]

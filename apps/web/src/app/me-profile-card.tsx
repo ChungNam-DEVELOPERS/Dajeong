@@ -1,6 +1,7 @@
 "use client";
 
 import { ApiClientError, getCurrentUser } from "@dajeong/api-client";
+import Link from "next/link";
 import { useEffect, useReducer, useState } from "react";
 
 import { initialMeState, meStateReducer } from "./me-state";
@@ -92,7 +93,13 @@ export function MeProfileCard() {
           value={joinedDateFormatter.format(new Date(state.user.createdAt))}
         />
       </dl>
-      <form action="/api/auth/logout" className="mt-8" method="post">
+      <Link
+        className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand px-5 py-3 font-extrabold text-white transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        href="/trips"
+      >
+        내 여행으로 가기
+      </Link>
+      <form action="/api/auth/logout" className="mt-3" method="post">
         <button
           className="inline-flex min-h-12 w-full items-center justify-center rounded-xl border border-line bg-white px-5 py-3 font-extrabold transition hover:bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           type="submit"

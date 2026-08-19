@@ -1,4 +1,21 @@
 import type { paths } from "./generated/schema";
+import {
+  ApiClientError,
+  buildApiUrl,
+  jsonHeaders,
+  readErrorBody,
+  type ApiClientOptions,
+} from "./http.ts";
+import {
+  createTrip,
+  listTrips,
+  type CreateTripRequest,
+  type TripListResponse,
+  type TripSummaryResponse,
+} from "./trips.ts";
+
+export { ApiClientError } from "./http.ts";
+export type { ApiClientOptions } from "./http.ts";
 
 const SYSTEM_HEALTH_PATH = "/api/v1/system/health";
 const CURRENT_USER_PATH = "/api/v1/me";
@@ -19,11 +36,6 @@ type CurrentUserOperation = paths[typeof CURRENT_USER_PATH]["get"];
 export type CurrentUserResponse =
   CurrentUserOperation["responses"][200]["content"]["application/json"];
 
-export interface ApiClientOptions {
-  baseUrl: string;
-  fetch?: typeof globalThis.fetch;
-}
-
 export interface SystemHealthRequestOptions extends ApiClientOptions {
   signal?: AbortSignal;
 }
@@ -34,31 +46,37 @@ export interface CurrentUserRequestOptions extends ApiClientOptions {
 }
 
 export interface DajeongApiClient {
+  createTrip(
+    request: CreateTripRequest,
+    options: {
+      accessToken?: string;
+      idempotencyKey: string;
+      signal?: AbortSignal;
+    },
+  ): Promise<TripSummaryResponse>;
   getCurrentUser(options?: {
     accessToken?: string;
     signal?: AbortSignal;
   }): Promise<CurrentUserResponse>;
   getSystemHealth(options?: { signal?: AbortSignal }): Promise<SystemHealthResponse>;
-}
-
-export class ApiClientError extends Error {
-  readonly status: number;
-  readonly responseBody: unknown;
-
-  constructor(status: number, responseBody: unknown) {
-    super(`다정 API 요청이 HTTP ${status} 상태로 실패했습니다.`);
-    this.name = "ApiClientError";
-    this.status = status;
-    this.responseBody = responseBody;
-  }
+  listTrips(options?: {
+    accessToken?: string;
+    cursor?: string;
+    limit?: number;
+    signal?: AbortSignal;
+  }): Promise<TripListResponse>;
 }
 
 export function createApiClient(options: ApiClientOptions): DajeongApiClient {
   return {
+    createTrip: (request, requestOptions) =>
+      createTrip({ ...options, ...requestOptions, request }),
     getCurrentUser: (requestOptions = {}) =>
       getCurrentUser({ ...options, ...requestOptions }),
     getSystemHealth: (requestOptions = {}) =>
       getSystemHealth({ ...options, ...requestOptions }),
+    listTrips: (requestOptions = {}) =>
+      listTrips({ ...options, ...requestOptions }),
   };
 }
 
@@ -88,15 +106,10 @@ export async function getCurrentUser(
   options: CurrentUserRequestOptions,
 ): Promise<CurrentUserResponse> {
   const fetchImplementation = options.fetch ?? globalThis.fetch;
-  const headers = new Headers({ Accept: "application/json" });
-  if (options.accessToken) {
-    headers.set("Authorization", `Bearer ${options.accessToken}`);
-  }
-
   const response = await fetchImplementation(
     buildApiUrl(options.baseUrl, CURRENT_USER_PATH),
     {
-      headers,
+      headers: jsonHeaders(options.accessToken),
       method: "GET",
       signal: options.signal,
     },
@@ -107,26 +120,4 @@ export async function getCurrentUser(
   }
 
   throw new ApiClientError(response.status, await readErrorBody(response));
-}
-
-function buildApiUrl(baseUrl: string, path: string): string {
-  const normalizedBaseUrl = baseUrl.trim().replace(/\/+$/, "");
-  if (normalizedBaseUrl.length === 0) {
-    throw new TypeError("API baseUrl은 비어 있을 수 없습니다.");
-  }
-
-  return `${normalizedBaseUrl}${path}`;
-}
-
-async function readErrorBody(response: Response): Promise<unknown> {
-  const text = await response.text();
-  if (text.length === 0) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    return text;
-  }
 }

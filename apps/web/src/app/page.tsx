@@ -1,5 +1,6 @@
-import { SystemHealthCard } from "./system-health-card";
 import Link from "next/link";
+
+import { SystemHealthCard } from "./system-health-card";
 
 const foundationItems = [
   { label: "Routing", value: "App Router" },
@@ -17,36 +18,36 @@ export default function HomePage() {
               className="size-2 rounded-full bg-brand shadow-[0_0_0_4px_rgb(91_159_90_/_14%)]"
               aria-hidden="true"
             />
-            Web foundation ready
+            Web journey ready
           </div>
 
           <p className="mt-[var(--space-xl)] mb-[var(--space-sm)] text-[clamp(1rem,2vw,1.2rem)] font-bold text-muted">
-            소중한 사람들과 함께
+            좋아하는 사람들과 함께
           </p>
           <h1
             id="home-title"
             className="m-0 max-w-[720px] text-[clamp(2.8rem,15vw,4.25rem)] leading-[0.98] font-black tracking-[-0.065em] text-balance sm:text-[clamp(3.25rem,8vw,6.5rem)]"
           >
-            여행의 모든 순간을
+            여행의 모든 시간을
             <span className="block text-brand">다정하게.</span>
           </h1>
           <p className="mt-[var(--space-lg)] max-w-[600px] text-[clamp(1rem,1.7vw,1.15rem)] leading-7 text-muted [word-break:keep-all]">
-            계획부터 추억까지 한곳에서 나눌 수 있는 여행 공간을 만들고
-            있어요.
+            계획부터 추억까지, 소중한 사람들과 나눌 수 있는 여행 공간을
+            만들고 있어요.
           </p>
 
           <div className="mt-[var(--space-xl)] flex flex-col gap-3 sm:flex-row">
             <Link
               className="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-6 py-3 font-extrabold text-white transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-              href="/login"
+              href="/trips"
             >
-              여행 시작하기
+              내 여행 시작하기
             </Link>
             <Link
               className="inline-flex min-h-12 items-center justify-center rounded-xl border border-line bg-white/70 px-6 py-3 font-extrabold transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               href="/me"
             >
-              내 공간 확인하기
+              내 계정 확인하기
             </Link>
           </div>
 
