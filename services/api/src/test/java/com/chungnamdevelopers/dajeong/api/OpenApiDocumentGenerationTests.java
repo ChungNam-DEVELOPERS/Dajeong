@@ -79,6 +79,15 @@ class OpenApiDocumentGenerationTests {
                 .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/itineraries/draft/publish']"
                         + ".post.operationId")
                         .value("publishItineraryDraft"))
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/preferences/me']"
+                        + ".get.operationId")
+                        .value("getMyPrivatePreference"))
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/preferences/me']"
+                        + ".put.operationId")
+                        .value("saveMyPrivatePreference"))
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/preferences/status']"
+                        + ".get.operationId")
+                        .value("getPreferenceSubmissionStatus"))
                 .andReturn()
                 .getResponse()
                 .getContentAsString(StandardCharsets.UTF_8);

@@ -98,6 +98,13 @@ public class IdentityService {
 
         Instant deletedAt = Instant.now();
         jdbcClient.sql("""
+                        delete from public.private_preference
+                        where user_id = :userId
+                        """)
+                .param("userId", userId.get())
+                .update();
+
+        jdbcClient.sql("""
                         update public.trip_invite
                         set revoked_at = :deletedAt
                         where revoked_at is null
