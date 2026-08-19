@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  appendItineraryTimeline,
   createEmptySlotDraft,
   initialItineraryState,
   itineraryStateReducer,
+  itineraryTimelineMessage,
   toItinerarySlotRequest,
   validateItinerarySlotDraft,
 } from "../src/app/itinerary-state.ts";
@@ -113,6 +115,35 @@ test("서울 현지 입력을 UTC API 요청으로 변환한다", () => {
     placeName: "국립중앙과학관",
     startsAt: "2026-09-01T01:00:00.000Z",
   });
+});
+
+test("일정 변경 타임라인을 중복 없이 이어 붙인다", () => {
+  const replan = {
+    currentPlaceName: "실내 미술관",
+    itineraryVersionId: "version-2",
+    occurredAt: "2026-08-20T01:00:00Z",
+    previousPlaceName: "야외 공원",
+    previousVersionNumber: 1,
+    proposalSetId: "proposal-set-1",
+    reason: "REPLAN",
+    versionNumber: 2,
+  };
+  const original = {
+    itineraryVersionId: "version-1",
+    occurredAt: "2026-08-19T01:00:00Z",
+    reason: "ORIGINAL",
+    versionNumber: 1,
+  };
+  const appended = appendItineraryTimeline(
+    { items: [replan], nextCursor: "next", tripId: trip.id },
+    { items: [replan, original], nextCursor: null, tripId: trip.id },
+  );
+
+  assert.deepEqual(appended.items, [replan, original]);
+  assert.equal(appended.nextCursor, null);
+  assert.match(itineraryTimelineMessage(replan), /야외 공원/);
+  assert.match(itineraryTimelineMessage(replan), /실내 미술관/);
+  assert.match(itineraryTimelineMessage(original), /첫 확정 일정/);
 });
 
 test("인증·권한·연결 오류 상태를 구분한다", () => {

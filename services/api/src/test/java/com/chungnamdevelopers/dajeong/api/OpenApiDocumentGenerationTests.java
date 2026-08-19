@@ -67,6 +67,14 @@ class OpenApiDocumentGenerationTests {
                 .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/itineraries/current']"
                         + ".get.operationId")
                         .value("getCurrentItinerary"))
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/itineraries/timeline']"
+                        + ".get.operationId")
+                        .value("getItineraryTimeline"))
+                .andExpect(jsonPath("$.paths['/api/v1/notifications'].get.operationId")
+                        .value("listNotifications"))
+                .andExpect(jsonPath("$.paths['/api/v1/notifications/{notificationId}/read']"
+                        + ".post.operationId")
+                        .value("readNotification"))
                 .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/itineraries/draft/slots']"
                         + ".post.operationId")
                         .value("addItineraryDraftSlot"))

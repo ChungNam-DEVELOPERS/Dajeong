@@ -73,6 +73,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 내 인앱 알림 목록 */
+        get: operations["listNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/{notificationId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 내 인앱 알림 읽음 처리 */
+        post: operations["readNotification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/proposal-sets/{proposalSetId}": {
         parameters: {
             query?: never;
@@ -281,6 +315,23 @@ export interface paths {
         patch: operations["updateItineraryDraftSlot"];
         trace?: never;
     };
+    "/api/v1/trips/{tripId}/itineraries/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 일정 변경 감사 타임라인 조회 */
+        get: operations["getItineraryTimeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/trips/{tripId}/preferences/me": {
         parameters: {
             query?: never;
@@ -464,6 +515,33 @@ export interface components {
             /** Format: date-time */
             startsAt: string;
         };
+        ItineraryTimelineItemResponse: {
+            currentPlaceName?: string | null;
+            /** @enum {string|null} */
+            disruptionType?: "WEATHER" | "CLOSURE" | "TRAFFIC" | "OTHER" | null;
+            /** Format: uuid */
+            itineraryVersionId: string;
+            /** Format: date-time */
+            occurredAt: string;
+            previousPlaceName?: string | null;
+            /** Format: int32 */
+            previousVersionNumber?: number | null;
+            /** Format: uuid */
+            proposalSetId?: string | null;
+            /** @enum {string} */
+            reason: "ORIGINAL" | "REPLAN";
+            /** Format: int32 */
+            versionNumber: number;
+            /** Format: uuid */
+            winnerProposalId?: string | null;
+            winnerTitle?: string | null;
+        };
+        ItineraryTimelineResponse: {
+            items: components["schemas"]["ItineraryTimelineItemResponse"][];
+            nextCursor?: string | null;
+            /** Format: uuid */
+            tripId: string;
+        };
         ItineraryVersionResponse: {
             /** Format: int64 */
             draftRevision: number;
@@ -480,6 +558,32 @@ export interface components {
             tripId: string;
             /** Format: int32 */
             versionNumber: number;
+        };
+        NotificationListResponse: {
+            items: components["schemas"]["NotificationResponse"][];
+            nextCursor?: string | null;
+        };
+        NotificationResponse: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            itineraryVersionId: string;
+            /** Format: int32 */
+            itineraryVersionNumber: number;
+            /** Format: uuid */
+            proposalSetId: string;
+            /** Format: date-time */
+            readAt?: string | null;
+            /** Format: uuid */
+            tripId: string;
+            tripTitle: string;
+            /** @enum {string} */
+            type: "ITINERARY_REPLAN_APPLIED";
+            /** Format: uuid */
+            winnerProposalId: string;
+            winnerTitle: string;
         };
         PreferenceMemberStatusResponse: {
             displayName: string;
@@ -860,6 +964,81 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    listNotifications: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 현재 사용자의 활성 여행 알림 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationListResponse"];
+                };
+            };
+            /** @description 잘못된 cursor 또는 limit */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readNotification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notificationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 읽음 시각이 동기화된 알림 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationResponse"];
+                };
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 내 활성 여행 알림이 아님 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
             };
         };
     };
@@ -1654,6 +1833,54 @@ export interface operations {
             };
             /** @description 오래된 revision */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getItineraryTimeline: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 불변 일정 버전 기반 최신순 변경 이력 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItineraryTimelineResponse"];
+                };
+            };
+            /** @description 잘못된 cursor 또는 limit */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 활성 멤버십 없음 */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

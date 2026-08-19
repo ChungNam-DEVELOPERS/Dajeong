@@ -1,5 +1,6 @@
 package com.chungnamdevelopers.dajeong.api.itinerary;
 
+import com.chungnamdevelopers.dajeong.api.disruption.DisruptionType;
 import com.chungnamdevelopers.dajeong.api.error.ApiException;
 import com.chungnamdevelopers.dajeong.api.identity.CurrentUserResponse;
 import com.chungnamdevelopers.dajeong.api.trip.MembershipRole;
@@ -19,6 +20,8 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
@@ -70,6 +73,77 @@ public class ItineraryService {
                         "아직 발행된 일정이 없습니다."
                 ));
         return loadVersion(jdbcClient, versionId);
+    }
+
+    @Transactional(readOnly = true)
+    public ItineraryTimelineResponse getTimeline(
+            CurrentUserResponse currentUser,
+            UUID tripId,
+            String encodedCursor,
+            int limit
+    ) {
+        JdbcClient jdbcClient = requireJdbcClient();
+        requireActiveMembership(jdbcClient, tripId, currentUser.id());
+        TimelineCursor cursor = decodeTimelineCursor(encodedCursor);
+        String cursorPredicate = cursor == null
+                ? ""
+                : """
+                   and (
+                       v.version_number < :cursorVersionNumber
+                       or (v.version_number = :cursorVersionNumber and v.id < :cursorId)
+                   )
+                   """;
+
+        JdbcClient.StatementSpec statement = jdbcClient.sql("""
+                        select
+                            v.id as itinerary_version_id,
+                            v.version_number,
+                            v.reason,
+                            previous.version_number as previous_version_number,
+                            coalesce(ps.applied_at, v.published_at) as occurred_at,
+                            ps.id as proposal_set_id,
+                            ps.winner_proposal_id,
+                            winner.title as winner_title,
+                            d.type as disruption_type,
+                            previous_slot.place_name as previous_place_name,
+                            winner.place_name as current_place_name
+                        from public.itinerary_version v
+                        left join public.itinerary_version previous
+                          on previous.id = v.previous_version_id
+                        left join public.proposal_set ps
+                          on ps.applied_itinerary_version_id = v.id
+                         and ps.status = 'APPLIED'
+                        left join public.proposal winner
+                          on winner.proposal_set_id = ps.id
+                         and winner.id = ps.winner_proposal_id
+                        left join public.disruption d
+                          on d.id = ps.disruption_id
+                        left join public.itinerary_slot previous_slot
+                          on previous_slot.id = d.itinerary_slot_id
+                        where v.trip_id = :tripId
+                        """ + cursorPredicate + """
+                        order by v.version_number desc, v.id desc
+                        limit :queryLimit
+                        """)
+                .param("tripId", tripId)
+                .param("queryLimit", limit + 1);
+        if (cursor != null) {
+            statement = statement
+                    .param("cursorVersionNumber", cursor.versionNumber())
+                    .param("cursorId", cursor.id());
+        }
+
+        List<ItineraryTimelineItemResponse> rows = statement
+                .query(this::mapTimelineItem)
+                .list();
+        boolean hasMore = rows.size() > limit;
+        List<ItineraryTimelineItemResponse> items = hasMore
+                ? new ArrayList<>(rows.subList(0, limit))
+                : rows;
+        String nextCursor = hasMore
+                ? encodeTimelineCursor(items.get(items.size() - 1))
+                : null;
+        return new ItineraryTimelineResponse(tripId, items, nextCursor);
     }
 
     @Transactional
@@ -730,6 +804,63 @@ public class ItineraryService {
         );
     }
 
+    private ItineraryTimelineItemResponse mapTimelineItem(
+            java.sql.ResultSet resultSet,
+            int rowNumber
+    ) throws java.sql.SQLException {
+        String disruptionType = resultSet.getString("disruption_type");
+        return new ItineraryTimelineItemResponse(
+                resultSet.getObject("itinerary_version_id", UUID.class),
+                resultSet.getInt("version_number"),
+                ItineraryReason.valueOf(resultSet.getString("reason")),
+                resultSet.getObject("previous_version_number", Integer.class),
+                resultSet.getObject("occurred_at", Timestamp.class).toInstant(),
+                resultSet.getObject("proposal_set_id", UUID.class),
+                resultSet.getObject("winner_proposal_id", UUID.class),
+                resultSet.getString("winner_title"),
+                disruptionType == null ? null : DisruptionType.valueOf(disruptionType),
+                resultSet.getString("previous_place_name"),
+                resultSet.getString("current_place_name")
+        );
+    }
+
+    private String encodeTimelineCursor(ItineraryTimelineItemResponse item) {
+        String value = item.versionNumber() + "|" + item.itineraryVersionId();
+        return Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private TimelineCursor decodeTimelineCursor(String encodedCursor) {
+        if (encodedCursor == null || encodedCursor.isBlank()) {
+            return null;
+        }
+        try {
+            String decoded = new String(
+                    Base64.getUrlDecoder().decode(encodedCursor),
+                    StandardCharsets.UTF_8
+            );
+            int separator = decoded.indexOf('|');
+            if (separator <= 0 || separator == decoded.length() - 1) {
+                throw new IllegalArgumentException("cursor separator");
+            }
+            int versionNumber = Integer.parseInt(decoded.substring(0, separator));
+            if (versionNumber < 1) {
+                throw new IllegalArgumentException("cursor version");
+            }
+            return new TimelineCursor(
+                    versionNumber,
+                    UUID.fromString(decoded.substring(separator + 1))
+            );
+        } catch (IllegalArgumentException exception) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "INVALID_ITINERARY_CURSOR",
+                    "일정 변경 타임라인 cursor가 올바르지 않습니다."
+            );
+        }
+    }
+
     private JdbcClient requireJdbcClient() {
         JdbcClient jdbcClient = jdbcClientProvider.getIfAvailable();
         if (jdbcClient == null) {
@@ -870,5 +1001,8 @@ public class ItineraryService {
             long draftRevision,
             Instant publishedAt
     ) {
+    }
+
+    private record TimelineCursor(int versionNumber, UUID id) {
     }
 }

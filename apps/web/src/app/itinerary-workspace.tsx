@@ -28,6 +28,7 @@ import {
   type ItinerarySlotDraft,
   type ItinerarySlotDraftErrors,
 } from "./itinerary-state";
+import { ItineraryTimelinePanel } from "./itinerary-timeline-panel";
 
 const dateTimeFormatter = new Intl.DateTimeFormat("ko-KR", {
   day: "numeric",
@@ -355,6 +356,7 @@ export function ItineraryWorkspace({ tripId }: Readonly<{ tripId: string }>) {
       ) : null}
 
       <PublishedPanel current={state.current} />
+      <ItineraryTimelinePanel refreshKey={state.current?.id} tripId={tripId} />
     </div>
   );
 }

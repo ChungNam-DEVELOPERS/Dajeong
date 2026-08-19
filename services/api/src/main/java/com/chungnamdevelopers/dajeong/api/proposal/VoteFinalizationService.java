@@ -174,6 +174,7 @@ public class VoteFinalizationService {
         );
         updateConcessionLedger(jdbcClient, context, winner.id(), now);
         markApplied(jdbcClient, context, appliedVersionId, now);
+        createAppliedNotifications(jdbcClient, context, appliedVersionId, now);
         return proposalService.loadResponse(
                 jdbcClient,
                 proposalSetId,
@@ -577,6 +578,46 @@ public class VoteFinalizationService {
                         """)
                 .param("appliedAt", Timestamp.from(now))
                 .param("disruptionId", context.disruptionId())
+                .update();
+    }
+
+    private void createAppliedNotifications(
+            JdbcClient jdbcClient,
+            FinalizationContext context,
+            UUID appliedVersionId,
+            Instant now
+    ) {
+        jdbcClient.sql("""
+                        insert into public.notification (
+                            id,
+                            user_id,
+                            trip_id,
+                            type,
+                            proposal_set_id,
+                            itinerary_version_id,
+                            created_at
+                        )
+                        select
+                            cast(md5(
+                                cast(:proposalSetId as text)
+                                || ':' || cast(m.user_id as text)
+                                || ':ITINERARY_REPLAN_APPLIED'
+                            ) as uuid),
+                            m.user_id,
+                            :tripId,
+                            'ITINERARY_REPLAN_APPLIED',
+                            :proposalSetId,
+                            :appliedVersionId,
+                            :createdAt
+                        from public.trip_membership m
+                        where m.trip_id = :tripId
+                          and m.status = 'ACTIVE'
+                        on conflict (proposal_set_id, user_id, type) do nothing
+                        """)
+                .param("proposalSetId", context.proposalSetId())
+                .param("tripId", context.tripId())
+                .param("appliedVersionId", appliedVersionId)
+                .param("createdAt", Timestamp.from(now))
                 .update();
     }
 

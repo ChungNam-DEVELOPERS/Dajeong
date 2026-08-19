@@ -1,6 +1,8 @@
 import type {
   ItineraryDraftResponse,
   ItinerarySlotRequest,
+  ItineraryTimelineItem,
+  ItineraryTimelineResponse,
   ItineraryVersionResponse,
   TripSummaryResponse,
 } from "@dajeong/api-client";
@@ -177,6 +179,40 @@ export function toItinerarySlotRequest(
     placeName: draft.placeName.trim(),
     startsAt: toUtcIso(draft.date, draft.startTime),
   };
+}
+
+export function appendItineraryTimeline(
+  current: ItineraryTimelineResponse,
+  next: ItineraryTimelineResponse,
+): ItineraryTimelineResponse {
+  const seen = new Set(current.items.map((item) => item.itineraryVersionId));
+  return {
+    items: [
+      ...current.items,
+      ...next.items.filter((item) => {
+        if (seen.has(item.itineraryVersionId)) {
+          return false;
+        }
+        seen.add(item.itineraryVersionId);
+        return true;
+      }),
+    ],
+    nextCursor: next.nextCursor,
+    tripId: current.tripId,
+  };
+}
+
+export function itineraryTimelineMessage(item: ItineraryTimelineItem): string {
+  if (
+    item.reason === "REPLAN" &&
+    item.previousPlaceName &&
+    item.currentPlaceName
+  ) {
+    return `${item.previousPlaceName}에서 ${item.currentPlaceName}(으)로 변경됐어요.`;
+  }
+  return item.reason === "ORIGINAL"
+    ? "방장이 첫 확정 일정을 발행했어요."
+    : "그룹 투표 결과가 새 일정 버전에 반영됐어요.";
 }
 
 function parseOptionalNumber(value: string): number | null {
