@@ -23,6 +23,7 @@ public record DisruptionResponse(
         @Schema(nullable = true) Integer precipitationProbability,
         @Schema(nullable = true) Instant forecastAt,
         @Schema(nullable = true) Instant forecastIssuedAt,
+        @Schema(nullable = true) UUID proposalSetId,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) DisruptionStatus status,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant reportedAt,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant updatedAt

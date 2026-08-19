@@ -4,6 +4,8 @@ import com.chungnamdevelopers.dajeong.api.config.SecurityConfiguration;
 import com.chungnamdevelopers.dajeong.api.error.ApiErrorResponse;
 import com.chungnamdevelopers.dajeong.api.identity.CurrentUserResponse;
 import com.chungnamdevelopers.dajeong.api.identity.IdentityService;
+import com.chungnamdevelopers.dajeong.api.proposal.ProposalService;
+import com.chungnamdevelopers.dajeong.api.proposal.ReplanStartResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,13 +34,16 @@ public class DisruptionController {
 
     private final IdentityService identityService;
     private final DisruptionService disruptionService;
+    private final ProposalService proposalService;
 
     public DisruptionController(
             IdentityService identityService,
-            DisruptionService disruptionService
+            DisruptionService disruptionService,
+            ProposalService proposalService
     ) {
         this.identityService = identityService;
         this.disruptionService = disruptionService;
+        this.proposalService = proposalService;
     }
 
     @Operation(
@@ -125,7 +130,7 @@ public class DisruptionController {
                     description = "재조정 시작을 확인한 문제",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = DisruptionResponse.class)
+                            schema = @Schema(implementation = ReplanStartResponse.class)
                     )
             ),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 요청", content = @Content),
@@ -133,13 +138,13 @@ public class DisruptionController {
             @ApiResponse(responseCode = "409", description = "이미 처리된 문제", content = @Content)
     })
     @PostMapping("/disruptions/{disruptionId}/replans")
-    public ResponseEntity<DisruptionResponse> startReplan(
+    public ResponseEntity<ReplanStartResponse> startReplan(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID disruptionId,
             @RequestHeader("Idempotency-Key") String idempotencyKey
     ) {
         return ResponseEntity.accepted().body(
-                disruptionService.startReplan(
+                proposalService.start(
                         currentUser(jwt),
                         disruptionId,
                         idempotencyKey

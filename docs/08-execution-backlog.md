@@ -15,6 +15,8 @@
 > 2026-08-19 진행: [Issue #45](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/45)에서 수동 문제 신고 → 그룹 확인 → 원본 유지 또는 재조정 시작 웹 세로 슬라이스를 구현하고 검증했다.
 >
 > 2026-08-19 진행: [Issue #47](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/47)에서 향후 24시간 야외 일정 → 강수확률 60% 경계 감지 → 그룹 날씨 근거 표시 세로 슬라이스를 mock 기상 어댑터로 구현하고 검증했다.
+>
+> 2026-08-19 진행: [Issue #49](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/49)에서 재조정 요청 → 결정론적 공정성 점수 기반 후보 1~3개 생성 → 진행·실패·후보 부족 표시 세로 슬라이스를 구현하고 검증했다.
 
 이 문서는 [종합 개발 계획](./00-development-plan.md)의 단계 0~1만 실행 단위로 분해한다. 전체 기간과 출시 기준은 [로드맵과 테스트](./07-roadmap-testing.md)를 따른다.
 
@@ -328,6 +330,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-19 | Issue #43 | 비공개 선호 저장·본인 조회, 원문 없는 멤버별 제출 현황과 반응형 웹 입력 화면 구현 | API 34건, OpenAPI client 27건, 웹 상태 테스트 28건, production build·Expo web export, 402px·1280px Chrome와 axe 위반 0건 | 수동 문제 신고 세로 슬라이스 |
 | 2026-08-19 | Issue #45 | 현재 발행 슬롯의 수동 문제 신고, 그룹 목록, 원본 유지·재조정 시작 상태 전이와 반응형 웹 화면 구현 | API 37건, OpenAPI client 31건, 웹 상태·인증 테스트 32건, production build·Expo web export 통과 | 기상청 날씨 감지 세로 슬라이스 |
 | 2026-08-19 | Issue #47 | 최신 발행 일정의 24시간 야외 슬롯과 mock 단기예보를 대조해 강수확률 60% 이상 날씨 문제를 멱등 생성하고 그룹 화면에 예보 근거 표시 | API 39건, OpenAPI client 32건, 웹 상태·인증 테스트 33건, production build·Expo web export 통과 | 재조정 후보 생성 세로 슬라이스 |
+| 2026-08-19 | Issue #49 | 멱등 재조정 작업, 버전 고정, 개인별 비공개 점수와 양보 가중치, 결정론 순위로 검증된 후보 최대 3개를 생성하고 진행·실패·부족·stale 상태를 웹에 표시 | API 43건, OpenAPI client 33건, 웹 상태·인증 테스트 35건, production build·Expo web export 통과 | 익명 투표·집계 세로 슬라이스 |
 
 ## 9. 2단계 상세화 시점
 
@@ -343,6 +346,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 6. ~~비공개 선호 입력 → 본인 조회 → 멤버별 제출 상태 확인~~ ([Issue #43](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/43))
 7. ~~수동 문제 신고 → 방장·멤버 확인 → 원본 일정 유지 또는 재조정 시작 선택~~ ([Issue #45](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/45))
 8. ~~향후 24시간 야외 일정 → 강수확률 경계 감지 → 날씨 근거 확인~~ ([Issue #47](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/47))
-9. 재조정 요청 → 검증 가능한 후보 1~3개 생성 → 진행·실패·후보 부족 확인
+9. ~~재조정 요청 → 검증 가능한 후보 1~3개 생성 → 진행·실패·후보 부족 확인~~ ([Issue #49](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/49))
+10. 익명 투표 생성·변경·철회 → 득표수·참여 인원 집계 → 개인별 선택 비공개 확인
 
 웹 공개 베타가 안정화되면 FND-05와 FND-12를 재개하고 위 세로 슬라이스의 모바일 화면·딥링크·푸시·실기기 검증을 별도 백로그로 상세화한다.

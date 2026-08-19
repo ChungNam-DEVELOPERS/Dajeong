@@ -5,6 +5,7 @@ import {
   ApiClientError,
   createDisruption,
   dismissDisruption,
+  getProposalSet,
   listDisruptions,
   startDisruptionReplan,
 } from "../src/index.ts";
@@ -25,6 +26,19 @@ const disruption = {
   tripId: "trip-45",
   type: "CLOSURE",
   updatedAt: "2026-08-19T09:00:00Z",
+};
+
+const proposalSet = {
+  candidateCount: 0,
+  candidateLimit: 3,
+  createdAt: "2026-08-19T10:00:00Z",
+  disruptionId: disruption.id,
+  id: "proposal-set-1",
+  itineraryVersionId: disruption.itineraryVersionId,
+  proposals: [],
+  status: "QUEUED",
+  tripId: disruption.tripId,
+  updatedAt: "2026-08-19T10:00:00Z",
 };
 
 test("여행별 문제 목록 경로를 인코딩해 조회한다", async () => {
@@ -97,7 +111,13 @@ test("유지와 재조정 시작은 각 상태 코드와 멱등 키를 사용한
   const fetch = async (url, init) => {
     requests.push({ init, url: String(url) });
     return Response.json(
-      { ...disruption, status: requests.length === 1 ? "DISMISSED" : "ACKNOWLEDGED" },
+      requests.length === 1
+        ? { ...disruption, status: "DISMISSED" }
+        : {
+            disruptionId: disruption.id,
+            disruptionStatus: "ACKNOWLEDGED",
+            proposalSet,
+          },
       { status: requests.length === 1 ? 200 : 202 },
     );
   };
@@ -125,6 +145,27 @@ test("유지와 재조정 시작은 각 상태 코드와 멱등 키를 사용한
   );
   assert.equal(requests[0].init.headers.get("Idempotency-Key"), "keep-original");
   assert.equal(requests[1].init.headers.get("Idempotency-Key"), "start-replan");
+});
+
+test("후보 세트 식별자를 인코딩해 그룹 공개 후보를 조회한다", async () => {
+  let captured;
+  const response = await getProposalSet({
+    accessToken: "private-token",
+    baseUrl: "https://api.example.com",
+    fetch: async (url, init) => {
+      captured = { init, url: String(url) };
+      return Response.json(proposalSet);
+    },
+    proposalSetId: "proposal / set",
+  });
+
+  assert.equal(
+    captured.url,
+    "https://api.example.com/api/v1/proposal-sets/proposal%20%2F%20set",
+  );
+  assert.equal(captured.init.method, "GET");
+  assert.equal(captured.init.headers.get("Authorization"), "Bearer private-token");
+  assert.deepEqual(response, proposalSet);
 });
 
 test("문제 API 오류 상태와 본문을 보존한다", async () => {

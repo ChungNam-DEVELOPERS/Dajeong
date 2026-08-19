@@ -1,0 +1,31 @@
+{
+  "status": "OK",
+  "candidates": [
+    {
+      "sourceCandidateId": "partial-culture",
+      "placeName": "대전실내문화관",
+      "address": "대전광역시 유성구 문화로 1",
+      "latitude": 36.370000,
+      "longitude": 127.390000,
+      "indoor": true,
+      "category": "CULTURE",
+      "expectedCost": 4000,
+      "totalTravelMinutes": 10,
+      "activityLevel": 2,
+      "verifiedOpen": true
+    },
+    {
+      "sourceCandidateId": "partial-cafe",
+      "placeName": "대전실내카페",
+      "address": "대전광역시 서구 카페로 2",
+      "latitude": 36.350000,
+      "longitude": 127.380000,
+      "indoor": true,
+      "category": "CAFE",
+      "expectedCost": 6000,
+      "totalTravelMinutes": 14,
+      "activityLevel": 1,
+      "verifiedOpen": true
+    }
+  ]
+}

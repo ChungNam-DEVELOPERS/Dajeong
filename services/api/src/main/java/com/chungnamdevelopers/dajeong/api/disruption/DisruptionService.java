@@ -158,21 +158,6 @@ public class DisruptionService {
         );
     }
 
-    @Transactional
-    public DisruptionResponse startReplan(
-            CurrentUserResponse currentUser,
-            UUID disruptionId,
-            String idempotencyKey
-    ) {
-        return transition(
-                currentUser,
-                disruptionId,
-                idempotencyKey,
-                DisruptionAction.START_REPLAN,
-                DisruptionStatus.ACKNOWLEDGED
-        );
-    }
-
     private DisruptionResponse transition(
             CurrentUserResponse currentUser,
             UUID disruptionId,
@@ -342,6 +327,13 @@ public class DisruptionService {
                             d.precipitation_probability,
                             d.forecast_at,
                             d.forecast_issued_at,
+                            (
+                                select ps.id
+                                from public.proposal_set ps
+                                where ps.disruption_id = d.id
+                                order by ps.created_at desc, ps.id desc
+                                limit 1
+                            ) as proposal_set_id,
                             d.status,
                             d.reported_at,
                             d.updated_at
@@ -373,6 +365,7 @@ public class DisruptionService {
                         resultSet.getObject("precipitation_probability", Integer.class),
                         nullableInstant(resultSet.getObject("forecast_at", Timestamp.class)),
                         nullableInstant(resultSet.getObject("forecast_issued_at", Timestamp.class)),
+                        resultSet.getObject("proposal_set_id", UUID.class),
                         DisruptionStatus.valueOf(resultSet.getString("status")),
                         resultSet.getObject("reported_at", Timestamp.class).toInstant(),
                         resultSet.getObject("updated_at", Timestamp.class).toInstant()
@@ -452,8 +445,7 @@ public class DisruptionService {
     }
 
     private enum DisruptionAction {
-        DISMISS,
-        START_REPLAN
+        DISMISS
     }
 
     private record TripAccess(TripStatus status) {

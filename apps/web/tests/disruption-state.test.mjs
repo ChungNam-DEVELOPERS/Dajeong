@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  applyReplanStart,
   createEmptyDisruptionDraft,
   getWeatherEvidence,
+  proposalFailureMessage,
   replaceDisruption,
   toCreateDisruptionRequest,
   validateDisruptionDraft,
@@ -94,4 +96,30 @@ test("날씨 방해요소에서 화면에 필요한 예보 근거만 추출한�
     getWeatherEvidence({ ...weather, precipitationProbability: null }),
     null,
   );
+});
+
+test("재조정 시작 응답은 해당 문제와 후보 세트만 연결한다", () => {
+  const first = { id: "first", status: "DETECTED" };
+  const second = { id: "second", status: "DETECTED" };
+  const started = {
+    disruptionId: "second",
+    disruptionStatus: "ACKNOWLEDGED",
+    proposalSet: { id: "proposal-set-1" },
+  };
+
+  assert.deepEqual(applyReplanStart([first, second], started), [
+    first,
+    {
+      id: "second",
+      proposalSetId: "proposal-set-1",
+      status: "ACKNOWLEDGED",
+    },
+  ]);
+});
+
+test("후보 실패 코드를 사용자가 복구할 수 있는 문구로 구분한다", () => {
+  assert.match(proposalFailureMessage("PREFERENCES_INCOMPLETE"), /모든 멤버/);
+  assert.match(proposalFailureMessage("STALE_ITINERARY"), /일정 버전/);
+  assert.match(proposalFailureMessage("UPSTREAM_UNAVAILABLE"), /연결하지 못/);
+  assert.match(proposalFailureMessage("UNKNOWN"), /완료하지 못/);
 });
