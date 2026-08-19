@@ -122,7 +122,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 상태 | ID | 작업 | 예상 | 완료 조건 |
 | --- | --- | --- | --- | --- |
 | `DONE` | EXT-01 | 외부 서비스 대장·비밀정보 규칙 | 0.25일 | 환경별 변수명, 보관 위치, 승인·할당량·만료 상태를 값 없이 기록 |
-| `TODO` | EXT-02 | AWS 계정·비용 보호 | 0.5일 | MFA, 서울 리전, 예산 알림, 개발자·배포 권한 분리 계획 확인 |
+| `WAITING` | EXT-02 | AWS 계정·비용 보호 | 0.5일 | MFA, 서울 리전, 예산 알림, 개발자·배포 권한 분리 계획 확인 |
 | `TODO` | EXT-03 | Kakao Developers 앱·OIDC 준비 | 0.25일 | 개발용 앱, 필요 동의 항목, callback 미확정값, 심사 공백 기록 |
 | `TODO` | EXT-04 | Google OAuth 클라이언트 준비 | 0.25일 | 웹 테스트 사용자·client·callback 항목 기록, 앱 client는 후속 분리 |
 | `TODO` | EXT-05 | Apple Developer·Sign in with Apple 준비 | 0.25일 + 심사 | 등록·심사 상태와 필요 identifier·key 목록 기록 |
@@ -138,6 +138,8 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - 문서에는 예: `TOUR_API_KEY` 같은 변수명과 보관 위치만 기록한다.
 - 심사가 남아도 신청 접수 증거와 mock이 있으면 1단계 개발을 계속한다.
 - callback URL이 필요하면 placeholder를 기록하고 `FND-17` staging URL 확정 후 갱신한다.
+
+> 2026-08-20 진행: [Issue #63](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/63)에서 AWS CLI v2 설치와 계정 준비 상태 검사기·권한 분리 절차를 준비했다. IAM Identity Center profile, root MFA·access key, 월 비용 예산과 80% 알림은 실제 계정 인증 후 확인해야 하므로 `WAITING`으로 둔다.
 
 ## 5. 1단계: 개발 기반 요약표
 
@@ -276,7 +278,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - **완료:** `ap-northeast-2` staging synth가 재현되고 diff에는 의도한 변경만 나타남
 - **검증:** synth 결과와 실제 staging 계정 대상 diff 결과 기록
 - **학습 포인트:** IaC의 desired state와 `synth`·`diff`·`deploy`의 차이
-- **2026-08-20 부분 검증:** [Issue #61](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/61)에서 Staging·Production 리전·CIDR·네이밍·태그 규칙, CDK 기반 스택, 단위 테스트, 로컬 synth·template diff를 검증했다. AWS CLI·Staging 자격 증명과 EXT-02가 준비되지 않아 실제 계정 diff는 미실행이며 상태를 `WAITING`으로 두었다.
+- **2026-08-20 부분 검증:** [Issue #61](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/61)에서 Staging·Production 리전·CIDR·네이밍·태그 규칙, CDK 기반 스택, 단위 테스트, 로컬 synth·template diff를 검증했다. AWS CLI는 설치했지만 Staging SSO profile과 EXT-02 실제 계정 검증이 준비되지 않아 실제 계정 diff는 미실행이며 상태를 `WAITING`으로 두었다.
 
 ### FND-16. GitHub Actions OIDC 배포 인증
 
