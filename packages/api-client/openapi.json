@@ -163,6 +163,13 @@
               "null"
             ]
           },
+          "proposalSetId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "reportedAt": {
             "format": "date-time",
             "type": "string"
@@ -189,6 +196,9 @@
             "enum": [
               "DETECTED",
               "ACKNOWLEDGED",
+              "GENERATING",
+              "VOTING",
+              "FAILED",
               "DISMISSED"
             ],
             "type": "string"
@@ -679,6 +689,211 @@
         ],
         "type": "object"
       },
+      "ProposalResponse": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "MEAL",
+              "CAFE",
+              "CULTURE",
+              "ACTIVITY",
+              "SHOPPING",
+              "TRANSIT",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "endsAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expectedCost": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "indoor": {
+            "type": "boolean"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "minimumMemberSatisfaction": {
+            "type": "number"
+          },
+          "placeName": {
+            "type": "string"
+          },
+          "rank": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "startsAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "totalTravelMinutes": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "weightedAverageSatisfaction": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "address",
+          "category",
+          "endsAt",
+          "expectedCost",
+          "id",
+          "indoor",
+          "latitude",
+          "longitude",
+          "minimumMemberSatisfaction",
+          "placeName",
+          "rank",
+          "startsAt",
+          "summary",
+          "title",
+          "totalTravelMinutes",
+          "weightedAverageSatisfaction"
+        ],
+        "type": "object"
+      },
+      "ProposalSetResponse": {
+        "properties": {
+          "candidateCount": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "candidateLimit": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "completedAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "disruptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "failureCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "itineraryVersionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "proposals": {
+            "items": {
+              "$ref": "#/components/schemas/ProposalResponse"
+            },
+            "type": "array"
+          },
+          "shortageReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "startedAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "QUEUED",
+              "GENERATING",
+              "OPEN",
+              "FAILED",
+              "CANCELLED"
+            ],
+            "type": "string"
+          },
+          "tripId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "candidateCount",
+          "candidateLimit",
+          "createdAt",
+          "disruptionId",
+          "id",
+          "itineraryVersionId",
+          "proposals",
+          "status",
+          "tripId",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ReplanStartResponse": {
+        "properties": {
+          "disruptionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "disruptionStatus": {
+            "enum": [
+              "DETECTED",
+              "ACKNOWLEDGED",
+              "GENERATING",
+              "VOTING",
+              "FAILED",
+              "DISMISSED"
+            ],
+            "type": "string"
+          },
+          "proposalSet": {
+            "$ref": "#/components/schemas/ProposalSetResponse"
+          }
+        },
+        "required": [
+          "disruptionId",
+          "disruptionStatus",
+          "proposalSet"
+        ],
+        "type": "object"
+      },
       "SystemHealthResponse": {
         "properties": {
           "database": {
@@ -862,7 +1077,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DisruptionResponse"
+                  "$ref": "#/components/schemas/ReplanStartResponse"
                 }
               }
             },
@@ -1023,6 +1238,52 @@
         "summary": "현재 사용자 조회",
         "tags": [
           "current-user-controller"
+        ]
+      }
+    },
+    "/api/v1/proposal-sets/{proposalSetId}": {
+      "get": {
+        "operationId": "getProposalSet",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposalSetId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalSetResponse"
+                }
+              }
+            },
+            "description": "후보 작업 조회"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "활성 멤버십 없음"
+          },
+          "404": {
+            "description": "후보 작업 없음"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "재조정 후보 작업과 그룹 공개 후보 조회",
+        "tags": [
+          "proposal-controller"
         ]
       }
     },

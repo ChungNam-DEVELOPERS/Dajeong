@@ -73,6 +73,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/proposal-sets/{proposalSetId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 재조정 후보 작업과 그룹 공개 후보 조회 */
+        get: operations["getProposalSet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/health": {
         parameters: {
             query?: never;
@@ -342,6 +359,8 @@ export interface components {
             placeName: string;
             /** Format: int32 */
             precipitationProbability?: number | null;
+            /** Format: uuid */
+            proposalSetId?: string | null;
             /** Format: date-time */
             reportedAt: string;
             /** Format: uuid */
@@ -352,7 +371,7 @@ export interface components {
             /** Format: date-time */
             slotStartsAt: string;
             /** @enum {string} */
-            status: "DETECTED" | "ACKNOWLEDGED" | "DISMISSED";
+            status: "DETECTED" | "ACKNOWLEDGED" | "GENERATING" | "VOTING" | "FAILED" | "DISMISSED";
             /** Format: uuid */
             tripId: string;
             /** @enum {string} */
@@ -498,6 +517,65 @@ export interface components {
             /** Format: uuid */
             userId: string;
         };
+        ProposalResponse: {
+            address: string;
+            /** @enum {string} */
+            category: "MEAL" | "CAFE" | "CULTURE" | "ACTIVITY" | "SHOPPING" | "TRANSIT" | "OTHER";
+            /** Format: date-time */
+            endsAt: string;
+            /** Format: int32 */
+            expectedCost: number;
+            /** Format: uuid */
+            id: string;
+            indoor: boolean;
+            latitude: number;
+            longitude: number;
+            minimumMemberSatisfaction: number;
+            placeName: string;
+            /** Format: int32 */
+            rank: number;
+            /** Format: date-time */
+            startsAt: string;
+            summary: string;
+            title: string;
+            /** Format: int32 */
+            totalTravelMinutes: number;
+            weightedAverageSatisfaction: number;
+        };
+        ProposalSetResponse: {
+            /** Format: int32 */
+            candidateCount: number;
+            /** Format: int32 */
+            candidateLimit: number;
+            /** Format: date-time */
+            completedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            disruptionId: string;
+            failureCode?: string | null;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            itineraryVersionId: string;
+            proposals: components["schemas"]["ProposalResponse"][];
+            shortageReason?: string | null;
+            /** Format: date-time */
+            startedAt?: string | null;
+            /** @enum {string} */
+            status: "QUEUED" | "GENERATING" | "OPEN" | "FAILED" | "CANCELLED";
+            /** Format: uuid */
+            tripId: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ReplanStartResponse: {
+            /** Format: uuid */
+            disruptionId: string;
+            /** @enum {string} */
+            disruptionStatus: "DETECTED" | "ACKNOWLEDGED" | "GENERATING" | "VOTING" | "FAILED" | "DISMISSED";
+            proposalSet: components["schemas"]["ProposalSetResponse"];
+        };
         SystemHealthResponse: {
             /** @enum {string} */
             database: "UP" | "DOWN";
@@ -577,7 +655,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DisruptionResponse"];
+                    "application/json": components["schemas"]["ReplanStartResponse"];
                 };
             };
             /** @description 인증되지 않은 요청 */
@@ -734,6 +812,49 @@ export interface operations {
             };
             /** @description 사용자 저장소를 사용할 수 없음 */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getProposalSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposalSetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 후보 작업 조회 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalSetResponse"];
+                };
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 활성 멤버십 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 후보 작업 없음 */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

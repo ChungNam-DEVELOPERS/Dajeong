@@ -1,0 +1,57 @@
+{
+  "status": "OK",
+  "candidates": [
+    {
+      "sourceCandidateId": "daejeon-nature-1",
+      "placeName": "대전숲체원",
+      "address": "대전광역시 유성구 숲길 1",
+      "latitude": 36.410000,
+      "longitude": 127.350000,
+      "indoor": true,
+      "category": "ACTIVITY",
+      "expectedCost": 8000,
+      "totalTravelMinutes": 18,
+      "activityLevel": 3,
+      "verifiedOpen": true
+    },
+    {
+      "sourceCandidateId": "daejeon-museum-1",
+      "placeName": "대전과학문화관",
+      "address": "대전광역시 유성구 과학로 10",
+      "latitude": 36.375000,
+      "longitude": 127.390000,
+      "indoor": true,
+      "category": "CULTURE",
+      "expectedCost": 5000,
+      "totalTravelMinutes": 12,
+      "activityLevel": 2,
+      "verifiedOpen": true
+    },
+    {
+      "sourceCandidateId": "daejeon-cafe-1",
+      "placeName": "한밭정원카페",
+      "address": "대전광역시 서구 둔산대로 20",
+      "latitude": 36.355000,
+      "longitude": 127.385000,
+      "indoor": true,
+      "category": "CAFE",
+      "expectedCost": 7000,
+      "totalTravelMinutes": 15,
+      "activityLevel": 1,
+      "verifiedOpen": true
+    },
+    {
+      "sourceCandidateId": "daejeon-food-1",
+      "placeName": "대전향토식당",
+      "address": "대전광역시 중구 중앙로 30",
+      "latitude": 36.330000,
+      "longitude": 127.430000,
+      "indoor": true,
+      "category": "MEAL",
+      "expectedCost": 15000,
+      "totalTravelMinutes": 25,
+      "activityLevel": 1,
+      "verifiedOpen": true
+    }
+  ]
+}

@@ -5,19 +5,23 @@ import {
   createDisruption,
   dismissDisruption,
   getCurrentItinerary,
+  getProposalSet,
   getTrip,
   listDisruptions,
   startDisruptionReplan,
   type DisruptionListResponse,
   type ItineraryVersionResponse,
+  type ProposalSetResponse,
   type TripSummaryResponse,
 } from "@dajeong/api-client";
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 
 import {
+  applyReplanStart,
   createEmptyDisruptionDraft,
   getWeatherEvidence,
+  proposalFailureMessage,
   replaceDisruption,
   toCreateDisruptionRequest,
   validateDisruptionDraft,
@@ -34,6 +38,7 @@ type WorkspaceState =
       current: ItineraryVersionResponse | null;
       list: DisruptionListResponse;
       phase: "ready";
+      proposalSets: Record<string, ProposalSetResponse>;
       trip: TripSummaryResponse;
     };
 
@@ -56,9 +61,9 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
   useEffect(() => {
     const controller = new AbortController();
     void loadDisruptionWorkspace(tripId, controller.signal)
-      .then(({ current, list, trip }) => {
+      .then(({ current, list, proposalSets, trip }) => {
         setDraft(createEmptyDisruptionDraft(current?.slots[0]?.id));
-        setState({ current, list, phase: "ready", trip });
+        setState({ current, list, phase: "ready", proposalSets, trip });
       })
       .catch((error: unknown) => {
         if (!controller.signal.aborted) {
@@ -121,31 +126,77 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
         disruptionId,
         idempotencyKey: crypto.randomUUID(),
       };
-      const updated =
+      if (action === "dismiss") {
+        const updated = await dismissDisruption(options);
+        setState((current) =>
+          current.phase === "ready"
+            ? {
+                ...current,
+                list: {
+                  ...current.list,
+                  disruptions: replaceDisruption(
+                    current.list.disruptions,
+                    updated,
+                  ),
+                },
+              }
+            : current,
+        );
+      } else {
+        const started = await startDisruptionReplan(options);
+        setState((current) =>
+          current.phase === "ready"
+            ? {
+                ...current,
+                list: {
+                  ...current.list,
+                  disruptions: applyReplanStart(
+                    current.list.disruptions,
+                    started,
+                  ),
+                },
+                proposalSets: {
+                  ...current.proposalSets,
+                  [started.proposalSet.id]: started.proposalSet,
+                },
+              }
+            : current,
+        );
+      }
+      setNotice(
         action === "dismiss"
-          ? await dismissDisruption(options)
-          : await startDisruptionReplan(options);
+          ? "원본 일정을 유지하기로 기록했습니다."
+          : "재조정 요청을 접수했습니다. 후보 준비 상태를 이 화면에서 확인할 수 있습니다.",
+      );
+    } catch (error: unknown) {
+      setNotice(readApiMessage(error, "문제 상태를 변경하지 못했습니다."));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function refreshProposalSet(proposalSetId: string) {
+    setBusy(`proposal:${proposalSetId}`);
+    setNotice("");
+    try {
+      const proposalSet = await getProposalSet({
+        baseUrl: window.location.origin,
+        proposalSetId,
+      });
       setState((current) =>
         current.phase === "ready"
           ? {
               ...current,
-              list: {
-                ...current.list,
-                disruptions: replaceDisruption(
-                  current.list.disruptions,
-                  updated,
-                ),
+              proposalSets: {
+                ...current.proposalSets,
+                [proposalSetId]: proposalSet,
               },
             }
           : current,
       );
-      setNotice(
-        action === "dismiss"
-          ? "원본 일정을 유지하기로 기록했습니다."
-          : "재조정 시작을 기록했습니다. 후보 생성은 다음 단계에서 연결됩니다.",
-      );
+      setNotice("후보 준비 상태를 새로 확인했습니다.");
     } catch (error: unknown) {
-      setNotice(readApiMessage(error, "문제 상태를 변경하지 못했습니다."));
+      setNotice(readApiMessage(error, "후보 상태를 확인하지 못했습니다."));
     } finally {
       setBusy(null);
     }
@@ -318,6 +369,16 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
                   <WeatherEvidenceDetails disruption={item} />
                   <p className="mt-4 text-xs font-bold text-[#6f665a]">{item.reporterDisplayName} · {dateTimeFormatter.format(new Date(item.reportedAt))}</p>
 
+                  <ProposalSetDetails
+                    busy={busy === `proposal:${item.proposalSetId}`}
+                    onRefresh={refreshProposalSet}
+                    proposalSet={
+                      item.proposalSetId
+                        ? state.proposalSets[item.proposalSetId]
+                        : undefined
+                    }
+                  />
+
                   {item.status === "DETECTED" && canEdit ? (
                     <div className="mt-5 grid gap-2 border-t border-line pt-5 sm:grid-cols-2">
                       <button
@@ -403,6 +464,75 @@ function WeatherEvidenceDetails({
   );
 }
 
+function ProposalSetDetails({
+  busy,
+  onRefresh,
+  proposalSet,
+}: Readonly<{
+  busy: boolean;
+  onRefresh: (proposalSetId: string) => Promise<void>;
+  proposalSet?: ProposalSetResponse;
+}>) {
+  if (proposalSet === undefined) {
+    return null;
+  }
+  const inProgress = proposalSet.status === "QUEUED" || proposalSet.status === "GENERATING";
+  return (
+    <section className="mt-5 rounded-2xl border border-[#cbdcc7] bg-[#f4faf2] p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black tracking-[0.08em] text-[#557255] uppercase">Replan proposals</p>
+          <h4 className="mt-1 font-black">{proposalSetLabel[proposalSet.status]}</h4>
+        </div>
+        <button
+          className="min-h-10 rounded-xl border border-[#aac7a5] bg-white px-3 py-2 text-xs font-extrabold disabled:opacity-50"
+          disabled={busy}
+          onClick={() => void onRefresh(proposalSet.id)}
+          type="button"
+        >
+          {busy ? "확인 중…" : "상태 새로고침"}
+        </button>
+      </div>
+
+      {inProgress ? (
+        <p className="mt-3 text-sm font-semibold leading-6 text-[#5b6f59]">
+          검증 가능한 장소와 그룹 조건을 대조하고 있습니다. 준비되는 동안 원본 일정은 그대로 유지됩니다.
+        </p>
+      ) : null}
+      {proposalSet.status === "FAILED" || proposalSet.status === "CANCELLED" ? (
+        <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold leading-6 text-[#7a4b0f]">
+          {proposalFailureMessage(proposalSet.failureCode)}
+        </p>
+      ) : null}
+      {proposalSet.shortageReason ? (
+        <p className="mt-3 rounded-xl bg-[#fff8e8] p-3 text-sm font-bold text-[#7a4b0f]">
+          {proposalSet.shortageReason}
+        </p>
+      ) : null}
+      {proposalSet.status === "OPEN" ? (
+        <div className="mt-4 space-y-3">
+          {proposalSet.proposals.map((proposal) => (
+            <article className="rounded-xl border border-[#dce9d9] bg-white p-4" key={proposal.id}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h5 className="font-black">{proposal.rank}. {proposal.title}</h5>
+                <span className="text-xs font-black text-[#3c713d]">최저 만족도 {Math.round(proposal.minimumMemberSatisfaction)}점</span>
+              </div>
+              <p className="mt-2 text-sm font-semibold leading-6 text-[#6f665a]">{proposal.summary}</p>
+              <dl className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+                <div><dt className="font-bold text-[#6f665a]">시간</dt><dd className="mt-1 font-extrabold">{dateTimeFormatter.format(new Date(proposal.startsAt))}</dd></div>
+                <div><dt className="font-bold text-[#6f665a]">예상 비용</dt><dd className="mt-1 font-extrabold">{costFormatter.format(proposal.expectedCost)}원</dd></div>
+                <div><dt className="font-bold text-[#6f665a]">이동</dt><dd className="mt-1 font-extrabold">{proposal.totalTravelMinutes}분</dd></div>
+                <div><dt className="font-bold text-[#6f665a]">가중 평균</dt><dd className="mt-1 font-extrabold">{Math.round(proposal.weightedAverageSatisfaction)}점</dd></div>
+              </dl>
+            </article>
+          ))}
+          <p className="text-xs font-bold leading-5 text-[#6f665a]">개인별 선호와 만족도는 공개하지 않습니다. 투표 기능은 다음 단계에서 연결됩니다.</p>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 function toWorkspaceError(error: unknown): WorkspaceState {
   if (error instanceof ApiClientError && error.status === 401) {
     return { phase: "unauthenticated" };
@@ -429,7 +559,18 @@ async function loadDisruptionWorkspace(tripId: string, signal: AbortSignal) {
     }),
     listDisruptions({ baseUrl, signal, tripId }),
   ]);
-  return { current, list, trip };
+  const proposalSetIds = list.disruptions
+    .map((disruption) => disruption.proposalSetId)
+    .filter((proposalSetId): proposalSetId is string => Boolean(proposalSetId));
+  const proposalSets = Object.fromEntries(
+    await Promise.all(
+      proposalSetIds.map(async (proposalSetId) => [
+        proposalSetId,
+        await getProposalSet({ baseUrl, proposalSetId, signal }),
+      ] as const),
+    ),
+  );
+  return { current, list, proposalSets, trip };
 }
 
 function readApiCode(error: ApiClientError): string | null {
@@ -445,8 +586,10 @@ function readApiMessage(error: unknown, fallback: string): string {
 }
 
 const typeLabel = { CLOSURE: "휴관", OTHER: "기타", TRAFFIC: "교통", WEATHER: "날씨" } as const;
-const statusLabel = { ACKNOWLEDGED: "재조정 시작", DETECTED: "확인 필요", DISMISSED: "원본 유지" } as const;
-const statusClassName = { ACKNOWLEDGED: "text-[#3c713d]", DETECTED: "text-[#a35b00]", DISMISSED: "text-[#6f665a]" } as const;
+const statusLabel = { ACKNOWLEDGED: "요청 접수", DETECTED: "확인 필요", DISMISSED: "원본 유지", FAILED: "후보 실패", GENERATING: "후보 생성 중", VOTING: "후보 준비" } as const;
+const statusClassName = { ACKNOWLEDGED: "text-[#3c713d]", DETECTED: "text-[#a35b00]", DISMISSED: "text-[#6f665a]", FAILED: "text-red-700", GENERATING: "text-[#3c713d]", VOTING: "text-[#3c713d]" } as const;
+const proposalSetLabel = { CANCELLED: "후보 작업 취소", FAILED: "후보 생성 실패", GENERATING: "후보 생성 중", OPEN: "투표 전 후보 준비", QUEUED: "후보 생성 대기" } as const;
+const costFormatter = new Intl.NumberFormat("ko-KR");
 const inputClassName = "mt-2 min-h-12 w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-semibold outline-none transition focus:border-brand focus:ring-3 focus:ring-[#5b9f5a22] aria-invalid:border-red-600 disabled:bg-soft disabled:text-[#6f665a]";
 const primaryClassName = "mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#3c713d] px-6 py-3 font-extrabold text-white transition hover:bg-[#315d32] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
 const secondaryClassName = "mt-6 inline-flex min-h-12 items-center justify-center rounded-xl border border-line bg-white px-6 py-3 font-extrabold transition hover:bg-soft";

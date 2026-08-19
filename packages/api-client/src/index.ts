@@ -30,6 +30,7 @@ export {
 export {
   createDisruption,
   dismissDisruption,
+  getProposalSet,
   listDisruptions,
   startDisruptionReplan,
 } from "./disruptions.ts";
@@ -89,6 +90,11 @@ export type {
   DisruptionTripOptions,
   DisruptionType,
   ManualDisruptionType,
+  ProposalResponse,
+  ProposalSetOptions,
+  ProposalSetResponse,
+  ProposalSetStatus,
+  ReplanStartResponse,
 } from "./disruptions.ts";
 export type {
   components,

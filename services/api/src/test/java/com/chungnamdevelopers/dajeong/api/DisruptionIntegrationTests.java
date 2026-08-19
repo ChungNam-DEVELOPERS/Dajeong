@@ -175,7 +175,8 @@ class DisruptionIntegrationTests {
                         .with(user(member, "멤버"))
                         .header("Idempotency-Key", "start-replan"))
                 .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.status").value("ACKNOWLEDGED"));
+                .andExpect(jsonPath("$.disruptionStatus").value("ACKNOWLEDGED"))
+                .andExpect(jsonPath("$.proposalSet.status").value("QUEUED"));
 
         mockMvc.perform(get("/api/v1/trips/{tripId}/itineraries/current", tripId)
                         .with(user(member, "멤버")))

@@ -160,7 +160,8 @@ class WeatherPollIntegrationTests {
                         .with(user(host))
                         .header("Idempotency-Key", "weather-replan-" + tripId))
                 .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.status").value("ACKNOWLEDGED"));
+                .andExpect(jsonPath("$.disruptionStatus").value("ACKNOWLEDGED"))
+                .andExpect(jsonPath("$.proposalSet.status").value("QUEUED"));
 
         Instant secondIssue = Instant.parse("2026-09-01T00:30:00Z");
         forecastClient.respondWith(List.of(new WeatherForecast(

@@ -2,6 +2,7 @@ import type {
   CreateDisruptionRequest,
   DisruptionResponse,
   ManualDisruptionType,
+  ReplanStartResponse,
 } from "@dajeong/api-client";
 
 export interface DisruptionDraft {
@@ -63,6 +64,38 @@ export function replaceDisruption(
     return [updated, ...disruptions];
   }
   return disruptions.map((item) => (item.id === updated.id ? updated : item));
+}
+
+export function applyReplanStart(
+  disruptions: readonly DisruptionResponse[],
+  started: ReplanStartResponse,
+): DisruptionResponse[] {
+  return disruptions.map((item) =>
+    item.id === started.disruptionId
+      ? {
+          ...item,
+          proposalSetId: started.proposalSet.id,
+          status: started.disruptionStatus,
+        }
+      : item,
+  );
+}
+
+export function proposalFailureMessage(code?: string | null): string {
+  switch (code) {
+    case "NO_FEASIBLE_PROPOSAL":
+      return "검증 가능한 후보를 찾지 못했습니다. 원본 일정을 유지하거나 직접 편집해 주세요.";
+    case "PREFERENCES_INCOMPLETE":
+      return "모든 멤버의 선호가 제출된 뒤 후보를 만들 수 있습니다.";
+    case "STALE_ITINERARY":
+      return "일정 버전이 바뀌어 이 후보 작업을 취소했습니다. 최신 문제 현황에서 다시 시작해 주세요.";
+    case "INVALID_SOURCE_SLOT":
+      return "영향 일정의 위치 정보가 없어 후보를 검증할 수 없습니다.";
+    case "UPSTREAM_UNAVAILABLE":
+      return "후보 정보 제공처에 연결하지 못했습니다. 원본 일정은 변경되지 않았습니다.";
+    default:
+      return "후보 생성을 완료하지 못했습니다. 원본 일정은 변경되지 않았습니다.";
+  }
 }
 
 export function getWeatherEvidence(
