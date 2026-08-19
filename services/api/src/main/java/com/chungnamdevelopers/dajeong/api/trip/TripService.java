@@ -1,6 +1,7 @@
 package com.chungnamdevelopers.dajeong.api.trip;
 
 import com.chungnamdevelopers.dajeong.api.identity.CurrentUserResponse;
+import com.chungnamdevelopers.dajeong.api.error.ApiException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -189,6 +190,14 @@ public class TripService {
         return new TripListResponse(items, nextCursor);
     }
 
+    @Transactional(readOnly = true)
+    public TripSummaryResponse get(
+            CurrentUserResponse currentUser,
+            UUID tripId
+    ) {
+        return loadTrip(requireJdbcClient(), tripId, currentUser.id());
+    }
+
     private TripSummaryResponse loadTrip(
             JdbcClient jdbcClient,
             UUID tripId,
@@ -214,7 +223,12 @@ public class TripService {
                 .param("tripId", tripId)
                 .param("userId", userId)
                 .query(this::mapTrip)
-                .single();
+                .optional()
+                .orElseThrow(() -> new ApiException(
+                        HttpStatus.FORBIDDEN,
+                        "TRIP_FORBIDDEN",
+                        "이 여행을 조회할 권한이 없습니다."
+                ));
     }
 
     private TripSummaryResponse mapTrip(
