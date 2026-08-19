@@ -88,6 +88,232 @@
         ],
         "type": "object"
       },
+      "ItineraryDraftResponse": {
+        "properties": {
+          "publishedRevision": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/ItinerarySlotResponse"
+            },
+            "type": "array"
+          },
+          "tripId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision",
+          "slots",
+          "tripId"
+        ],
+        "type": "object"
+      },
+      "ItinerarySlotRequest": {
+        "properties": {
+          "address": {
+            "example": "대전 유성구 대덕대로 481",
+            "maxLength": 240,
+            "minLength": 0,
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "MEAL",
+              "CAFE",
+              "CULTURE",
+              "ACTIVITY",
+              "SHOPPING",
+              "TRANSIT",
+              "OTHER"
+            ],
+            "example": "CULTURE",
+            "type": "string"
+          },
+          "endsAt": {
+            "example": "2026-09-01T11:30:00+09:00",
+            "format": "date-time",
+            "type": "string"
+          },
+          "expectedCost": {
+            "example": 3000,
+            "format": "int32",
+            "maximum": 100000000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "indoor": {
+            "example": true,
+            "type": "boolean"
+          },
+          "latitude": {
+            "example": 36.3741,
+            "maximum": 90,
+            "minimum": -90,
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "longitude": {
+            "example": 127.3778,
+            "maximum": 180,
+            "minimum": -180,
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "placeName": {
+            "example": "국립중앙과학관",
+            "maxLength": 120,
+            "minLength": 0,
+            "type": "string"
+          },
+          "startsAt": {
+            "example": "2026-09-01T10:00:00+09:00",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "category",
+          "endsAt",
+          "expectedCost",
+          "indoor",
+          "placeName",
+          "startsAt"
+        ],
+        "type": "object"
+      },
+      "ItinerarySlotResponse": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "category": {
+            "enum": [
+              "MEAL",
+              "CAFE",
+              "CULTURE",
+              "ACTIVITY",
+              "SHOPPING",
+              "TRANSIT",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "endsAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expectedCost": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "indoor": {
+            "type": "boolean"
+          },
+          "latitude": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "longitude": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "placeName": {
+            "type": "string"
+          },
+          "startsAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "category",
+          "endsAt",
+          "expectedCost",
+          "id",
+          "indoor",
+          "placeName",
+          "startsAt"
+        ],
+        "type": "object"
+      },
+      "ItineraryVersionResponse": {
+        "properties": {
+          "draftRevision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "previousVersionNumber": {
+            "format": "int32",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reason": {
+            "enum": [
+              "ORIGINAL"
+            ],
+            "type": "string"
+          },
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/ItinerarySlotResponse"
+            },
+            "type": "array"
+          },
+          "tripId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "versionNumber": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "draftRevision",
+          "id",
+          "publishedAt",
+          "reason",
+          "slots",
+          "tripId",
+          "versionNumber"
+        ],
+        "type": "object"
+      },
       "SystemHealthResponse": {
         "properties": {
           "database": {
@@ -490,6 +716,59 @@
         ]
       }
     },
+    "/api/v1/trips/{tripId}": {
+      "get": {
+        "operationId": "getTrip",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripSummaryResponse"
+                }
+              }
+            },
+            "description": "활성 멤버십이 있는 여행"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "활성 멤버십 없음"
+          },
+          "503": {
+            "description": "여행 저장소 사용 불가"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "내 여행 상세 조회",
+        "tags": [
+          "trip-controller"
+        ]
+      }
+    },
     "/api/v1/trips/{tripId}/invites": {
       "post": {
         "operationId": "issueTripInvite",
@@ -540,6 +819,447 @@
         "summary": "여행 초대 발급",
         "tags": [
           "invite-controller"
+        ]
+      }
+    },
+    "/api/v1/trips/{tripId}/itineraries/current": {
+      "get": {
+        "operationId": "getCurrentItinerary",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryVersionResponse"
+                }
+              }
+            },
+            "description": "최신 불변 일정 버전"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "활성 멤버십 없음"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "발행된 일정 없음"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "최신 확정 일정 조회",
+        "tags": [
+          "itinerary-controller"
+        ]
+      }
+    },
+    "/api/v1/trips/{tripId}/itineraries/draft": {
+      "get": {
+        "operationId": "getItineraryDraft",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryDraftResponse"
+                }
+              }
+            },
+            "description": "현재 일정 초안"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "방장 권한 없음"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "방장 일정 초안 조회",
+        "tags": [
+          "itinerary-controller"
+        ]
+      }
+    },
+    "/api/v1/trips/{tripId}/itineraries/draft/publish": {
+      "post": {
+        "operationId": "publishItineraryDraft",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryVersionResponse"
+                }
+              }
+            },
+            "description": "동일한 멱등 발행 결과 반환"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryVersionResponse"
+                }
+              }
+            },
+            "description": "새 일정 버전 발행"
+          },
+          "400": {
+            "description": "빈 일정"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "방장 권한 없음"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "오래된 revision, 무변경 또는 멱등 충돌"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "일정 초안을 불변 버전으로 발행",
+        "tags": [
+          "itinerary-controller"
+        ]
+      }
+    },
+    "/api/v1/trips/{tripId}/itineraries/draft/slots": {
+      "post": {
+        "operationId": "addItineraryDraftSlot",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItinerarySlotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryDraftResponse"
+                }
+              }
+            },
+            "description": "동일한 멱등 요청 결과 반환"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryDraftResponse"
+                }
+              }
+            },
+            "description": "새 초안 슬롯 생성"
+          },
+          "400": {
+            "description": "잘못된 슬롯"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "방장 권한 없음"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "오래된 revision 또는 멱등 충돌"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "일정 초안 슬롯 추가",
+        "tags": [
+          "itinerary-controller"
+        ]
+      }
+    },
+    "/api/v1/trips/{tripId}/itineraries/draft/slots/{slotId}": {
+      "delete": {
+        "operationId": "deleteItineraryDraftSlot",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "slotId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryDraftResponse"
+                }
+              }
+            },
+            "description": "삭제 후 일정 초안"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "방장 권한 없음"
+          },
+          "404": {
+            "description": "슬롯 없음"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "오래된 revision"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "일정 초안 슬롯 삭제",
+        "tags": [
+          "itinerary-controller"
+        ]
+      },
+      "patch": {
+        "operationId": "updateItineraryDraftSlot",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "slotId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItinerarySlotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryDraftResponse"
+                }
+              }
+            },
+            "description": "수정된 일정 초안"
+          },
+          "400": {
+            "description": "잘못된 슬롯"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "방장 권한 없음"
+          },
+          "404": {
+            "description": "슬롯 없음"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "오래된 revision"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "일정 초안 슬롯 수정",
+        "tags": [
+          "itinerary-controller"
         ]
       }
     }

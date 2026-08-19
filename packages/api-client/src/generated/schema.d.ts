@@ -74,6 +74,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/trips/{tripId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 내 여행 상세 조회 */
+        get: operations["getTrip"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/trips/{tripId}/invites": {
         parameters: {
             query?: never;
@@ -89,6 +106,92 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trips/{tripId}/itineraries/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 최신 확정 일정 조회 */
+        get: operations["getCurrentItinerary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trips/{tripId}/itineraries/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 방장 일정 초안 조회 */
+        get: operations["getItineraryDraft"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trips/{tripId}/itineraries/draft/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 일정 초안을 불변 버전으로 발행 */
+        post: operations["publishItineraryDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trips/{tripId}/itineraries/draft/slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 일정 초안 슬롯 추가 */
+        post: operations["addItineraryDraftSlot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trips/{tripId}/itineraries/draft/slots/{slotId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 일정 초안 슬롯 삭제 */
+        delete: operations["deleteItineraryDraftSlot"];
+        options?: never;
+        head?: never;
+        /** 일정 초안 슬롯 수정 */
+        patch: operations["updateItineraryDraftSlot"];
         trace?: never;
     };
 }
@@ -127,6 +230,81 @@ export interface components {
             code: string;
             /** Format: date-time */
             expiresAt: string;
+        };
+        ItineraryDraftResponse: {
+            /** Format: int64 */
+            publishedRevision?: number | null;
+            /** Format: int64 */
+            revision: number;
+            slots: components["schemas"]["ItinerarySlotResponse"][];
+            /** Format: uuid */
+            tripId: string;
+        };
+        ItinerarySlotRequest: {
+            /** @example 대전 유성구 대덕대로 481 */
+            address: string;
+            /**
+             * @example CULTURE
+             * @enum {string}
+             */
+            category: "MEAL" | "CAFE" | "CULTURE" | "ACTIVITY" | "SHOPPING" | "TRANSIT" | "OTHER";
+            /**
+             * Format: date-time
+             * @example 2026-09-01T11:30:00+09:00
+             */
+            endsAt: string;
+            /**
+             * Format: int32
+             * @example 3000
+             */
+            expectedCost: number;
+            /** @example true */
+            indoor: boolean;
+            /** @example 36.3741 */
+            latitude?: number | null;
+            /** @example 127.3778 */
+            longitude?: number | null;
+            /** @example 국립중앙과학관 */
+            placeName: string;
+            /**
+             * Format: date-time
+             * @example 2026-09-01T10:00:00+09:00
+             */
+            startsAt: string;
+        };
+        ItinerarySlotResponse: {
+            address: string;
+            /** @enum {string} */
+            category: "MEAL" | "CAFE" | "CULTURE" | "ACTIVITY" | "SHOPPING" | "TRANSIT" | "OTHER";
+            /** Format: date-time */
+            endsAt: string;
+            /** Format: int32 */
+            expectedCost: number;
+            /** Format: uuid */
+            id: string;
+            indoor: boolean;
+            latitude?: number | null;
+            longitude?: number | null;
+            placeName: string;
+            /** Format: date-time */
+            startsAt: string;
+        };
+        ItineraryVersionResponse: {
+            /** Format: int64 */
+            draftRevision: number;
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            previousVersionNumber?: number | null;
+            /** Format: date-time */
+            publishedAt: string;
+            /** @enum {string} */
+            reason: "ORIGINAL";
+            slots: components["schemas"]["ItinerarySlotResponse"][];
+            /** Format: uuid */
+            tripId: string;
+            /** Format: int32 */
+            versionNumber: number;
         };
         SystemHealthResponse: {
             /** @enum {string} */
@@ -438,6 +616,51 @@ export interface operations {
             };
         };
     };
+    getTrip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 활성 멤버십이 있는 여행 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TripSummaryResponse"];
+                };
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 활성 멤버십 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 여행 저장소 사용 불가 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     issueTripInvite: {
         parameters: {
             query?: never;
@@ -480,6 +703,344 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getCurrentItinerary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 최신 불변 일정 버전 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItineraryVersionResponse"];
+                };
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 활성 멤버십 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 발행된 일정 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getItineraryDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 현재 일정 초안 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItineraryDraftResponse"];
+                };
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 방장 권한 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    publishItineraryDraft: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 동일한 멱등 발행 결과 반환 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItineraryVersionResponse"];
+                };
+            };
+            /** @description 새 일정 버전 발행 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItineraryVersionResponse"];
+                };
+            };
+            /** @description 빈 일정 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 방장 권한 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 오래된 revision, 무변경 또는 멱등 충돌 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    addItineraryDraftSlot: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItinerarySlotRequest"];
+            };
+        };
+        responses: {
+            /** @description 동일한 멱등 요청 결과 반환 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItineraryDraftResponse"];
+                };
+            };
+            /** @description 새 초안 슬롯 생성 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItineraryDraftResponse"];
+                };
+            };
+            /** @description 잘못된 슬롯 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 방장 권한 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 오래된 revision 또는 멱등 충돌 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteItineraryDraftSlot: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+            };
+            path: {
+                tripId: string;
+                slotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 삭제 후 일정 초안 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItineraryDraftResponse"];
+                };
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 방장 권한 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 슬롯 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 오래된 revision */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    updateItineraryDraftSlot: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+            };
+            path: {
+                tripId: string;
+                slotId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItinerarySlotRequest"];
+            };
+        };
+        responses: {
+            /** @description 수정된 일정 초안 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItineraryDraftResponse"];
+                };
+            };
+            /** @description 잘못된 슬롯 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 방장 권한 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 슬롯 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 오래된 revision */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
             };
         };
     };
