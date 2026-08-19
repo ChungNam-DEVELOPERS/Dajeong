@@ -23,6 +23,8 @@
 > 2026-08-19 진행: [Issue #53](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/53)에서 전원 참여·12시간 마감 → 최다 득표·공정성 순위 승자 선정 → 새 일정 버전·양보 원장 원자적 적용 세로 슬라이스를 구현하고 검증했다.
 >
 > 2026-08-20 진행: [Issue #55](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/55)에서 불변 일정 버전 감사 타임라인 → 재조정 적용 알림 원자·멱등 생성 → 읽음 처리·확정 후보 이동 세로 슬라이스를 구현했다.
+>
+> 2026-08-20 진행: [Issue #61](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/61)에서 CDK Staging·Production 환경 규칙, 네트워크 기반, 재현 가능한 로컬 synth·template diff를 구성했다. 실제 Staging 계정 diff는 EXT-02와 AWS 자격 증명을 기다린다.
 
 이 문서는 [종합 개발 계획](./00-development-plan.md)의 단계 0~1만 실행 단위로 분해한다. 전체 기간과 출시 기준은 [로드맵과 테스트](./07-roadmap-testing.md)를 따른다.
 
@@ -155,7 +157,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | `DEFERRED` | FND-12 | 앱 health 세로 슬라이스 | 0.25일 | 웹 MVP 안정화, FND-05, FND-10 |
 | `DONE` | FND-13 | 루트 품질 명령·Turbo 파이프라인 | 0.5일 | FND-03~04, FND-06~11 |
 | `DONE` | FND-14 | GitHub Actions PR CI | 0.5일 | FND-13 |
-| `NEXT` | FND-15 | CDK staging 기반·synth·diff | 0.5일 | FND-14, EXT-02 |
+| `WAITING` | FND-15 | CDK staging 기반·synth·diff | 0.5일 | FND-14, EXT-02 |
 | `TODO` | FND-16 | GitHub Actions OIDC 배포 인증 | 0.5일 | FND-15 |
 | `TODO` | FND-17 | 최소 staging 배포·health smoke | 1일 | FND-11, FND-13~16 |
 | `TODO` | FND-18 | clean-room 재현·1단계 출구 게이트 | 0.5일 | FND-17 |
@@ -274,6 +276,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - **완료:** `ap-northeast-2` staging synth가 재현되고 diff에는 의도한 변경만 나타남
 - **검증:** synth 결과와 실제 staging 계정 대상 diff 결과 기록
 - **학습 포인트:** IaC의 desired state와 `synth`·`diff`·`deploy`의 차이
+- **2026-08-20 부분 검증:** [Issue #61](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/61)에서 Staging·Production 리전·CIDR·네이밍·태그 규칙, CDK 기반 스택, 단위 테스트, 로컬 synth·template diff를 검증했다. AWS CLI·Staging 자격 증명과 EXT-02가 준비되지 않아 실제 계정 diff는 미실행이며 상태를 `WAITING`으로 두었다.
 
 ### FND-16. GitHub Actions OIDC 배포 인증
 
@@ -305,8 +308,8 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - [x] API liveness·readiness·`/api/v1/system/health`가 정해진 스키마로 응답한다.
 - [x] OpenAPI에서 TypeScript client를 재생성해도 추가 diff가 없다.
 - [x] 웹이 생성 client로 로컬 API의 loading·up·error·retry를 표시한다.
-- [ ] lint, typecheck, unit·integration test, Spring build, web build를 루트에서 실행하고 기존 Expo lint·typecheck·export 회귀 검사를 유지한다.
-- [ ] PR CI가 실패를 막고 현재 커밋에서 녹색이다.
+- [x] lint, typecheck, unit·integration test, Spring build, web build를 루트에서 실행하고 기존 Expo lint·typecheck·export 회귀 검사를 유지한다.
+- [x] PR CI가 실패를 막고 현재 커밋에서 녹색이다.
 - [ ] staging CDK synth·diff와 GitHub OIDC 역할 취득을 검증했다.
 - [ ] staging 웹이 staging API health를 표시하고 배포 후 smoke가 통과한다.
 - [ ] repository와 CI 로그에 secret·token·실제 API key가 없다.

@@ -1,5 +1,27 @@
 {
   "name": "@dajeong/cdk",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm synth",
+    "diff:offline": "cdk diff DajeongStagingFoundation --context environment=staging --template test/fixtures/empty-stack.template.json --method=template --no-color",
+    "diff:staging": "cdk diff DajeongStagingFoundation --context environment=staging --method=change-set",
+    "lint": "eslint bin lib test --max-warnings=0",
+    "synth": "cdk synth DajeongStagingFoundation --context environment=staging --output cdk.out/staging --quiet",
+    "synth:production": "cdk synth DajeongProductionFoundation --context environment=production --output cdk.out/production --quiet",
+    "test": "node --test test/*.test.ts",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.265.0",
+    "constructs": "10.8.1"
+  },
+  "devDependencies": {
+    "@dajeong/config": "workspace:*",
+    "@types/node": "24.13.3",
+    "aws-cdk": "2.1137.0",
+    "eslint": "9.39.5",
+    "typescript": "6.0.3"
+  }
 }

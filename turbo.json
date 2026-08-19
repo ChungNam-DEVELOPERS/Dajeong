@@ -10,6 +10,7 @@
     "build": {
       "dependsOn": ["^build"],
       "env": [
+        "CDK_DEFAULT_ACCOUNT",
         "DAJEONG_API_AUDIENCE",
         "DAJEONG_COGNITO_CLIENT_ID",
         "DAJEONG_COGNITO_DOMAIN",
@@ -18,7 +19,7 @@
         "EXPO_PUBLIC_API_BASE_URL",
         "NEXT_PUBLIC_API_BASE_URL"
       ],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "cdk.out/**", "dist/**"]
     },
     "dev": {
       "cache": false,

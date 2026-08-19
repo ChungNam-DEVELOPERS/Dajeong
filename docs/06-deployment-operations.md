@@ -32,6 +32,8 @@ AWS CDK TypeScript가 네트워크, 보안 그룹, RDS, Cognito, SQS, EventBridg
 
 권한은 웹 빌드, API 런타임, CI 배포, 운영자 역할로 분리한다. API 런타임은 필요한 큐·비밀·Bedrock 모델·로그에만 접근한다.
 
+CDK 스택은 `dajeong-<environment>-<purpose>`, 리소스는 `dajeong-<environment>-<resource>` 형식으로 이름을 붙인다. 모든 태그 가능 리소스에 `Project`, `Environment`, `ManagedBy`, `Repository` 태그를 적용하고 Staging과 Production의 VPC CIDR를 분리한다. 재현 명령과 실제 계정 diff 선행 조건은 [`infra/cdk/README.md`](../infra/cdk/README.md)를 따른다.
+
 ## 4. CI/CD
 
 ### Branch flow
@@ -71,6 +73,7 @@ PR CI는 clean checkout에서 고정된 pnpm lockfile로 의존성을 설치한 
 - `dev` 갱신과 필수 CI 통과 후 staging 환경을 배포한다.
 - 배포 후 웹·API liveness와 CORS smoke를 실행한다.
 - 현재는 AWS CDK·OIDC 기반이 준비되지 않아 이 자동 배포를 활성화하지 않는다.
+- CDK 로컬 synth·template diff는 준비됐지만 EXT-02와 Staging 계정 diff·OIDC 인증이 남아 있으므로 자동 배포는 계속 비활성화한다.
 
 ### Main 배포
 
