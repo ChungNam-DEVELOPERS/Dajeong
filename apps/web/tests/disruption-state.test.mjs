@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   createEmptyDisruptionDraft,
+  getWeatherEvidence,
   replaceDisruption,
   toCreateDisruptionRequest,
   validateDisruptionDraft,
@@ -68,5 +69,29 @@ test("새 신고는 앞에 추가하고 상태 변경은 같은 항목만 교체
   assert.deepEqual(
     replaceDisruption([second, first], { ...first, status: "DISMISSED" }),
     [second, { id: "first", status: "DISMISSED" }],
+  );
+});
+
+test("날씨 방해요소에서 화면에 필요한 예보 근거만 추출한다", () => {
+  const weather = {
+    forecastAt: "2026-09-01T01:00:00Z",
+    forecastIssuedAt: "2026-08-31T23:00:00Z",
+    precipitationProbability: 60,
+    type: "WEATHER",
+    weatherGridX: 67,
+    weatherGridY: 100,
+  };
+
+  assert.deepEqual(getWeatherEvidence(weather), {
+    forecastAt: weather.forecastAt,
+    forecastIssuedAt: weather.forecastIssuedAt,
+    precipitationProbability: 60,
+    weatherGridX: 67,
+    weatherGridY: 100,
+  });
+  assert.equal(getWeatherEvidence({ ...weather, type: "TRAFFIC" }), null);
+  assert.equal(
+    getWeatherEvidence({ ...weather, precipitationProbability: null }),
+    null,
   );
 });

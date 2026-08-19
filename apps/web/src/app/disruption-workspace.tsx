@@ -17,6 +17,7 @@ import { useEffect, useState, type FormEvent } from "react";
 
 import {
   createEmptyDisruptionDraft,
+  getWeatherEvidence,
   replaceDisruption,
   toCreateDisruptionRequest,
   validateDisruptionDraft,
@@ -314,6 +315,7 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
                   <h3 className="mt-4 text-lg font-black">{item.placeName}</h3>
                   <p className="mt-1 text-sm font-semibold text-[#6f665a]">{dateTimeFormatter.format(new Date(item.slotStartsAt))} · 일정 v{item.itineraryVersionNumber}</p>
                   <p className="mt-4 whitespace-pre-wrap leading-7">{item.description}</p>
+                  <WeatherEvidenceDetails disruption={item} />
                   <p className="mt-4 text-xs font-bold text-[#6f665a]">{item.reporterDisplayName} · {dateTimeFormatter.format(new Date(item.reportedAt))}</p>
 
                   {item.status === "DETECTED" && canEdit ? (
@@ -364,6 +366,43 @@ function FieldError({ message }: Readonly<{ message?: string }>) {
   return message ? <p className="mt-1 text-sm font-bold text-red-700">{message}</p> : null;
 }
 
+function WeatherEvidenceDetails({
+  disruption,
+}: Readonly<{ disruption: DisruptionListResponse["disruptions"][number] }>) {
+  const evidence = getWeatherEvidence(disruption);
+  if (evidence === null) {
+    return null;
+  }
+  return (
+    <dl className="mt-4 grid gap-3 rounded-2xl bg-[#eef7ec] p-4 text-sm sm:grid-cols-2">
+      <div>
+        <dt className="font-bold text-[#557255]">예상 강수확률</dt>
+        <dd className="mt-1 text-lg font-black text-[#315d32]">
+          {evidence.precipitationProbability}%
+        </dd>
+      </div>
+      <div>
+        <dt className="font-bold text-[#557255]">예보 대상 시각</dt>
+        <dd className="mt-1 font-extrabold">
+          {dateTimeFormatter.format(new Date(evidence.forecastAt))}
+        </dd>
+      </div>
+      <div>
+        <dt className="font-bold text-[#557255]">예보 발표 시각</dt>
+        <dd className="mt-1 font-extrabold">
+          {dateTimeFormatter.format(new Date(evidence.forecastIssuedAt))}
+        </dd>
+      </div>
+      <div>
+        <dt className="font-bold text-[#557255]">기상청 격자</dt>
+        <dd className="mt-1 font-extrabold">
+          {evidence.weatherGridX}, {evidence.weatherGridY}
+        </dd>
+      </div>
+    </dl>
+  );
+}
+
 function toWorkspaceError(error: unknown): WorkspaceState {
   if (error instanceof ApiClientError && error.status === 401) {
     return { phase: "unauthenticated" };
@@ -405,7 +444,7 @@ function readApiMessage(error: unknown, fallback: string): string {
     : fallback;
 }
 
-const typeLabel = { CLOSURE: "휴관", OTHER: "기타", TRAFFIC: "교통" } as const;
+const typeLabel = { CLOSURE: "휴관", OTHER: "기타", TRAFFIC: "교통", WEATHER: "날씨" } as const;
 const statusLabel = { ACKNOWLEDGED: "재조정 시작", DETECTED: "확인 필요", DISMISSED: "원본 유지" } as const;
 const statusClassName = { ACKNOWLEDGED: "text-[#3c713d]", DETECTED: "text-[#a35b00]", DISMISSED: "text-[#6f665a]" } as const;
 const inputClassName = "mt-2 min-h-12 w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-semibold outline-none transition focus:border-brand focus:ring-3 focus:ring-[#5b9f5a22] aria-invalid:border-red-600 disabled:bg-soft disabled:text-[#6f665a]";

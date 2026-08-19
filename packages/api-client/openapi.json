@@ -123,6 +123,20 @@
           "description": {
             "type": "string"
           },
+          "forecastAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "forecastIssuedAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "id": {
             "format": "uuid",
             "type": "string"
@@ -142,13 +156,23 @@
           "placeName": {
             "type": "string"
           },
+          "precipitationProbability": {
+            "format": "int32",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
           "reportedAt": {
             "format": "date-time",
             "type": "string"
           },
           "reportedByUserId": {
             "format": "uuid",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "reporterDisplayName": {
             "type": "string"
@@ -175,6 +199,7 @@
           },
           "type": {
             "enum": [
+              "WEATHER",
               "CLOSURE",
               "TRAFFIC",
               "OTHER"
@@ -184,6 +209,20 @@
           "updatedAt": {
             "format": "date-time",
             "type": "string"
+          },
+          "weatherGridX": {
+            "format": "int32",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "weatherGridY": {
+            "format": "int32",
+            "type": [
+              "integer",
+              "null"
+            ]
           }
         },
         "required": [
@@ -194,7 +233,6 @@
           "itineraryVersionNumber",
           "placeName",
           "reportedAt",
-          "reportedByUserId",
           "reporterDisplayName",
           "slotEndsAt",
           "slotStartsAt",

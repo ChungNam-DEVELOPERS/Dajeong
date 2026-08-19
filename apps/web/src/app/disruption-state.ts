@@ -1,13 +1,21 @@
 import type {
   CreateDisruptionRequest,
   DisruptionResponse,
-  DisruptionType,
+  ManualDisruptionType,
 } from "@dajeong/api-client";
 
 export interface DisruptionDraft {
   description: string;
   itinerarySlotId: string;
-  type: DisruptionType;
+  type: ManualDisruptionType;
+}
+
+export interface WeatherEvidence {
+  forecastAt: string;
+  forecastIssuedAt: string;
+  precipitationProbability: number;
+  weatherGridX: number;
+  weatherGridY: number;
 }
 
 export type DisruptionDraftErrors = Partial<
@@ -55,4 +63,38 @@ export function replaceDisruption(
     return [updated, ...disruptions];
   }
   return disruptions.map((item) => (item.id === updated.id ? updated : item));
+}
+
+export function getWeatherEvidence(
+  disruption: DisruptionResponse,
+): WeatherEvidence | null {
+  const {
+    forecastAt,
+    forecastIssuedAt,
+    precipitationProbability,
+    weatherGridX,
+    weatherGridY,
+  } = disruption;
+  if (
+    disruption.type !== "WEATHER" ||
+    forecastAt === null ||
+    forecastAt === undefined ||
+    forecastIssuedAt === null ||
+    forecastIssuedAt === undefined ||
+    precipitationProbability === null ||
+    precipitationProbability === undefined ||
+    weatherGridX === null ||
+    weatherGridX === undefined ||
+    weatherGridY === null ||
+    weatherGridY === undefined
+  ) {
+    return null;
+  }
+  return {
+    forecastAt,
+    forecastIssuedAt,
+    precipitationProbability,
+    weatherGridX,
+    weatherGridY,
+  };
 }

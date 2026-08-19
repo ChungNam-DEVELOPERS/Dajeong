@@ -88,6 +88,7 @@ export type {
   DisruptionStatus,
   DisruptionTripOptions,
   DisruptionType,
+  ManualDisruptionType,
 } from "./disruptions.ts";
 export type {
   components,

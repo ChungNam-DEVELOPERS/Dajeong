@@ -327,6 +327,10 @@ export interface components {
         };
         DisruptionResponse: {
             description: string;
+            /** Format: date-time */
+            forecastAt?: string | null;
+            /** Format: date-time */
+            forecastIssuedAt?: string | null;
             /** Format: uuid */
             id: string;
             /** Format: uuid */
@@ -336,10 +340,12 @@ export interface components {
             /** Format: int32 */
             itineraryVersionNumber: number;
             placeName: string;
+            /** Format: int32 */
+            precipitationProbability?: number | null;
             /** Format: date-time */
             reportedAt: string;
             /** Format: uuid */
-            reportedByUserId: string;
+            reportedByUserId?: string | null;
             reporterDisplayName: string;
             /** Format: date-time */
             slotEndsAt: string;
@@ -350,9 +356,13 @@ export interface components {
             /** Format: uuid */
             tripId: string;
             /** @enum {string} */
-            type: "CLOSURE" | "TRAFFIC" | "OTHER";
+            type: "WEATHER" | "CLOSURE" | "TRAFFIC" | "OTHER";
             /** Format: date-time */
             updatedAt: string;
+            /** Format: int32 */
+            weatherGridX?: number | null;
+            /** Format: int32 */
+            weatherGridY?: number | null;
         };
         InviteResponse: {
             code: string;

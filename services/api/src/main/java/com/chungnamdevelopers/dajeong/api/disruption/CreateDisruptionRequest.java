@@ -13,7 +13,7 @@ public record CreateDisruptionRequest(
         UUID itinerarySlotId,
         @NotNull
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
-        DisruptionType type,
+        ManualDisruptionType type,
         @NotBlank
         @Size(max = 200)
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, maxLength = 200)

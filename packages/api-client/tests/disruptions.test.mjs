@@ -45,6 +45,28 @@ test("여행별 문제 목록 경로를 인코딩해 조회한다", async () => 
   assert.equal(captured.init.method, "GET");
 });
 
+test("자동 감지 날씨 근거를 목록 응답에 보존한다", async () => {
+  const weather = {
+    ...disruption,
+    forecastAt: "2026-09-01T01:00:00Z",
+    forecastIssuedAt: "2026-08-31T23:00:00Z",
+    precipitationProbability: 60,
+    reportedByUserId: null,
+    reporterDisplayName: "기상청 단기예보",
+    type: "WEATHER",
+    weatherGridX: 67,
+    weatherGridY: 100,
+  };
+  const response = await listDisruptions({
+    baseUrl: "https://api.example.com",
+    fetch: async () =>
+      Response.json({ disruptions: [weather], tripId: "trip-45" }),
+    tripId: "trip-45",
+  });
+
+  assert.deepEqual(response.disruptions[0], weather);
+});
+
 test("문제 신고에 인증·멱등 키·원본 JSON을 전달한다", async () => {
   let captured;
   const request = {
