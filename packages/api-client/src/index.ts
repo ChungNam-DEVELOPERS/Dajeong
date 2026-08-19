@@ -8,6 +8,10 @@ export {
   createTrip,
   listTrips,
 } from "./trips.ts";
+export {
+  issueTripInvite,
+  joinTripByInvite,
+} from "./invites.ts";
 export type {
   ApiClientOptions,
   CurrentUserRequestOptions,
@@ -24,6 +28,12 @@ export type {
   TripListResponse,
   TripSummaryResponse,
 } from "./trips.ts";
+export type {
+  InviteResponse,
+  IssueTripInviteOptions,
+  JoinedTripResponse,
+  JoinTripByInviteOptions,
+} from "./invites.ts";
 export type {
   components,
   operations,

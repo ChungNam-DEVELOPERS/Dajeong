@@ -1,6 +1,21 @@
 {
   "components": {
     "schemas": {
+      "ApiErrorResponse": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object"
+      },
       "CreateTripRequest": {
         "properties": {
           "endDate": {
@@ -54,6 +69,22 @@
           "displayName",
           "id",
           "status"
+        ],
+        "type": "object"
+      },
+      "InviteResponse": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "expiresAt"
         ],
         "type": "object"
       },
@@ -168,6 +199,78 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/invites/{code}/join": {
+      "post": {
+        "operationId": "joinTripByInvite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripSummaryResponse"
+                }
+              }
+            },
+            "description": "이미 가입한 여행 반환"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripSummaryResponse"
+                }
+              }
+            },
+            "description": "새 MEMBER 멤버십 생성"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "여행 정원 초과"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "만료 또는 폐기된 초대"
+          },
+          "503": {
+            "description": "여행 저장소 사용 불가"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "초대 코드로 여행 가입",
+        "tags": [
+          "invite-controller"
+        ]
+      }
+    },
     "/api/v1/me": {
       "get": {
         "operationId": "getCurrentUser",
@@ -351,6 +454,59 @@
         "summary": "여행 생성",
         "tags": [
           "trip-controller"
+        ]
+      }
+    },
+    "/api/v1/trips/{tripId}/invites": {
+      "post": {
+        "operationId": "issueTripInvite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteResponse"
+                }
+              }
+            },
+            "description": "새 7일 초대 코드 발급"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "방장 권한 없음"
+          },
+          "503": {
+            "description": "여행 저장소 사용 불가"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "여행 초대 발급",
+        "tags": [
+          "invite-controller"
         ]
       }
     }
