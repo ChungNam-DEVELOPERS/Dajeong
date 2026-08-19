@@ -1,16 +1,18 @@
 # 0~1단계 실행 백로그
 
-> 상태: 실행 기준선 v1.0
+> 상태: 실행 기준선 v1.1 · 웹 우선
 >
 > 범위: `0. 외부 준비` + `1. 개발 기반`
 >
-> 목표: 다음 10개 개발일 동안 로컬 세로 슬라이스, CI, 최소 staging health를 재현 가능하게 완성한다.
+> 목표: 다음 10개 개발일 동안 웹 로컬 세로 슬라이스, CI, 최소 staging health를 재현 가능하게 완성한다.
+
+> 2026-08-19 결정: [Issue #31](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/31)에 따라 1차 공개 베타는 웹을 우선하고 모바일 기능은 웹 MVP 안정화 후 재개한다.
 
 이 문서는 [종합 개발 계획](./00-development-plan.md)의 단계 0~1만 실행 단위로 분해한다. 전체 기간과 출시 기준은 [로드맵과 테스트](./07-roadmap-testing.md)를 따른다.
 
 ## 1. 사용 방법
 
-- 개발 작업은 한 번에 하나만 `DOING`으로 두는다. 외부 심사 `WAITING`은 WIP에 포함하지 않는다.
+- 개발 작업은 한 번에 하나만 `DOING`으로 두는다. 외부 심사 `WAITING`과 의도적으로 미룬 `DEFERRED`는 WIP에 포함하지 않는다.
 - 예상 기간은 실제 구현, 테스트, 짧은 문서화를 포함한 집중 개발 시간이다. `0.5일`은 약 3~4시간이다.
 - 작업을 시작할 때 요약표의 상태를 `DOING`으로, 검증까지 끝났을 때만 `DONE`으로 바꾼다.
 - 완료 시 명령, CI URL, 스크린샷 또는 짧은 결과를 [진행 기록](#8-진행-기록)에 남긴다.
@@ -24,6 +26,7 @@
 | `NEXT` | 지금 시작할 수 있는 작업 |
 | `DOING` | 현재 구현과 검증 중 |
 | `WAITING` | 외부 심사·승인·정보를 기다림 |
+| `DEFERRED` | 현재 우선순위에서 제외했으며 명시된 재개 조건까지 시작하지 않음 |
 | `BLOCKED` | 개발을 계속할 대안이 없는 상태 |
 | `DONE` | 완료 조건과 검증 증거를 모두 확인 |
 
@@ -33,14 +36,16 @@
 
 - 외부 계정·API 신청과 승인 대기 시 mock 준비
 - pnpm·Turborepo 모노레포와 공통 설정
-- Next.js 웹, Expo 앱, Spring Boot API, PostgreSQL·Flyway 기반
-- OpenAPI 생성 클라이언트를 쓰는 웹·앱 health 세로 슬라이스
+- Next.js 웹, Spring Boot API, PostgreSQL·Flyway 기반과 기존 Expo 앱 골격
+- OpenAPI 생성 클라이언트를 쓰는 웹 health 세로 슬라이스
+- 기존 Expo 앱의 lint·typecheck·export 회귀 검사
 - 로컬 품질 명령, GitHub Actions CI, CDK 기반, 최소 staging 생존 검사
 
 ### 아직 하지 않음
 
 - Cognito·소셜 로그인 구현
 - `User`, `Trip`, `Membership`, `Invite` 도메인 테이블과 API
+- Expo 실기기 검증과 신규 모바일 기능·health 화면
 - UI 시안 전체 반영
 - TourAPI·기상청·ODsay·Bedrock 실제 연동
 - 운영급 RDS·SQS·EventBridge·알람과 production 배포
@@ -50,45 +55,47 @@
 ## 3. 실행 순서
 
 ```text
-외부 신청 EXT-01~10 ------------------------------------> 심사는 병렬 대기
+외부 신청 EXT-01~08, EXT-10 -----------------------------> 심사는 병렬 대기
+모바일 계정 EXT-09 --------------------------------------> DEFERRED: 웹 MVP 후
 
 FND-01 버전 기준
   └─ FND-02 모노레포 골격
       ├─ FND-03 공통 설정
       ├─ FND-04 웹
-      ├─ FND-05 앱
+      ├─ FND-05 앱 (DEFERRED: 웹 MVP 후)
       └─ FND-06 API
           └─ FND-07 PostgreSQL
               └─ FND-08 Flyway·health API
                   └─ FND-10 OpenAPI client
                       ├─ FND-11 웹 health
-                      └─ FND-12 앱 health
+                      └─ FND-12 앱 health (DEFERRED: 웹 MVP 후)
 
-FND-03~12 → FND-13 루트 품질 명령 → FND-14 CI
+FND-03~04, FND-06~11 → FND-13 루트 품질 명령 → FND-14 CI
 FND-14 → FND-15 CDK → FND-16 AWS OIDC → FND-17 staging health
 FND-17 → FND-18 clean-room 검증·출구 게이트
 ```
 
 `FND-09 환경 설정 계약`은 웹·앱·API 생성 후 `FND-10`보다 먼저 수행한다.
+`FND-05`와 `FND-12`는 웹 공개 베타가 안정화된 뒤 재개하며 `FND-13~18`과 2단계 웹 개발의 선행 조건이 아니다.
 
 ### 10개 개발일 목표
 
 | 일차 | 주요 작업 | 일일 검증 |
 | --- | --- | --- |
-| 1 | `EXT-01~10` 신청 시작, `FND-01~02` | 루트 install과 workspace 탐색 |
+| 1 | `EXT-01~08`, `EXT-10` 신청 시작, `FND-01~02` | 루트 install과 workspace 탐색 |
 | 2 | `FND-03~04` | 공통 설정과 웹 dev·build |
-| 3 | `FND-05` | Expo 로컬 실행·export |
-| 4 | `FND-06` | Spring test·boot |
-| 5 | `FND-07~08` | DB 연결, Flyway, liveness·readiness |
-| 6 | `FND-09~10` | 환경 계약과 생성 client 재현 |
-| 7 | `FND-11~12` | 웹·앱의 loading·up·error 확인 |
-| 8 | `FND-13~14` | 루트 품질 명령과 PR CI 통과 |
+| 3 | `FND-06` | Spring test·boot |
+| 4 | `FND-07~08` | DB 연결, Flyway, liveness·readiness |
+| 5 | `FND-09~10` | 환경 계약과 생성 client 재현 |
+| 6 | `FND-11` | 웹 loading·up·error·retry 확인 |
+| 7 | `FND-13` | 루트 품질 명령과 실패 전파 확인 |
+| 8 | `FND-14` | PR CI 통과 |
 | 9 | `FND-15~16` | CDK synth·diff, OIDC 인증 |
 | 10 | `FND-17~18` | staging smoke, clean-room 재현 |
 
 예상치가 늘어나면 일차를 고정하지 않고 작업 순서와 출구 게이트를 유지한다. 외부 심사 대기 기간은 10개 개발일에 포함하지 않는다.
 
-1단계 순수 구현 예상치는 8.25일이고 나머지 1.75일은 통합·환경 문제·학습 버퍼로 둔다. 0단계는 짧은 관리 블록으로 나누어 개발과 병렬 진행한다.
+웹 우선 1단계 순수 구현 예상치는 7.5일이고 나머지 2.5일은 통합·환경 문제·학습 버퍼로 둔다. 0단계는 짧은 관리 블록으로 나누어 개발과 병렬 진행한다.
 
 ## 4. 0단계: 외부 준비 백로그
 
@@ -97,12 +104,12 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | `DONE` | EXT-01 | 외부 서비스 대장·비밀정보 규칙 | 0.25일 | 환경별 변수명, 보관 위치, 승인·할당량·만료 상태를 값 없이 기록 |
 | `TODO` | EXT-02 | AWS 계정·비용 보호 | 0.5일 | MFA, 서울 리전, 예산 알림, 개발자·배포 권한 분리 계획 확인 |
 | `TODO` | EXT-03 | Kakao Developers 앱·OIDC 준비 | 0.25일 | 개발용 앱, 필요 동의 항목, callback 미확정값, 심사 공백 기록 |
-| `TODO` | EXT-04 | Google OAuth 클라이언트 준비 | 0.25일 | 테스트 사용자, 웹·앱 client 구분, callback 항목 기록 |
+| `TODO` | EXT-04 | Google OAuth 클라이언트 준비 | 0.25일 | 웹 테스트 사용자·client·callback 항목 기록, 앱 client는 후속 분리 |
 | `TODO` | EXT-05 | Apple Developer·Sign in with Apple 준비 | 0.25일 + 심사 | 등록·심사 상태와 필요 identifier·key 목록 기록 |
 | `TODO` | EXT-06 | TourAPI `KorService2`·기상청 API 신청 | 0.5일 + 심사 | 신청 완료, 할당량·이용조건·예제 응답 기록 |
 | `TODO` | EXT-07 | ODsay Basic 신청 | 0.25일 + 심사 | 신청 완료, 일일 한도·6개월 종료 추적 항목 기록 |
 | `TODO` | EXT-08 | Bedrock 모델 접근 확인 | 0.25일 | 서울 리전의 사용 후보 모델, 요청 상태, 예산 상한 기록 |
-| `TODO` | EXT-09 | Expo·EAS·앱스토어 계정 상태 확인 | 0.5일 + 심사 | Expo organization, bundle·package ID 후보, 스토어 가입·심사 상태 기록 |
+| `DEFERRED` | EXT-09 | Expo·EAS·앱스토어 계정 상태 확인 | 0.5일 + 심사 | 웹 MVP 안정화 후 Expo organization, bundle·package ID 후보, 스토어 가입·심사 상태 기록 |
 | `TODO` | EXT-10 | 외부 API mock fixture 준비 | 0.5일 | 승인 대기 서비스별 정상·빈 결과·오류 예제를 민감정보 없이 보존 |
 
 ### 0단계 처리 규칙
@@ -120,19 +127,19 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | `DONE` | FND-02 | 모노레포 골격·workspace | 0.5일 | FND-01 |
 | `DONE` | FND-03 | 공통 TypeScript·lint·디자인 토큰 최소 구성 | 0.25일 | FND-02 |
 | `DONE` | FND-04 | Next.js 웹 부트스트랩 | 0.5일 | FND-02~03 |
-| `WAITING` | FND-05 | Expo 앱 부트스트랩 | 0.5일 | FND-02~03 |
+| `DEFERRED` | FND-05 | Expo 앱 부트스트랩 실기기 검증 | 0.5일 | 웹 MVP 안정화, FND-02~03 |
 | `DONE` | FND-06 | Spring Boot API 부트스트랩 | 0.5일 | FND-01~02 |
 | `DONE` | FND-07 | 로컬 PostgreSQL 16 구성 | 0.5일 | FND-06 |
 | `DONE` | FND-08 | Flyway·Testcontainers·health API | 0.5일 | FND-07 |
 | `DONE` | FND-09 | local·staging·production 환경 계약 | 0.25일 | FND-04~08 |
 | `DONE` | FND-10 | OpenAPI → TypeScript client 생성 | 0.5일 | FND-08~09 |
 | `DONE` | FND-11 | 웹 health 세로 슬라이스 | 0.25일 | FND-04, FND-10 |
-| `TODO` | FND-12 | 앱 health 세로 슬라이스 | 0.25일 | FND-05, FND-10 |
-| `TODO` | FND-13 | 루트 품질 명령·Turbo 파이프라인 | 0.5일 | FND-03~12 |
+| `DEFERRED` | FND-12 | 앱 health 세로 슬라이스 | 0.25일 | 웹 MVP 안정화, FND-05, FND-10 |
+| `NEXT` | FND-13 | 루트 품질 명령·Turbo 파이프라인 | 0.5일 | FND-03~04, FND-06~11 |
 | `TODO` | FND-14 | GitHub Actions PR CI | 0.5일 | FND-13 |
 | `TODO` | FND-15 | CDK staging 기반·synth·diff | 0.5일 | FND-14, EXT-02 |
 | `TODO` | FND-16 | GitHub Actions OIDC 배포 인증 | 0.5일 | FND-15 |
-| `TODO` | FND-17 | 최소 staging 배포·health smoke | 1일 | FND-11~16 |
+| `TODO` | FND-17 | 최소 staging 배포·health smoke | 1일 | FND-11, FND-13~16 |
 | `TODO` | FND-18 | clean-room 재현·1단계 출구 게이트 | 0.5일 | FND-17 |
 
 ## 6. 1단계: 작업별 완료 조건
@@ -173,6 +180,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - **학습 포인트:** Expo Go, development build, production build의 차이
 - **2026-08-18 진행 증거:** Expo doctor 21/21, lint·typecheck, Android·iOS·web export, 390px 웹 런타임과 브라우저 오류 0건 통과
 - **남은 완료 조건:** 현재 개발 Mac에 Xcode Simulator·Android SDK가 없으므로 Expo Go 실기기 또는 네이티브 개발 환경에서 홈 화면을 1회 실행하고 스크린샷을 남긴다.
+- **재개 조건:** 웹 공개 베타가 안정화되어 모바일 제품화가 다음 활성 마일스톤으로 승인됨
 
 ### FND-06. Spring Boot API 부트스트랩
 
@@ -226,6 +234,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - **완료:** loading, `UP`, 오프라인·API 실패, 재시도 상태가 표현됨
 - **검증:** 시뮬레이터 또는 실제 기기에서 로컬 API 접근과 중단 상태 확인
 - **학습 포인트:** 모바일의 `localhost`, 네트워크, 재연결 차이
+- **재개 조건:** 웹 공개 베타가 안정화되고 FND-05 실기기 검증을 완료함
 
 ### FND-13. 루트 품질 명령·Turbo 파이프라인
 
@@ -258,14 +267,14 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 ### FND-17. 최소 staging 배포·health smoke
 
 - **산출물:** staging API liveness URL, staging 웹 URL, 배포 자동화, health smoke 스크립트
-- **완료:** 배포된 웹이 배포된 API의 `UP`을 표시하고 앱도 staging base URL로 같은 응답을 확인함
-- **검증:** 배포 후 liveness HTTP 200, CORS, 웹 연결, 앱 연결 스모크 기록
+- **완료:** 배포된 웹이 배포된 API의 `UP`을 표시함
+- **검증:** 배포 후 liveness HTTP 200, CORS, 웹 연결 스모크 기록
 - **학습 포인트:** build 성공과 실제 배포 성공이 다른 이유
 
 ### FND-18. clean-room 재현·1단계 출구 게이트
 
 - **산출물:** 루트 README 실행 절차, 문제 해결 항목, 출구 게이트 증거
-- **완료:** 기존 캐시·수동 설정을 쓰지 않는 새 임시 디렉터리에서 README만으로 install·DB·API·웹·앱·test를 재현함
+- **완료:** 기존 캐시·수동 설정을 쓰지 않는 새 임시 디렉터리에서 README만으로 install·DB·API·웹·test를 재현하고 기존 Expo 골격의 lint·typecheck·export가 회귀하지 않음
 - **검증:** [1단계 출구 게이트](#7-1단계-출구-게이트) 전체 통과
 - **학습 포인트:** 문서도 실행 가능한 제품 인터페이스라는 관점
 
@@ -277,8 +286,8 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - [x] PostgreSQL 16을 시작하고 빈 DB에 Flyway migration을 적용했다.
 - [x] API liveness·readiness·`/api/v1/system/health`가 정해진 스키마로 응답한다.
 - [x] OpenAPI에서 TypeScript client를 재생성해도 추가 diff가 없다.
-- [ ] 웹과 앱이 생성 client로 로컬 API의 loading·up·error·retry를 표시한다.
-- [ ] lint, typecheck, unit·integration test, Spring build, web build, Expo export를 루트에서 실행한다.
+- [x] 웹이 생성 client로 로컬 API의 loading·up·error·retry를 표시한다.
+- [ ] lint, typecheck, unit·integration test, Spring build, web build를 루트에서 실행하고 기존 Expo lint·typecheck·export 회귀 검사를 유지한다.
 - [ ] PR CI가 실패를 막고 현재 커밋에서 녹색이다.
 - [ ] staging CDK synth·diff와 GitHub OIDC 역할 취득을 검증했다.
 - [ ] staging 웹이 staging API health를 표시하고 배포 후 smoke가 통과한다.
@@ -301,7 +310,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-18 | FND-08 | Flyway `V1`, 시스템 Health API와 DB 연동 readiness 구성 | PostgreSQL 16.15 Testcontainers에서 빈 DB migration, 정상·DB 중단 health 통합 테스트 통과 | FND-09 |
 | 2026-08-18 | FND-09 | Local·Staging·Production 환경 설정 계약과 공개 경계, fail-fast 검증, secret 검사 구성 | `pnpm check:configuration`, 누락 변수 실패, Spring·웹·Expo 검증 통과 | FND-10 |
 | 2026-08-19 | FND-10 | Spring OpenAPI 계약에서 웹·앱 공용 TypeScript 타입과 health client 생성 | `pnpm check:api-client`, 웹·앱 import smoke, 연속 생성 diff 없음, 의도적 스키마 불일치 감지 | FND-11 |
-| 2026-08-19 | FND-11 | 생성 client와 웹 Route Handler로 health loading·UP·DOWN·연결 실패·재시도 화면 구현 | 웹 상태 전이 테스트 3건, lint·typecheck·production build, 브라우저 정상·503·중단·복구 확인 | FND-12 |
+| 2026-08-19 | FND-11 | 생성 client와 웹 Route Handler로 health loading·UP·DOWN·연결 실패·재시도 화면 구현 | 웹 상태 전이 테스트 3건, lint·typecheck·production build, 브라우저 정상·503·중단·복구 확인 | FND-13 |
 
 ## 9. 2단계 상세화 시점
 
@@ -309,7 +318,9 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 
 예정 세로 슬라이스:
 
-1. Cognito 기본 로그인 → `/api/v1/me` → 웹·앱 사용자 표시
-2. 여행 생성 → DB 저장 → 웹·앱 목록
+1. Cognito 기본 로그인 → `/api/v1/me` → 웹 사용자 표시
+2. 여행 생성 → DB 저장 → 웹 목록
 3. 초대 발급 → 로그인 복귀 → 3~6인 가입·권한 검증
-4. 계정 삭제 → 도메인 처리 → 웹·앱 완료 흐름
+4. 계정 삭제 → 도메인 처리 → 웹 완료 흐름
+
+웹 공개 베타가 안정화되면 FND-05와 FND-12를 재개하고 위 세로 슬라이스의 모바일 화면·딥링크·푸시·실기기 검증을 별도 백로그로 상세화한다.
