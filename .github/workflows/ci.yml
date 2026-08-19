@@ -24,7 +24,11 @@ jobs:
     timeout-minutes: 30
     env:
       CI: "true"
+      DAJEONG_API_AUDIENCE: http://localhost:8080/api
+      DAJEONG_COGNITO_CLIENT_ID: dajeong-web-local
+      DAJEONG_COGNITO_DOMAIN: http://127.0.0.1:9090
       DAJEONG_ENV: local
+      DAJEONG_WEB_BASE_URL: http://localhost:3000
       EXPO_NO_TELEMETRY: "1"
       EXPO_PUBLIC_API_BASE_URL: http://127.0.0.1:8080
       NEXT_TELEMETRY_DISABLED: "1"

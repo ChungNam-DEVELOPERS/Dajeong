@@ -77,7 +77,8 @@ Node 패키지는 pnpm workspace와 Turborepo로 관리한다. Spring은 독립 
 ## 6. 인증·인가
 
 - Cognito User Pool이 카카오 OIDC, Apple, Google 로그인을 통합한다.
-- Spring Security Resource Server가 `iss`, `aud`, 서명, 만료를 검증한다.
+- 웹은 Cognito Authorization Code + PKCE 요청에 API resource identifier를 바인딩하고 access·refresh token을 HttpOnly·SameSite 쿠키에만 저장한다.
+- Spring Security Resource Server가 access token의 `iss`, `aud`, `token_use`, 서명, 만료를 검증한다.
 - 첫 인증 API 호출에서 Cognito `sub`로 내부 사용자를 생성한다.
 - 여행 권한은 매 요청에서 활성 Membership을 조회한다. 클라이언트가 보낸 역할 값은 신뢰하지 않는다.
 - 내부 스케줄·워커 요청은 사용자 JWT가 아니라 IAM/SQS 권한으로 분리한다.

@@ -24,7 +24,7 @@ class OpenApiDocumentGenerationTests {
     private MockMvc mockMvc;
 
     @Test
-    void generatesTheSystemHealthContract() throws Exception {
+    void generatesTheApiContract() throws Exception {
         String document = mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.openapi").value("3.1.0"))
@@ -36,6 +36,10 @@ class OpenApiDocumentGenerationTests {
                 .andExpect(jsonPath("$.paths['/api/v1/system/health'].get.responses['503']"
                         + ".content['application/json'].schema['$ref']")
                         .value("#/components/schemas/SystemHealthResponse"))
+                .andExpect(jsonPath("$.paths['/api/v1/me'].get.operationId")
+                        .value("getCurrentUser"))
+                .andExpect(jsonPath("$.paths['/api/v1/me'].get.security[0].bearerAuth")
+                        .isArray())
                 .andReturn()
                 .getResponse()
                 .getContentAsString(StandardCharsets.UTF_8);

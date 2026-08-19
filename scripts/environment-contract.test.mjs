@@ -25,6 +25,16 @@ test("웹 API URL 누락을 변수명과 함께 거부한다", () => {
   );
 });
 
+test("웹 인증 설정 누락을 변수명과 함께 거부한다", () => {
+  assert.throws(
+    () =>
+      validateEnvironment("web", "local", {
+        NEXT_PUBLIC_API_BASE_URL: "http://127.0.0.1:8080",
+      }),
+    /DAJEONG_COGNITO_DOMAIN이\(가\) 필요합니다/,
+  );
+});
+
 test("배포 환경의 공개 URL은 https만 허용한다", () => {
   assert.throws(
     () =>
@@ -53,6 +63,8 @@ test("API 로컬 환경은 명시된 안전한 기본값을 사용한다", () =>
     DAJEONG_DB_NAME: "dajeong",
     DAJEONG_DB_USER: "dajeong",
     DAJEONG_DB_PASSWORD: "dajeong-local-only",
+    DAJEONG_COGNITO_ISSUER: "http://127.0.0.1:9090/cognito/local",
+    DAJEONG_API_AUDIENCE: "http://localhost:8080/api",
   });
 });
 
@@ -69,6 +81,8 @@ test("API 배포 환경은 누락 변수와 로컬 비밀번호를 거부한다"
         DAJEONG_DB_NAME: "dajeong",
         DAJEONG_DB_USER: "dajeong",
         DAJEONG_DB_PASSWORD: "dajeong-local-only",
+        DAJEONG_COGNITO_ISSUER: "https://cognito-idp.ap-northeast-2.amazonaws.com/example",
+        DAJEONG_API_AUDIENCE: "https://api.example.com",
       }),
     /로컬 전용 예제값을 사용할 수 없습니다/,
   );
