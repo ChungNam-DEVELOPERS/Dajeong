@@ -16,7 +16,56 @@ const user = {
 test("내 사용자 응답을 인증 상태로 보존한다", () => {
   assert.deepEqual(
     meStateReducer(initialMeState, { type: "resolve", user }),
-    { phase: "authenticated", user },
+    { deletion: { phase: "idle" }, phase: "authenticated", user },
+  );
+});
+
+test("계정 삭제는 확인·진행·실패·완료 상태를 구분한다", () => {
+  const authenticated = meStateReducer(initialMeState, {
+    type: "resolve",
+    user,
+  });
+  const confirming = meStateReducer(authenticated, { type: "beginDeletion" });
+  assert.deepEqual(confirming, {
+    deletion: { phase: "confirming" },
+    phase: "authenticated",
+    user,
+  });
+
+  const deleting = meStateReducer(confirming, { type: "requestDeletion" });
+  assert.deepEqual(deleting, {
+    deletion: { phase: "deleting" },
+    phase: "authenticated",
+    user,
+  });
+
+  assert.deepEqual(
+    meStateReducer(deleting, {
+      message: "삭제 API 실패",
+      type: "deletionFailed",
+    }),
+    {
+      deletion: { message: "삭제 API 실패", phase: "error" },
+      phase: "authenticated",
+      user,
+    },
+  );
+  assert.deepEqual(
+    meStateReducer(deleting, { type: "deletionSucceeded" }),
+    { phase: "deleted" },
+  );
+});
+
+test("계정 삭제 확인을 취소하면 초기 상태로 돌아간다", () => {
+  const authenticated = meStateReducer(initialMeState, {
+    type: "resolve",
+    user,
+  });
+  const confirming = meStateReducer(authenticated, { type: "beginDeletion" });
+
+  assert.deepEqual(
+    meStateReducer(confirming, { type: "cancelDeletion" }),
+    authenticated,
   );
 });
 
