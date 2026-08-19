@@ -17,6 +17,7 @@ import {
   type TripDraft,
   type TripDraftErrors,
 } from "./trip-state";
+import { TripInviteControl } from "./trip-invite-control";
 
 const dateFormatter = new Intl.DateTimeFormat("ko-KR", {
   day: "numeric",
@@ -183,7 +184,7 @@ export function TripsWorkspace() {
         여행을 만들고 내 여행 목록을 보려면 로그인이 필요합니다.
         <a
           className="mt-7 inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-6 py-3 font-extrabold text-white transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-          href="/api/auth/login"
+          href="/api/auth/login?returnTo=%2Ftrips"
         >
           소셜 로그인 시작하기
         </a>
@@ -437,6 +438,10 @@ function TripCard({ trip }: Readonly<{ trip: TripSummaryResponse }>) {
       <p className="mt-2 text-sm font-bold text-muted">
         {trip.role === "HOST" ? "내가 만든 여행" : "함께하는 여행"}
       </p>
+      {trip.role === "HOST" &&
+      (trip.status === "DRAFT" || trip.status === "ACTIVE") ? (
+        <TripInviteControl tripId={trip.id} />
+      ) : null}
     </article>
   );
 }

@@ -142,6 +142,40 @@ export function callbackUrl(config: CognitoConfig): string {
   return new URL("/api/auth/callback/cognito", `${config.webBaseUrl}/`).toString();
 }
 
+export function normalizeReturnTo(
+  value: string | null | undefined,
+  fallback = "/me",
+): string {
+  if (
+    !value ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("\\") ||
+    Array.from(value).some((character) => {
+      const codePoint = character.codePointAt(0) ?? 0;
+      return codePoint < 32 || codePoint === 127;
+    })
+  ) {
+    return fallback;
+  }
+
+  try {
+    const baseUrl = new URL("https://dajeong.invalid");
+    const url = new URL(value, baseUrl);
+    const decodedPath = decodeURIComponent(url.pathname);
+    if (
+      url.origin !== baseUrl.origin ||
+      decodedPath.startsWith("//") ||
+      decodedPath.includes("\\")
+    ) {
+      return fallback;
+    }
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return fallback;
+  }
+}
+
 async function requestTokens(
   config: CognitoConfig,
   body: URLSearchParams,

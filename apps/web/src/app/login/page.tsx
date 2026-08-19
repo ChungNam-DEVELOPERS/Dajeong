@@ -1,17 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { normalizeReturnTo } from "../../auth/cognito";
+
 export const metadata: Metadata = {
   title: "로그인",
 };
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string | string[] }>;
+  searchParams: Promise<{
+    error?: string | string[];
+    returnTo?: string | string[];
+  }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { error } = await searchParams;
+  const { error, returnTo: returnToValue } = await searchParams;
   const hasError = typeof error === "string" || Array.isArray(error);
+  const returnTo = normalizeReturnTo(
+    typeof returnToValue === "string" ? returnToValue : undefined,
+  );
+  const loginUrl = `/api/auth/login?${new URLSearchParams({ returnTo })}`;
 
   return (
     <main className="grid min-h-screen place-items-center bg-canvas px-4 py-10 sm:px-8">
@@ -37,7 +46,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         ) : null}
         <a
           className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-brand px-5 py-3 font-extrabold text-white transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-          href="/api/auth/login"
+          href={loginUrl}
         >
           소셜 로그인 계속하기
         </a>

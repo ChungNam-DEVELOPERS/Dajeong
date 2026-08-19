@@ -316,6 +316,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-19 | FND-10 | Spring OpenAPI 계약에서 웹·앱 공용 TypeScript 타입과 health client 생성 | `pnpm check:api-client`, 웹·앱 import smoke, 연속 생성 diff 없음, 의도적 스키마 불일치 감지 | FND-11 |
 | 2026-08-19 | FND-11 | 생성 client와 웹 Route Handler로 health loading·UP·DOWN·연결 실패·재시도 화면 구현 | 웹 상태 전이 테스트 3건, lint·typecheck·production build, 브라우저 정상·503·중단·복구 확인 | FND-13 |
 | 2026-08-19 | Issue #35 | 여행·방장 멤버십 원자 생성, 멱등 요청, cursor 목록 API와 웹 생성·목록 화면 구현 | PostgreSQL 통합 테스트, OpenAPI client 11건, 웹 상태 테스트 13건, production build, `/trips` 브라우저 오류 0건 | 초대·가입 세로 슬라이스 |
+| 2026-08-19 | Issue #37 | 7일 초대 발급·재발급 폐기, 로그인 복귀, 멱등 가입, 6명 동시성 제한과 웹 발급·가입 화면 구현 | API 25건, OpenAPI client 15건, 웹 상태·인증 테스트 17건, production build, Expo web 회귀 export 통과 | 계정 삭제 세로 슬라이스 |
 
 ## 9. 2단계 상세화 시점
 
@@ -325,7 +326,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 
 1. ~~Cognito 기본 로그인 → `/api/v1/me` → 웹 사용자 표시~~
 2. ~~여행 생성 → DB 저장 → 웹 목록~~ ([Issue #35](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/35))
-3. 초대 발급 → 로그인 복귀 → 3~6인 가입·권한 검증
+3. ~~초대 발급 → 로그인 복귀 → 3~6인 가입·권한 검증~~ ([Issue #37](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/37))
 4. 계정 삭제 → 도메인 처리 → 웹 완료 흐름
 
 웹 공개 베타가 안정화되면 FND-05와 FND-12를 재개하고 위 세로 슬라이스의 모바일 화면·딥링크·푸시·실기기 검증을 별도 백로그로 상세화한다.

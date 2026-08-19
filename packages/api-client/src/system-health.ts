@@ -7,6 +7,12 @@ import {
   type ApiClientOptions,
 } from "./http.ts";
 import {
+  issueTripInvite,
+  joinTripByInvite,
+  type InviteResponse,
+  type JoinedTripResponse,
+} from "./invites.ts";
+import {
   createTrip,
   listTrips,
   type CreateTripRequest,
@@ -59,6 +65,14 @@ export interface DajeongApiClient {
     signal?: AbortSignal;
   }): Promise<CurrentUserResponse>;
   getSystemHealth(options?: { signal?: AbortSignal }): Promise<SystemHealthResponse>;
+  issueTripInvite(
+    tripId: string,
+    options?: { accessToken?: string; signal?: AbortSignal },
+  ): Promise<InviteResponse>;
+  joinTripByInvite(
+    code: string,
+    options?: { accessToken?: string; signal?: AbortSignal },
+  ): Promise<JoinedTripResponse>;
   listTrips(options?: {
     accessToken?: string;
     cursor?: string;
@@ -75,6 +89,10 @@ export function createApiClient(options: ApiClientOptions): DajeongApiClient {
       getCurrentUser({ ...options, ...requestOptions }),
     getSystemHealth: (requestOptions = {}) =>
       getSystemHealth({ ...options, ...requestOptions }),
+    issueTripInvite: (tripId, requestOptions = {}) =>
+      issueTripInvite({ ...options, ...requestOptions, tripId }),
+    joinTripByInvite: (code, requestOptions = {}) =>
+      joinTripByInvite({ ...options, ...requestOptions, code }),
     listTrips: (requestOptions = {}) =>
       listTrips({ ...options, ...requestOptions }),
   };
