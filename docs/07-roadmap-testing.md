@@ -37,6 +37,7 @@
 - Spring OpenAPI와 생성 TypeScript 클라이언트 호환성
 - SQS 중복 전달·재시도·DLQ와 outbox 멱등성
 - 전원 투표 즉시 마감, 1분 마감 작업, 0표 취소와 동일 세트 중복 마감
+- 마감 코어는 전원 참여·기한 경계·동률·stale·원자적 양보 원장 갱신을 Testcontainers로 검증하고, 1분 스케줄 배송은 EventBridge/SQS 연결 후 별도로 검증한다.
 - 다른 멤버의 선호·투표를 조회할 수 없는지 확인하는 부정 테스트
 
 ### E2E

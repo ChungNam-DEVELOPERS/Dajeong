@@ -9,12 +9,12 @@
 | `Membership` | 여행·사용자, `HOST`/`MEMBER`, 활성 상태. 여행당 최대 6명 |
 | `Invite` | 해시된 코드, 만료 시각, 폐기 시각. 평문 코드는 생성 응답에서만 제공 |
 | `ItineraryDraft` | 여행별 현재 초안 revision과 마지막 발행 revision. 편집은 방장만 가능 |
-| `ItineraryVersion` | 여행, 버전 번호, 생성 원인, 이전 버전, 확정 시각 |
+| `ItineraryVersion` | 여행, 버전 번호, `ORIGINAL/REPLAN` 생성 원인, 이전 버전, 확정 시각 |
 | `ItinerarySlot` | 날짜·시간, 장소, 좌표, 실내외, 범주, 비용, 출처 |
 | `PrivatePreference` | 멤버별 최신 원본 응답. 본인과 계산 서비스만 접근 |
 | `ConcessionLedger` | 멤버별 0~100 양보 점수와 갱신 근거 |
 | `Disruption` | 슬롯, `WEATHER/CLOSURE/TRAFFIC/OTHER`, 출처, 상태 |
-| `ProposalSet` | 생성 작업, 후보 버전, 마감, 상태, 입력 스냅샷 해시 |
+| `ProposalSet` | 생성 작업, 후보 버전, 마감·승자·적용 버전, 상태, 입력 스냅샷 해시 |
 | `Proposal` | 변경 슬롯, 검증 데이터, 멤버별 비공개 만족도, 그룹 요약 |
 | `Vote` | 후보 세트·멤버당 한 행, 선택 후보, 갱신 시각 |
 | `Notification` | 사용자, 종류, 이동 대상, 읽음 시각 |
@@ -41,7 +41,7 @@
 
 `QUEUED → GENERATING → OPEN → CLOSED → APPLIED`
 
-후보가 없으면 `FAILED`, 사용자가 취소하거나 원본 일정이 더 최신이면 `CANCELLED`다.
+후보가 없으면 `FAILED`, 0표로 마감되거나 원본 일정이 더 최신이면 `CANCELLED`다. `CLOSED`에서 승자 적용까지는 같은 트랜잭션에서 수행하므로 외부에는 완료된 `APPLIED`로 관찰된다.
 
 ## 3. REST API
 
@@ -93,7 +93,7 @@
 - 일정 슬롯 추가·변경·삭제와 발행은 `If-Match`에 초안 revision을 보내며 불일치 시 `409 Conflict` 및 `STALE_VERSION`을 반환한다.
 - 목록은 cursor pagination을 사용한다.
 - 오류 형식은 RFC 9457 Problem Details를 사용하고 `type`, `title`, `status`, `detail`, `instance`, `code`, `correlationId`를 포함한다.
-- 주요 코드는 `AUTH_REQUIRED`, `FORBIDDEN`, `INVITE_EXPIRED`, `TRIP_FULL`, `STALE_VERSION`, `VOTE_CLOSED`, `UPSTREAM_UNAVAILABLE`, `QUOTA_EXCEEDED`, `NO_FEASIBLE_PROPOSAL`이다.
+- 주요 코드는 `AUTH_REQUIRED`, `FORBIDDEN`, `INVITE_EXPIRED`, `TRIP_FULL`, `STALE_VERSION`, `VOTE_CLOSED`, `NO_VOTES`, `UPSTREAM_UNAVAILABLE`, `QUOTA_EXCEEDED`, `NO_FEASIBLE_PROPOSAL`이다.
 
 ### 일정 초안·발행 규칙
 
@@ -105,11 +105,14 @@
 ## 5. 투표와 적용 규칙
 
 - 전원이 투표하면 즉시 닫고, 그렇지 않으면 `openedAt + 12시간`에 닫는다.
+- 투표 자격은 후보 생성 시 개인 점수가 생성됐고 현재도 활성인 멤버로 고정해, 투표 중 신규 가입자가 점수 없이 결과에 포함되지 않게 한다.
 - 마감 시 1표 이상이면 최다 득표 후보를 선택한다. 0표이면 원본 일정을 유지하고 `CANCELLED` 처리한다.
 - 동률은 [AI와 공정성](./05-ai-fairness.md)의 결정론 순위로 해소한다.
 - 선택 후보 적용과 투표 마감, 양보 원장 갱신, 새 일정 버전 생성은 하나의 DB 트랜잭션으로 처리한다.
+- 적용 직전에 현재 일정 버전을 다시 확인하고 stale이면 새 버전과 양보 원장을 만들지 않는다. 마감 재시도는 이미 완료된 결과를 반환한다.
 - 그룹 응답은 득표수와 투표 완료 인원만 반환하고 사용자별 선택은 반환하지 않는다.
 - 인증된 본인에게만 `myVoteProposalId`를 반환해 선택 변경·철회를 지원하며, 다른 멤버의 식별자와 선택은 어떤 그룹 응답에도 포함하지 않는다.
+- 마감 응답은 `winnerProposalId`, `closingReason`, `closedAt`, `appliedItineraryVersionId`, `appliedAt`을 추가로 반환한다.
 
 ## 6. 삭제·감사·보안
 

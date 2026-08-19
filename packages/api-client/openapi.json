@@ -198,6 +198,7 @@
               "ACKNOWLEDGED",
               "GENERATING",
               "VOTING",
+              "APPLIED",
               "FAILED",
               "DISMISSED"
             ],
@@ -465,7 +466,8 @@
           },
           "reason": {
             "enum": [
-              "ORIGINAL"
+              "ORIGINAL",
+              "REPLAN"
             ],
             "type": "string"
           },
@@ -782,6 +784,20 @@
       },
       "ProposalSetResponse": {
         "properties": {
+          "appliedAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "appliedItineraryVersionId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "candidateCount": {
             "format": "int32",
             "type": "integer"
@@ -789,6 +805,23 @@
           "candidateLimit": {
             "format": "int32",
             "type": "integer"
+          },
+          "closedAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "closingReason": {
+            "enum": [
+              "ALL_MEMBERS_VOTED",
+              "DEADLINE"
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "completedAt": {
             "format": "date-time",
@@ -858,6 +891,8 @@
               "QUEUED",
               "GENERATING",
               "OPEN",
+              "CLOSED",
+              "APPLIED",
               "FAILED",
               "CANCELLED"
             ],
@@ -880,6 +915,13 @@
           },
           "votingOpenedAt": {
             "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "winnerProposalId": {
+            "format": "uuid",
             "type": [
               "string",
               "null"
@@ -914,6 +956,7 @@
               "ACKNOWLEDGED",
               "GENERATING",
               "VOTING",
+              "APPLIED",
               "FAILED",
               "DISMISSED"
             ],

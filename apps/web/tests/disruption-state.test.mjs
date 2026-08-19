@@ -6,7 +6,9 @@ import {
   applyReplanStart,
   createEmptyDisruptionDraft,
   getWeatherEvidence,
+  isVoteResolved,
   proposalFailureMessage,
+  proposalResolutionMessage,
   replaceDisruption,
   toCreateDisruptionRequest,
   validateDisruptionDraft,
@@ -119,10 +121,37 @@ test("재조정 시작 응답은 해당 문제와 후보 세트만 연결한다"
 });
 
 test("후보 실패 코드를 사용자가 복구할 수 있는 문구로 구분한다", () => {
+  assert.match(proposalFailureMessage("NO_VOTES"), /원본 일정/);
   assert.match(proposalFailureMessage("PREFERENCES_INCOMPLETE"), /모든 멤버/);
   assert.match(proposalFailureMessage("STALE_ITINERARY"), /일정 버전/);
   assert.match(proposalFailureMessage("UPSTREAM_UNAVAILABLE"), /연결하지 못/);
   assert.match(proposalFailureMessage("UNKNOWN"), /완료하지 못/);
+});
+
+test("투표 확정과 무투표 취소를 새 일정 갱신이 필요한 결과로 구분한다", () => {
+  const applied = {
+    closedAt: "2026-09-01T02:00:00Z",
+    closingReason: "ALL_MEMBERS_VOTED",
+    proposals: [{ id: "proposal-1", title: "실내 미술관으로 변경" }],
+    status: "APPLIED",
+    winnerProposalId: "proposal-1",
+  };
+  assert.match(proposalResolutionMessage(applied), /전원 참여/);
+  assert.match(proposalResolutionMessage(applied), /실내 미술관/);
+  assert.equal(isVoteResolved(applied), true);
+
+  const cancelled = {
+    closedAt: "2026-09-01T03:00:00Z",
+    failureCode: "NO_VOTES",
+    proposals: [],
+    status: "CANCELLED",
+  };
+  assert.match(proposalResolutionMessage(cancelled), /원본 일정/);
+  assert.equal(isVoteResolved(cancelled), true);
+  assert.equal(
+    isVoteResolved({ closedAt: null, proposals: [], status: "CANCELLED" }),
+    false,
+  );
 });
 
 test("내 투표의 낙관적 생성·변경·철회는 집계를 중복하지 않는다", () => {

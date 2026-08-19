@@ -33,6 +33,7 @@ export type ProposalSetResponse =
   GetProposalSetOperation["responses"][200]["content"]["application/json"];
 export type ProposalResponse = ProposalSetResponse["proposals"][number];
 export type ProposalSetStatus = ProposalSetResponse["status"];
+export type VoteClosingReason = NonNullable<ProposalSetResponse["closingReason"]>;
 export type VoteRequest =
   UpsertProposalVoteOperation["requestBody"]["content"]["application/json"];
 

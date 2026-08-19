@@ -5,6 +5,7 @@ public enum DisruptionStatus {
     ACKNOWLEDGED,
     GENERATING,
     VOTING,
+    APPLIED,
     FAILED,
     DISMISSED
 }

@@ -172,6 +172,25 @@ test("후보 세트 식별자를 인코딩해 그룹 공개 후보를 조회한�
   assert.deepEqual(response, proposalSet);
 });
 
+test("투표 마감 사유와 승자·적용 일정 식별자를 변경 없이 보존한다", async () => {
+  const applied = {
+    ...proposalSet,
+    appliedAt: "2026-08-19T11:00:00Z",
+    appliedItineraryVersionId: "version-2",
+    closedAt: "2026-08-19T11:00:00Z",
+    closingReason: "ALL_MEMBERS_VOTED",
+    status: "APPLIED",
+    winnerProposalId: "proposal-1",
+  };
+  const response = await getProposalSet({
+    baseUrl: "https://api.example.com",
+    fetch: async () => Response.json(applied),
+    proposalSetId: proposalSet.id,
+  });
+
+  assert.deepEqual(response, applied);
+});
+
 test("익명 투표 생성·변경과 철회는 같은 후보 세트 경로를 사용한다", async () => {
   const requests = [];
   const fetch = async (url, init) => {

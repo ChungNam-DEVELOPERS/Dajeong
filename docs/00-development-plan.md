@@ -195,6 +195,8 @@
 
 ### 단계 6. 투표·일정 적용
 
+> 2026-08-19 진행: [Issue #51](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/51)에서 익명 투표·집계를, [Issue #53](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/53)에서 전원/기한 마감·승자 선정·일정·양보 원장 원자적 적용 코어를 구현했다. EventBridge/SQS 운영 연결은 배포 인프라 단계에서 완성한다.
+
 구현 작업:
 
 - `Vote`, 투표 upsert·철회 API와 집계 응답을 구현한다.
