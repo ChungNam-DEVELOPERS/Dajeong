@@ -41,11 +41,13 @@ pnpm --filter @dajeong/cdk diff:offline
 
 1. EXT-02의 MFA, 비용 알림, 권한 분리를 확인한다.
 2. AWS CLI와 Staging용 SSO profile을 준비한다.
-3. 대상 계정의 `ap-northeast-2`를 CDK bootstrap한다.
-4. 아래 명령으로 CloudFormation change set 기반 diff를 확인한다.
+3. 계정 준비 상태 검사를 통과한다.
+4. 별도 배포 승인을 받은 뒤 대상 계정의 `ap-northeast-2`를 CDK bootstrap한다.
+5. 아래 명령으로 CloudFormation change set 기반 diff를 확인한다.
 
 ```bash
+pnpm check:aws-account -- --profile <staging-profile>
 pnpm --filter @dajeong/cdk diff:staging -- --profile <staging-profile>
 ```
 
-`diff`는 배포 명령이 아니다. `cdk deploy`는 별도 승인 없이 실행하지 않는다. 출력과 진행 기록에는 profile 이름, 계정 ID, ARN 같은 계정 식별 정보를 남기지 않는다.
+`cdk bootstrap`은 `CDKToolkit` 스택과 배포용 리소스를 생성하는 배포 작업이다. `diff`는 애플리케이션 배포 명령이 아니지만 change set 생성 권한이 필요하다. `cdk bootstrap`과 `cdk deploy`는 별도 승인 없이 실행하지 않는다. 출력과 진행 기록에는 profile 이름, 계정 ID, ARN 같은 계정 식별 정보를 남기지 않는다.

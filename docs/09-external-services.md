@@ -23,7 +23,7 @@
 
 | 서비스 | 용도 | 상태 | 할당량·만료 확인 | 다음 행동 |
 | --- | --- | --- | --- | --- |
-| AWS | staging·production 인프라 | `MOCK_READY` | Budget 80% 알림 설정 필요 | MFA, 청구, 서울 리전, 권한 구조를 확인한 뒤 CDK Staging diff 실행 |
+| AWS | staging·production 인프라 | `MOCK_READY` | 실제 계정의 Budget 80% 알림 확인 필요 | SSO profile을 준비하고 계정 검사 통과 후 CDK Staging diff 실행 |
 | Kakao Developers | Cognito OIDC 로그인 | `NOT_CHECKED` | 동의 항목·심사 조건 확인 | 개발용 앱과 callback placeholder 등록 |
 | Google Cloud OAuth | Cognito OIDC 로그인 | `NOT_CHECKED` | 테스트 사용자·게시 상태 확인 | 웹·앱 client 구분 기록 |
 | Apple Developer | Sign in with Apple·iOS 배포 | `NOT_CHECKED` | 가입·심사·갱신일 확인 | identifier·key 필요 목록 기록 |
@@ -88,3 +88,4 @@
 | 2026-08-19 | 기상청 | 키 없는 정상·빈 결과·오류 fixture와 강수확률 자동 감지 어댑터 계약 준비 | 활용 신청, 할당량·발표 주기 확인 후 실제 단기예보 어댑터 연결 |
 | 2026-08-19 | TourAPI·ODsay | 키 없는 정상·부족·빈 결과·오류 후보 fixture와 장소 운영·이동시간 검증 어댑터 계약 준비 | 각 서비스 신청·할당량·이용조건 확인 후 실제 어댑터 연결 |
 | 2026-08-20 | AWS | CDK Staging·Production 환경 규칙과 로컬 synth·template diff 준비 | EXT-02 확인, AWS CLI·SSO profile 준비 후 실제 Staging diff |
+| 2026-08-20 | AWS | AWS CLI v2와 식별자 비노출 계정 준비 상태 검사기·역할 분리 절차 준비 | SSO profile로 MFA·root key·월 예산 80% 알림 확인 |

@@ -12,6 +12,7 @@ Staging과 Production의 DB, Cognito User Pool, 외부 API 키를 공유하지 �
 
 ## 2. 초기 AWS 구성
 
+- 계정 보호와 비용 알림을 먼저 [`11-aws-account-readiness.md`](./11-aws-account-readiness.md)에 따라 확인한다.
 - 리전: `ap-northeast-2`를 기본으로 한다.
 - 웹: AWS Amplify Hosting에 Next.js 15를 배포한다.
 - API·워커: Elastic Beanstalk Java SE/AL2023에 실행 가능한 JAR를 배포한다.
@@ -31,6 +32,8 @@ Staging과 Production의 DB, Cognito User Pool, 외부 API 키를 공유하지 �
 AWS CDK TypeScript가 네트워크, 보안 그룹, RDS, Cognito, SQS, EventBridge, IAM, 알람을 관리한다. 콘솔 수동 변경은 긴급 조치만 허용하고 다음 배포 전에 CDK에 반영한다.
 
 권한은 웹 빌드, API 런타임, CI 배포, 운영자 역할로 분리한다. API 런타임은 필요한 큐·비밀·Bedrock 모델·로그에만 접근한다.
+
+사람은 IAM Identity Center의 단기 자격 증명을 사용한다. GitHub Actions 배포 역할은 FND-16에서 OIDC trust와 staging 전용 최소 권한으로 만들며 콘솔 로그인과 장기 access key를 허용하지 않는다.
 
 CDK 스택은 `dajeong-<environment>-<purpose>`, 리소스는 `dajeong-<environment>-<resource>` 형식으로 이름을 붙인다. 모든 태그 가능 리소스에 `Project`, `Environment`, `ManagedBy`, `Repository` 태그를 적용하고 Staging과 Production의 VPC CIDR를 분리한다. 재현 명령과 실제 계정 diff 선행 조건은 [`infra/cdk/README.md`](../infra/cdk/README.md)를 따른다.
 
