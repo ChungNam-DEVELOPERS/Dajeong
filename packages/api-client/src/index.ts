@@ -22,6 +22,11 @@ export {
   issueTripInvite,
   joinTripByInvite,
 } from "./invites.ts";
+export {
+  getMyPrivatePreference,
+  getPreferenceSubmissionStatus,
+  saveMyPrivatePreference,
+} from "./preferences.ts";
 export type {
   ApiClientOptions,
   CurrentUserRequestOptions,
@@ -58,6 +63,16 @@ export type {
   JoinedTripResponse,
   JoinTripByInviteOptions,
 } from "./invites.ts";
+export type {
+  PreferenceCategory,
+  PreferenceMemberStatus,
+  PreferencePriority,
+  PreferenceRequestOptions,
+  PreferenceStatusResponse,
+  PrivatePreferenceRequest,
+  PrivatePreferenceResponse,
+  SavePrivatePreferenceOptions,
+} from "./preferences.ts";
 export type {
   components,
   operations,
