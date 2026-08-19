@@ -55,6 +55,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify dependency security mitigations
+        run: pnpm check:dependency-security
+
       - name: Verify toolchain
         run: pnpm check:toolchain
 
@@ -66,6 +69,9 @@ jobs:
 
       - name: Test and package API
         run: pnpm check:api
+
+      - name: Verify generated OpenAPI client
+        run: pnpm check:api-client
 
       - name: Lint and typecheck
         run: pnpm check:shared-config

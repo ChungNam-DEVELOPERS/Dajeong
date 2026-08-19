@@ -17,6 +17,7 @@
     "typecheck": "tsc --project tsconfig.json"
   },
   "dependencies": {
+    "@dajeong/api-client": "workspace:*",
     "@dajeong/design-tokens": "workspace:*",
     "@expo/metro-runtime": "~57.0.11",
     "expo": "~57.0.14",
