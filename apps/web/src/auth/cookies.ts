@@ -4,6 +4,7 @@ import type { CognitoConfig, CognitoTokenSet } from "./cognito";
 
 export const authCookieNames = {
   accessToken: "dajeong_access_token",
+  loginReturnTo: "dajeong_login_return_to",
   loginState: "dajeong_login_state",
   pkceVerifier: "dajeong_pkce_verifier",
   refreshToken: "dajeong_refresh_token",
@@ -16,6 +17,7 @@ export function setLoginAttemptCookies(
   response: NextResponse,
   config: CognitoConfig,
   attempt: { state: string; verifier: string },
+  returnTo: string,
 ) {
   const options = {
     httpOnly: true,
@@ -26,6 +28,7 @@ export function setLoginAttemptCookies(
   };
   response.cookies.set(authCookieNames.loginState, attempt.state, options);
   response.cookies.set(authCookieNames.pkceVerifier, attempt.verifier, options);
+  response.cookies.set(authCookieNames.loginReturnTo, returnTo, options);
 }
 
 export function clearLoginAttemptCookies(
@@ -41,6 +44,7 @@ export function clearLoginAttemptCookies(
   };
   response.cookies.set(authCookieNames.loginState, "", options);
   response.cookies.set(authCookieNames.pkceVerifier, "", options);
+  response.cookies.set(authCookieNames.loginReturnTo, "", options);
 }
 
 export function setSessionCookies(

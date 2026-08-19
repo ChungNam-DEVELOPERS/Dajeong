@@ -122,7 +122,7 @@ export function apiSessionErrorResponse(
 
   if (
     error instanceof ApiClientError &&
-    (error.status === 400 || error.status === 409)
+    [400, 403, 404, 409, 410].includes(error.status)
   ) {
     return NextServerResponse.json(error.responseBody, {
       headers: { "Cache-Control": "no-store" },

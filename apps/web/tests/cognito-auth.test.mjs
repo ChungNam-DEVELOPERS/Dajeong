@@ -6,6 +6,7 @@ import {
   callbackUrl,
   exchangeAuthorizationCode,
   matchesLoginState,
+  normalizeReturnTo,
   readCognitoConfig,
   refreshAccessToken,
 } from "../src/auth/cognito.ts";
@@ -34,6 +35,17 @@ test("state는 일정 시간 비교로 같은 값만 허용한다", () => {
   assert.equal(matchesLoginState("expected", "expected"), true);
   assert.equal(matchesLoginState("modified", "expected"), false);
   assert.equal(matchesLoginState("short", "much-longer"), false);
+});
+
+test("로그인 복귀 경로는 같은 웹의 상대 경로만 허용한다", () => {
+  assert.equal(
+    normalizeReturnTo("/invites/code?from=login"),
+    "/invites/code?from=login",
+  );
+  assert.equal(normalizeReturnTo("https://evil.example/steal"), "/me");
+  assert.equal(normalizeReturnTo("//evil.example/steal"), "/me");
+  assert.equal(normalizeReturnTo("/%5C%5Cevil.example/steal"), "/me");
+  assert.equal(normalizeReturnTo("/%E0%A4%A"), "/me");
 });
 
 test("authorization code와 verifier를 token endpoint에 교환한다", async () => {

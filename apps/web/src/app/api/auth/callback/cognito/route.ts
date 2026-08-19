@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import {
   exchangeAuthorizationCode,
   matchesLoginState,
+  normalizeReturnTo,
   readCognitoConfig,
   type CognitoConfig,
 } from "../../../../../auth/cognito";
@@ -28,6 +29,9 @@ export async function GET(request: NextRequest) {
   const state = request.nextUrl.searchParams.get("state");
   const expectedState = request.cookies.get(authCookieNames.loginState)?.value;
   const verifier = request.cookies.get(authCookieNames.pkceVerifier)?.value;
+  const returnTo = normalizeReturnTo(
+    request.cookies.get(authCookieNames.loginReturnTo)?.value,
+  );
 
   if (
     request.nextUrl.searchParams.has("error") ||
@@ -37,13 +41,13 @@ export async function GET(request: NextRequest) {
     !verifier ||
     !matchesLoginState(state, expectedState)
   ) {
-    return loginError(config, "invalid_callback");
+    return loginError(config, "invalid_callback", returnTo);
   }
 
   try {
     const tokens = await exchangeAuthorizationCode(config, code, verifier);
     const response = NextResponse.redirect(
-      new URL("/me", `${config.webBaseUrl}/`),
+      new URL(returnTo, `${config.webBaseUrl}/`),
       303,
     );
     clearLoginAttemptCookies(response, config);
@@ -51,13 +55,14 @@ export async function GET(request: NextRequest) {
     response.headers.set("Cache-Control", "no-store");
     return response;
   } catch {
-    return loginError(config, "token_exchange_failed");
+    return loginError(config, "token_exchange_failed", returnTo);
   }
 }
 
-function loginError(config: CognitoConfig, error: string) {
+function loginError(config: CognitoConfig, error: string, returnTo: string) {
   const url = new URL("/login", `${config.webBaseUrl}/`);
   url.searchParams.set("error", error);
+  url.searchParams.set("returnTo", normalizeReturnTo(returnTo));
   const response = NextResponse.redirect(url, 303);
   clearLoginAttemptCookies(response, config);
   response.headers.set("Cache-Control", "no-store");
