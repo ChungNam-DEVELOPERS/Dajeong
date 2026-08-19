@@ -1,4 +1,35 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "tasks": {}
+  "globalDependencies": ["scripts/check-env.mjs"],
+  "globalPassThroughEnv": [
+    "CI",
+    "EXPO_NO_TELEMETRY",
+    "NEXT_TELEMETRY_DISABLED"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "env": [
+        "DAJEONG_API_AUDIENCE",
+        "DAJEONG_COGNITO_CLIENT_ID",
+        "DAJEONG_COGNITO_DOMAIN",
+        "DAJEONG_ENV",
+        "DAJEONG_WEB_BASE_URL",
+        "EXPO_PUBLIC_API_BASE_URL",
+        "NEXT_PUBLIC_API_BASE_URL"
+      ],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "test": {},
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    }
+  }
 }
