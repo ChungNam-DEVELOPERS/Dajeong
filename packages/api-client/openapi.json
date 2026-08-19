@@ -16,6 +16,33 @@
         ],
         "type": "object"
       },
+      "CreateDisruptionRequest": {
+        "properties": {
+          "description": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string"
+          },
+          "itinerarySlotId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "CLOSURE",
+              "TRAFFIC",
+              "OTHER"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "itinerarySlotId",
+          "type"
+        ],
+        "type": "object"
+      },
       "CreateTripRequest": {
         "properties": {
           "endDate": {
@@ -69,6 +96,112 @@
           "displayName",
           "id",
           "status"
+        ],
+        "type": "object"
+      },
+      "DisruptionListResponse": {
+        "properties": {
+          "disruptions": {
+            "items": {
+              "$ref": "#/components/schemas/DisruptionResponse"
+            },
+            "type": "array"
+          },
+          "tripId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "disruptions",
+          "tripId"
+        ],
+        "type": "object"
+      },
+      "DisruptionResponse": {
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "itinerarySlotId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "itineraryVersionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "itineraryVersionNumber": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "placeName": {
+            "type": "string"
+          },
+          "reportedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reportedByUserId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "reporterDisplayName": {
+            "type": "string"
+          },
+          "slotEndsAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "slotStartsAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "DETECTED",
+              "ACKNOWLEDGED",
+              "DISMISSED"
+            ],
+            "type": "string"
+          },
+          "tripId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "CLOSURE",
+              "TRAFFIC",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "itinerarySlotId",
+          "itineraryVersionId",
+          "itineraryVersionNumber",
+          "placeName",
+          "reportedAt",
+          "reportedByUserId",
+          "reporterDisplayName",
+          "slotEndsAt",
+          "slotStartsAt",
+          "status",
+          "tripId",
+          "type",
+          "updatedAt"
         ],
         "type": "object"
       },
@@ -619,6 +752,105 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/disruptions/{disruptionId}/dismiss": {
+      "post": {
+        "operationId": "dismissDisruption",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "disruptionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisruptionResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "문제 확인 후 원본 일정 유지",
+        "tags": [
+          "disruption-controller"
+        ]
+      }
+    },
+    "/api/v1/disruptions/{disruptionId}/replans": {
+      "post": {
+        "operationId": "startDisruptionReplan",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "disruptionId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisruptionResponse"
+                }
+              }
+            },
+            "description": "재조정 시작을 확인한 문제"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "활성 멤버십 없음"
+          },
+          "409": {
+            "description": "이미 처리된 문제"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "문제 확인 후 재조정 시작",
+        "tags": [
+          "disruption-controller"
+        ]
+      }
+    },
     "/api/v1/invites/{code}/join": {
       "post": {
         "operationId": "joinTripByInvite",
@@ -960,6 +1192,128 @@
         "summary": "내 여행 상세 조회",
         "tags": [
           "trip-controller"
+        ]
+      }
+    },
+    "/api/v1/trips/{tripId}/disruptions": {
+      "get": {
+        "operationId": "listDisruptions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisruptionListResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "여행 문제 목록",
+        "tags": [
+          "disruption-controller"
+        ]
+      },
+      "post": {
+        "operationId": "createDisruption",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDisruptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisruptionResponse"
+                }
+              }
+            },
+            "description": "멱등 요청 재응답"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisruptionResponse"
+                }
+              }
+            },
+            "description": "문제 신고 생성"
+          },
+          "400": {
+            "description": "잘못된 신고 입력"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "활성 멤버십 없음"
+          },
+          "404": {
+            "description": "현재 일정 슬롯 없음"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "종료 여행 또는 멱등 충돌"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "수동 문제 신고",
+        "tags": [
+          "disruption-controller"
         ]
       }
     },

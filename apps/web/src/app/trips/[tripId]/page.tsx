@@ -23,6 +23,12 @@ export default async function TripItineraryPage({
           </Link>
           <div className="flex items-center gap-2">
             <Link
+              className="rounded-full border border-[#d6973f] bg-[#fff6dc] px-4 py-2 text-sm font-extrabold text-[#7a4b0f] transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              href={`/trips/${tripId}/disruptions`}
+            >
+              문제 신고
+            </Link>
+            <Link
               className="rounded-full border border-brand bg-[#edf7ea] px-4 py-2 text-sm font-extrabold text-brand-strong transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               href={`/trips/${tripId}/preferences`}
             >
