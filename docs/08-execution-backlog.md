@@ -120,16 +120,16 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | `DONE` | FND-02 | 모노레포 골격·workspace | 0.5일 | FND-01 |
 | `DONE` | FND-03 | 공통 TypeScript·lint·디자인 토큰 최소 구성 | 0.25일 | FND-02 |
 | `DONE` | FND-04 | Next.js 웹 부트스트랩 | 0.5일 | FND-02~03 |
-| `DOING` | FND-05 | Expo 앱 부트스트랩 | 0.5일 | FND-02~03 |
+| `WAITING` | FND-05 | Expo 앱 부트스트랩 | 0.5일 | FND-02~03 |
 | `DONE` | FND-06 | Spring Boot API 부트스트랩 | 0.5일 | FND-01~02 |
 | `DONE` | FND-07 | 로컬 PostgreSQL 16 구성 | 0.5일 | FND-06 |
 | `DONE` | FND-08 | Flyway·Testcontainers·health API | 0.5일 | FND-07 |
 | `DONE` | FND-09 | local·staging·production 환경 계약 | 0.25일 | FND-04~08 |
 | `DONE` | FND-10 | OpenAPI → TypeScript client 생성 | 0.5일 | FND-08~09 |
-| `TODO` | FND-11 | 웹 health 세로 슬라이스 | 0.25일 | FND-04, FND-10 |
+| `DONE` | FND-11 | 웹 health 세로 슬라이스 | 0.25일 | FND-04, FND-10 |
 | `TODO` | FND-12 | 앱 health 세로 슬라이스 | 0.25일 | FND-05, FND-10 |
-| `DOING` | FND-13 | 루트 품질 명령·Turbo 파이프라인 | 0.5일 | FND-03~12 |
-| `DOING` | FND-14 | GitHub Actions PR CI | 0.5일 | FND-13 |
+| `TODO` | FND-13 | 루트 품질 명령·Turbo 파이프라인 | 0.5일 | FND-03~12 |
+| `TODO` | FND-14 | GitHub Actions PR CI | 0.5일 | FND-13 |
 | `TODO` | FND-15 | CDK staging 기반·synth·diff | 0.5일 | FND-14, EXT-02 |
 | `TODO` | FND-16 | GitHub Actions OIDC 배포 인증 | 0.5일 | FND-15 |
 | `TODO` | FND-17 | 최소 staging 배포·health smoke | 1일 | FND-11~16 |
@@ -301,6 +301,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-18 | FND-08 | Flyway `V1`, 시스템 Health API와 DB 연동 readiness 구성 | PostgreSQL 16.15 Testcontainers에서 빈 DB migration, 정상·DB 중단 health 통합 테스트 통과 | FND-09 |
 | 2026-08-18 | FND-09 | Local·Staging·Production 환경 설정 계약과 공개 경계, fail-fast 검증, secret 검사 구성 | `pnpm check:configuration`, 누락 변수 실패, Spring·웹·Expo 검증 통과 | FND-10 |
 | 2026-08-19 | FND-10 | Spring OpenAPI 계약에서 웹·앱 공용 TypeScript 타입과 health client 생성 | `pnpm check:api-client`, 웹·앱 import smoke, 연속 생성 diff 없음, 의도적 스키마 불일치 감지 | FND-11 |
+| 2026-08-19 | FND-11 | 생성 client와 웹 Route Handler로 health loading·UP·DOWN·연결 실패·재시도 화면 구현 | 웹 상태 전이 테스트 3건, lint·typecheck·production build, 브라우저 정상·503·중단·복구 확인 | FND-12 |
 
 ## 9. 2단계 상세화 시점
 
