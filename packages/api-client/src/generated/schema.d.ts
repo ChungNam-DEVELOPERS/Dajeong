@@ -4,6 +4,40 @@
  */
 
 export interface paths {
+    "/api/v1/disruptions/{disruptionId}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 문제 확인 후 원본 일정 유지 */
+        post: operations["dismissDisruption"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/disruptions/{disruptionId}/replans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 문제 확인 후 재조정 시작 */
+        post: operations["startDisruptionReplan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/invites/{code}/join": {
         parameters: {
             query?: never;
@@ -85,6 +119,24 @@ export interface paths {
         get: operations["getTrip"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trips/{tripId}/disruptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 여행 문제 목록 */
+        get: operations["listDisruptions"];
+        put?: never;
+        /** 수동 문제 신고 */
+        post: operations["createDisruption"];
         delete?: never;
         options?: never;
         head?: never;
@@ -237,6 +289,13 @@ export interface components {
             code: string;
             message: string;
         };
+        CreateDisruptionRequest: {
+            description: string;
+            /** Format: uuid */
+            itinerarySlotId: string;
+            /** @enum {string} */
+            type: "CLOSURE" | "TRAFFIC" | "OTHER";
+        };
         CreateTripRequest: {
             /**
              * Format: date
@@ -260,6 +319,40 @@ export interface components {
             id: string;
             /** @enum {string} */
             status: "ACTIVE" | "DELETED";
+        };
+        DisruptionListResponse: {
+            disruptions: components["schemas"]["DisruptionResponse"][];
+            /** Format: uuid */
+            tripId: string;
+        };
+        DisruptionResponse: {
+            description: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            itinerarySlotId: string;
+            /** Format: uuid */
+            itineraryVersionId: string;
+            /** Format: int32 */
+            itineraryVersionNumber: number;
+            placeName: string;
+            /** Format: date-time */
+            reportedAt: string;
+            /** Format: uuid */
+            reportedByUserId: string;
+            reporterDisplayName: string;
+            /** Format: date-time */
+            slotEndsAt: string;
+            /** Format: date-time */
+            slotStartsAt: string;
+            /** @enum {string} */
+            status: "DETECTED" | "ACKNOWLEDGED" | "DISMISSED";
+            /** Format: uuid */
+            tripId: string;
+            /** @enum {string} */
+            type: "CLOSURE" | "TRAFFIC" | "OTHER";
+            /** Format: date-time */
+            updatedAt: string;
         };
         InviteResponse: {
             code: string;
@@ -431,6 +524,75 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    dismissDisruption: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                disruptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisruptionResponse"];
+                };
+            };
+        };
+    };
+    startDisruptionReplan: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                disruptionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 재조정 시작을 확인한 문제 */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisruptionResponse"];
+                };
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 활성 멤버십 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 이미 처리된 문제 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     joinTripByInvite: {
         parameters: {
             query?: never;
@@ -747,6 +909,102 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    listDisruptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisruptionListResponse"];
+                };
+            };
+        };
+    };
+    createDisruption: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDisruptionRequest"];
+            };
+        };
+        responses: {
+            /** @description 멱등 요청 재응답 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisruptionResponse"];
+                };
+            };
+            /** @description 문제 신고 생성 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisruptionResponse"];
+                };
+            };
+            /** @description 잘못된 신고 입력 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 활성 멤버십 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 현재 일정 슬롯 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 종료 여행 또는 멱등 충돌 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
             };
         };
     };

@@ -11,6 +11,8 @@
 > 2026-08-19 진행: [Issue #35](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/35)에서 여행 생성 → DB 저장 → 웹 목록 세로 슬라이스를 구현하고 검증했다.
 >
 > 2026-08-19 진행: [Issue #41](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/41)에서 기존 일정 입력 → revision 기반 초안 편집 → 불변 버전 발행 웹 세로 슬라이스를 구현하고 검증했다.
+>
+> 2026-08-19 진행: [Issue #45](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/45)에서 수동 문제 신고 → 그룹 확인 → 원본 유지 또는 재조정 시작 웹 세로 슬라이스를 구현하고 검증했다.
 
 이 문서는 [종합 개발 계획](./00-development-plan.md)의 단계 0~1만 실행 단위로 분해한다. 전체 기간과 출시 기준은 [로드맵과 테스트](./07-roadmap-testing.md)를 따른다.
 
@@ -322,6 +324,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-19 | Issue #39 | 계정 식별정보 익명화, 삭제 token tombstone, 멤버십 종료·방장 여행 보관과 웹 2단계 삭제 흐름 구현 | API 28건, OpenAPI client 17건, 웹 상태·인증 테스트 19건, production build 통과 | 기존 일정 입력 세로 슬라이스 |
 | 2026-08-19 | Issue #41 | 여행 기간·중복 검증, revision 낙관적 잠금, 멱등 추가·발행, 불변 일정 버전과 웹 입력·편집·발행 흐름 구현 | API 31건, OpenAPI client 23건, 웹 상태·인증 테스트 24건, production build·Expo web export 통과 | 비공개 선호 입력 세로 슬라이스 |
 | 2026-08-19 | Issue #43 | 비공개 선호 저장·본인 조회, 원문 없는 멤버별 제출 현황과 반응형 웹 입력 화면 구현 | API 34건, OpenAPI client 27건, 웹 상태 테스트 28건, production build·Expo web export, 402px·1280px Chrome와 axe 위반 0건 | 수동 문제 신고 세로 슬라이스 |
+| 2026-08-19 | Issue #45 | 현재 발행 슬롯의 수동 문제 신고, 그룹 목록, 원본 유지·재조정 시작 상태 전이와 반응형 웹 화면 구현 | API 37건, OpenAPI client 31건, 웹 상태·인증 테스트 32건, production build·Expo web export 통과 | 기상청 날씨 감지 세로 슬라이스 |
 
 ## 9. 2단계 상세화 시점
 
@@ -335,6 +338,6 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 4. ~~계정 삭제 → 도메인 처리 → 웹 완료 흐름~~ ([Issue #39](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/39))
 5. ~~기존 일정 입력 → revision 기반 초안 편집 → 불변 버전 발행~~ ([Issue #41](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/41))
 6. ~~비공개 선호 입력 → 본인 조회 → 멤버별 제출 상태 확인~~ ([Issue #43](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/43))
-7. 수동 문제 신고 → 방장·멤버 확인 → 원본 일정 유지 또는 재조정 시작 선택
+7. ~~수동 문제 신고 → 방장·멤버 확인 → 원본 일정 유지 또는 재조정 시작 선택~~ ([Issue #45](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/45))
 
 웹 공개 베타가 안정화되면 FND-05와 FND-12를 재개하고 위 세로 슬라이스의 모바일 화면·딥링크·푸시·실기기 검증을 별도 백로그로 상세화한다.

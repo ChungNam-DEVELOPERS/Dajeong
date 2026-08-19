@@ -27,6 +27,12 @@ export {
   getPreferenceSubmissionStatus,
   saveMyPrivatePreference,
 } from "./preferences.ts";
+export {
+  createDisruption,
+  dismissDisruption,
+  listDisruptions,
+  startDisruptionReplan,
+} from "./disruptions.ts";
 export type {
   ApiClientOptions,
   CurrentUserRequestOptions,
@@ -73,6 +79,16 @@ export type {
   PrivatePreferenceResponse,
   SavePrivatePreferenceOptions,
 } from "./preferences.ts";
+export type {
+  CreateDisruptionOptions,
+  CreateDisruptionRequest,
+  DisruptionActionOptions,
+  DisruptionListResponse,
+  DisruptionResponse,
+  DisruptionStatus,
+  DisruptionTripOptions,
+  DisruptionType,
+} from "./disruptions.ts";
 export type {
   components,
   operations,
