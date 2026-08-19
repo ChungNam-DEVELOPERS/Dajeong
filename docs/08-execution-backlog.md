@@ -124,8 +124,8 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | `DONE` | FND-06 | Spring Boot API 부트스트랩 | 0.5일 | FND-01~02 |
 | `DONE` | FND-07 | 로컬 PostgreSQL 16 구성 | 0.5일 | FND-06 |
 | `DONE` | FND-08 | Flyway·Testcontainers·health API | 0.5일 | FND-07 |
-| `TODO` | FND-09 | local·staging·production 환경 계약 | 0.25일 | FND-04~08 |
-| `TODO` | FND-10 | OpenAPI → TypeScript client 생성 | 0.5일 | FND-08~09 |
+| `DONE` | FND-09 | local·staging·production 환경 계약 | 0.25일 | FND-04~08 |
+| `DONE` | FND-10 | OpenAPI → TypeScript client 생성 | 0.5일 | FND-08~09 |
 | `TODO` | FND-11 | 웹 health 세로 슬라이스 | 0.25일 | FND-04, FND-10 |
 | `TODO` | FND-12 | 앱 health 세로 슬라이스 | 0.25일 | FND-05, FND-10 |
 | `DOING` | FND-13 | 루트 품질 명령·Turbo 파이프라인 | 0.5일 | FND-03~12 |
@@ -203,6 +203,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - **완료:** 필수값 누락 시 각 앱이 명확한 오류로 실패하고 실제 secret이 Git에 없음
 - **검증:** secret scan과 누락 변수 실패 케이스 확인
 - **학습 포인트:** build-time 설정과 runtime secret의 차이
+- **2026-08-18 검증 증거:** 환경별 활성 변수와 공개 경계 문서화, 웹·모바일·API 누락 변수 실패 재현, `pnpm check:configuration`, Spring 테스트·bootJar, 웹 production build, Expo web export 통과
 
 ### FND-10. OpenAPI → TypeScript client 생성
 
@@ -210,6 +211,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - **완료:** 수동 DTO 없이 웹·앱에서 client를 import할 수 있고 두 번 생성해도 diff가 없음
 - **검증:** API schema 변경 후 미생성 client를 CI가 검출할 수 있는지 확인
 - **학습 포인트:** API 계약을 단일 원천으로 유지하는 방법
+- **2026-08-19 검증 증거:** Spring 컨텍스트에서 OpenAPI 3.1 스키마 생성, 웹·앱 import smoke, health client 단위 테스트, 연속 생성 무변경과 의도적 스키마 불일치 실패, `pnpm check:api-client` 통과
 
 ### FND-11. 웹 health 세로 슬라이스
 
@@ -274,7 +276,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 - [ ] 새 환경에서 툴체인 확인과 루트 install을 재현했다.
 - [x] PostgreSQL 16을 시작하고 빈 DB에 Flyway migration을 적용했다.
 - [x] API liveness·readiness·`/api/v1/system/health`가 정해진 스키마로 응답한다.
-- [ ] OpenAPI에서 TypeScript client를 재생성해도 추가 diff가 없다.
+- [x] OpenAPI에서 TypeScript client를 재생성해도 추가 diff가 없다.
 - [ ] 웹과 앱이 생성 client로 로컬 API의 loading·up·error·retry를 표시한다.
 - [ ] lint, typecheck, unit·integration test, Spring build, web build, Expo export를 루트에서 실행한다.
 - [ ] PR CI가 실패를 막고 현재 커밋에서 녹색이다.
@@ -297,6 +299,8 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-18 | FND-06 | Java 21·Spring Boot 4.1 API와 재현 가능한 Gradle wrapper, Actuator·OpenAPI 기반 구성 | `pnpm check:api`, `bootRun`, `/actuator/health` `UP`, `/v3/api-docs` OpenAPI 3.1 응답 통과 | FND-07 |
 | 2026-08-18 | FND-07 | PostgreSQL 16.15 Compose, healthcheck, named volume과 Spring `local` DataSource 구성 | `pnpm check:db`, DB healthy, 컨테이너 재생성 후 데이터 유지, API health `UP` | FND-08 |
 | 2026-08-18 | FND-08 | Flyway `V1`, 시스템 Health API와 DB 연동 readiness 구성 | PostgreSQL 16.15 Testcontainers에서 빈 DB migration, 정상·DB 중단 health 통합 테스트 통과 | FND-09 |
+| 2026-08-18 | FND-09 | Local·Staging·Production 환경 설정 계약과 공개 경계, fail-fast 검증, secret 검사 구성 | `pnpm check:configuration`, 누락 변수 실패, Spring·웹·Expo 검증 통과 | FND-10 |
+| 2026-08-19 | FND-10 | Spring OpenAPI 계약에서 웹·앱 공용 TypeScript 타입과 health client 생성 | `pnpm check:api-client`, 웹·앱 import smoke, 연속 생성 diff 없음, 의도적 스키마 불일치 감지 | FND-11 |
 
 ## 9. 2단계 상세화 시점
 

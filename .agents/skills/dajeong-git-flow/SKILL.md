@@ -37,8 +37,10 @@ Use the connected GitHub app for Issue and PR operations. Fall back to authentic
 
    ```bash
    pnpm check:toolchain
+   pnpm check:configuration
    pnpm check:db
    pnpm check:api
+   pnpm check:api-client
    pnpm check:shared-config
    pnpm --filter @dajeong/web build
    pnpm --filter @dajeong/mobile run export:web

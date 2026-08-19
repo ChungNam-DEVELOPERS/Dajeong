@@ -3,14 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "next build --webpack",
-    "build:turbopack": "next build",
-    "dev": "next dev",
+    "build": "pnpm check:env && next build --webpack",
+    "build:turbopack": "pnpm check:env && next build",
+    "check:env": "node ../../scripts/check-env.mjs --app web",
+    "dev": "pnpm check:env && next dev",
     "lint": "eslint . --max-warnings=0",
     "start": "next start",
     "typecheck": "tsc --project tsconfig.json"
   },
   "dependencies": {
+    "@dajeong/api-client": "workspace:*",
     "@dajeong/design-tokens": "workspace:*",
     "next": "16.3.1",
     "react": "19.2.8",

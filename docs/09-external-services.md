@@ -37,12 +37,14 @@
 
 ## 3. 설정·비밀정보 이름
 
+이 표는 현재 값뿐 아니라 후속 기능에서 사용할 예정인 이름도 포함한다. 지금 빌드와 실행에 필요한 활성 변수, 공개 경계, 환경별 주입 위치는 [`10-environment-configuration.md`](./10-environment-configuration.md)를 기준으로 한다.
+
 | 영역 | 이름 | secret | Local | Staging·Production |
 | --- | --- | --- | --- | --- |
 | 공통 | `AWS_REGION` | 아님 | `.env.local` 예정 | SSM Parameter Store |
 | 공통 | `API_BASE_URL` | 아님 | `.env.local` 예정 | 플랫폼 환경 설정 |
-| Web | `NEXT_PUBLIC_API_BASE_URL` | 아님 | `apps/web/.env.local` 예정 | Amplify 환경 설정 |
-| Mobile | `EXPO_PUBLIC_API_BASE_URL` | 아님 | `apps/mobile/.env.local` 예정 | EAS environment |
+| Web | `NEXT_PUBLIC_API_BASE_URL` | 아님 | `apps/web/.env.local` | Amplify 환경 설정 |
+| Mobile | `EXPO_PUBLIC_API_BASE_URL` | 아님 | `apps/mobile/.env.local` | EAS environment |
 | Cognito | `COGNITO_USER_POOL_ID` | 아님 | 로컬 mock 설정 | SSM Parameter Store |
 | Cognito | `COGNITO_CLIENT_ID` | 아님 | 로컬 mock 설정 | SSM Parameter Store |
 | Kakao | `KAKAO_OIDC_CLIENT_ID` | 아님 | 비밀 저장소 참조 | Secrets Manager |
@@ -67,7 +69,7 @@
 
 ## 4. 보관·기록 규칙
 
-- `.env`, `.env.*`, `*.local`은 Git에 추가하지 않고 `.env.example`에는 빈 값과 설명만 둔다.
+- `.env`, `.env.*`, `*.local`은 Git에 추가하지 않는다. `.env.example`에는 공개 로컬 값이나 `local-only`로 명시한 안전한 예제만 두고 실제 secret은 넣지 않는다.
 - 로컬 개발은 OS 비밀 저장소 또는 전용 비밀 관리자를 사용한다. 평문 메모나 shell history에 실제 값을 남기지 않는다.
 - staging·production 런타임 secret은 Secrets Manager, 비민감 설정은 SSM Parameter Store로 분리한다.
 - GitHub Actions의 AWS 인증은 OIDC 단기 자격 증명만 쓴다. `AWS_ACCESS_KEY_ID`와 `AWS_SECRET_ACCESS_KEY`를 repository secret으로 만들지 않는다.

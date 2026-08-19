@@ -1,0 +1,19 @@
+spring:
+  autoconfigure:
+    exclude: ""
+  datasource:
+    url: jdbc:postgresql://${DAJEONG_DB_HOST}:${DAJEONG_DB_PORT}/${DAJEONG_DB_NAME}
+    username: ${DAJEONG_DB_USER}
+    password: ${DAJEONG_DB_PASSWORD}
+    hikari:
+      pool-name: DajeongProductionPool
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 5000
+
+management:
+  endpoint:
+    health:
+      group:
+        readiness:
+          include: readinessState,db

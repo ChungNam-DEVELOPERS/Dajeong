@@ -1,0 +1,45 @@
+diff --git a/dist/types/icns.js b/dist/types/icns.js
+index f2bfafef3723cb423b110304815e56e3f97f81e0..67abdad06f6af64fb1530c2264ab2e7a896fbc1d 100644
+--- a/dist/types/icns.js
++++ b/dist/types/icns.js
+@@ -64,10 +64,15 @@ const ICON_TYPE_SIZE = {
+     ic10: 1024,
+ };
+ function readImageHeader(input, imageOffset) {
++    if (imageOffset + SIZE_HEADER > input.length)
++        throw new TypeError('Invalid ICNS, truncated image entry');
+     const imageLengthOffset = imageOffset + ENTRY_LENGTH_OFFSET;
++    const imageLength = (0, utils_1.readUInt32BE)(input, imageLengthOffset);
++    if (imageLength < SIZE_HEADER || imageOffset + imageLength > input.length)
++        throw new TypeError('Invalid ICNS, invalid image entry length');
+     return [
+         (0, utils_1.toUTF8String)(input, imageOffset, imageLengthOffset),
+-        (0, utils_1.readUInt32BE)(input, imageLengthOffset),
++        imageLength,
+     ];
+ }
+ function getImageSize(type) {
+@@ -79,6 +84,8 @@ exports.ICNS = {
+     calculate(input) {
+         const inputLength = input.length;
+         const fileLength = (0, utils_1.readUInt32BE)(input, FILE_LENGTH_OFFSET);
++        if (fileLength < SIZE_HEADER || fileLength > inputLength)
++            throw new TypeError('Invalid ICNS, invalid file length');
+         let imageOffset = SIZE_HEADER;
+         let imageHeader = readImageHeader(input, imageOffset);
+         let imageSize = getImageSize(imageHeader[0]);
+diff --git a/dist/types/utils.js b/dist/types/utils.js
+index 5224bbafe87551ac415cb3de234820ccc0ff6e2c..08d91dc7f5e0c72fbf1ec43c5dc0b09392ced1d8 100644
+--- a/dist/types/utils.js
++++ b/dist/types/utils.js
+@@ -52,6 +52,10 @@ function readBox(input, offset) {
+     if (input.length - offset < 4)
+         return;
+     const boxSize = (0, exports.readUInt32BE)(input, offset);
++    // ISO BMFF boxes require at least an 8-byte size/type header. Rejecting
++    // zero-length boxes also guarantees that callers can always advance.
++    if (boxSize < 8)
++        return;
+     if (input.length - offset < boxSize)
+         return;
+     return {

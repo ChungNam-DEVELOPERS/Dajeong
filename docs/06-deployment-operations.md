@@ -45,11 +45,24 @@ AWS CDK TypeScript가 네트워크, 보안 그룹, RDS, Cognito, SQS, EventBridg
 
 - PR 제목, 대상 브랜치, Issue 기반 브랜치 이름을 검사한다.
 - Markdown 링크·형식 검사
+- 환경 설정 계약·필수값 실패 케이스·추적 파일 secret 패턴 검사
 - TypeScript lint·typecheck·unit test
 - Spring compile·unit·integration test
 - OpenAPI 생성 후 변경 여부 검사
 - 웹 production build와 Expo export smoke test
 - 의존성·비밀·컨테이너가 추가된 이후 이미지 취약점 검사
+
+### 의존성 보안
+
+PR CI는 `pnpm check:dependency-security`로 전이 의존성의 로컬 보안 패치, 노출 범위 가정, `pnpm audit --audit-level moderate`를 함께 검증한다. 감사 예외는 GHSA별 근거와 제거 조건이 있는 경우에만 `pnpm-workspace.yaml`에 등록한다.
+
+| GHSA | 현재 완화 | 예외 제거 조건 |
+| --- | --- | --- |
+| [GHSA-w3rx-r6r6-pgpr](https://github.com/advisories/GHSA-w3rx-r6r6-pgpr) | `image-size@1.2.1`의 ICNS 파일·엔트리 길이를 검증하는 pnpm 패치와 악성 입력 회귀 테스트 | Expo·Metro가 해당 수정이 포함된 안전 버전을 제공할 때 패치와 예외를 함께 제거 |
+| [GHSA-5p2g-fcmc-qvqq](https://github.com/advisories/GHSA-5p2g-fcmc-qvqq) | 8바이트보다 짧은 ISO 이미지 박스를 거부하는 pnpm 패치와 JXL·HEIF 회귀 테스트 | Expo·Metro가 해당 수정이 포함된 안전 버전을 제공할 때 패치와 예외를 함께 제거 |
+| [GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq) | Expo의 `xcode@3.0.1`은 영향 함수인 UUID v3·v5·v6 및 호출자 버퍼를 사용하지 않고 `uuid.v4()`만 호출함을 회귀 테스트로 고정 | `xcode`가 `uuid@11.1.1` 이상 호환 범위를 제공하면 예외를 제거하고 정상 업데이트 |
+
+`image-size` 패치는 [Issue #21](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/21)에서 추적한다. 감사 결과를 숨기기 위한 존재하지 않는 버전 지정이나 상위 패키지 지원 범위를 벗어난 메이저 override는 사용하지 않는다.
 
 ### Dev 배포
 

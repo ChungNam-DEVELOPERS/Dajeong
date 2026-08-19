@@ -1,0 +1,67 @@
+{
+  "components": {
+    "schemas": {
+      "SystemHealthResponse": {
+        "properties": {
+          "database": {
+            "enum": [
+              "UP",
+              "DOWN"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "UP",
+              "DOWN"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "database",
+          "status"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/system/health": {
+      "get": {
+        "operationId": "getSystemHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemHealthResponse"
+                }
+              }
+            },
+            "description": "데이터베이스와 스키마가 준비됨"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemHealthResponse"
+                }
+              }
+            },
+            "description": "데이터베이스 또는 스키마를 사용할 수 없음"
+          }
+        },
+        "summary": "시스템 상태 확인",
+        "tags": [
+          "system-health-controller"
+        ]
+      }
+    }
+  }
+}
