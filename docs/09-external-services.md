@@ -23,7 +23,7 @@
 
 | 서비스 | 용도 | 상태 | 할당량·만료 확인 | 다음 행동 |
 | --- | --- | --- | --- | --- |
-| AWS | staging·production 인프라 | `NOT_CHECKED` | Budget 80% 알림 설정 필요 | MFA, 청구, 서울 리전, 권한 구조 확인 |
+| AWS | staging·production 인프라 | `MOCK_READY` | Budget 80% 알림 설정 필요 | MFA, 청구, 서울 리전, 권한 구조와 Cognito User Pool 생성 |
 | Kakao Developers | Cognito OIDC 로그인 | `NOT_CHECKED` | 동의 항목·심사 조건 확인 | 개발용 앱과 callback placeholder 등록 |
 | Google Cloud OAuth | Cognito OIDC 로그인 | `NOT_CHECKED` | 테스트 사용자·게시 상태 확인 | 웹·앱 client 구분 기록 |
 | Apple Developer | Sign in with Apple·iOS 배포 | `NOT_CHECKED` | 가입·심사·갱신일 확인 | identifier·key 필요 목록 기록 |
@@ -45,8 +45,11 @@
 | 공통 | `API_BASE_URL` | 아님 | `.env.local` 예정 | 플랫폼 환경 설정 |
 | Web | `NEXT_PUBLIC_API_BASE_URL` | 아님 | `apps/web/.env.local` | Amplify 환경 설정 |
 | Mobile | `EXPO_PUBLIC_API_BASE_URL` | 아님 | `apps/mobile/.env.local` | EAS environment |
-| Cognito | `COGNITO_USER_POOL_ID` | 아님 | 로컬 mock 설정 | SSM Parameter Store |
-| Cognito | `COGNITO_CLIENT_ID` | 아님 | 로컬 mock 설정 | SSM Parameter Store |
+| Cognito | `DAJEONG_COGNITO_ISSUER` | 아님 | 로컬 OIDC mock URL | SSM Parameter Store |
+| Cognito | `DAJEONG_COGNITO_DOMAIN` | 아님 | 로컬 OIDC mock URL | Amplify 환경 설정 |
+| Cognito | `DAJEONG_COGNITO_CLIENT_ID` | 아님 | 공개 로컬 app client ID | Amplify 환경 설정 |
+| Cognito | `DAJEONG_API_AUDIENCE` | 아님 | 로컬 API resource URL | Amplify 환경 설정·SSM Parameter Store |
+| Web | `DAJEONG_WEB_BASE_URL` | 아님 | `http://localhost:3000` | Amplify 환경 설정 |
 | Kakao | `KAKAO_OIDC_CLIENT_ID` | 아님 | 비밀 저장소 참조 | Secrets Manager |
 | Kakao | `KAKAO_OIDC_CLIENT_SECRET` | 맞음 | 비밀 저장소 | Secrets Manager |
 | Google | `GOOGLE_OIDC_CLIENT_ID` | 아님 | 비밀 저장소 참조 | Secrets Manager |
@@ -81,3 +84,4 @@
 | 날짜 | 영역 | 변경 | 다음 확인 |
 | --- | --- | --- | --- |
 | 2026-08-18 | 전체 | 서비스 대장과 환경 변수 보관 기준 생성 | EXT-02 AWS 계정·비용 보호 |
+| 2026-08-19 | Cognito | PKCE 웹 로그인과 API resource binding용 활성 변수 계약 추가, 로컬 mock 준비 | 실제 User Pool·도메인·app client 생성 후 Hosted UI 검증 |

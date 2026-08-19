@@ -18,6 +18,10 @@ const contracts = {
       name: "NEXT_PUBLIC_API_BASE_URL",
       type: "public-url",
     },
+    { name: "DAJEONG_WEB_BASE_URL", type: "public-url" },
+    { name: "DAJEONG_COGNITO_DOMAIN", type: "public-url" },
+    { name: "DAJEONG_COGNITO_CLIENT_ID", type: "identifier" },
+    { name: "DAJEONG_API_AUDIENCE", type: "public-url" },
   ],
   mobile: [
     {
@@ -31,6 +35,8 @@ const contracts = {
     { name: "DAJEONG_DB_NAME", type: "identifier" },
     { name: "DAJEONG_DB_USER", type: "identifier" },
     { name: "DAJEONG_DB_PASSWORD", type: "secret" },
+    { name: "DAJEONG_COGNITO_ISSUER", type: "public-url" },
+    { name: "DAJEONG_API_AUDIENCE", type: "public-url" },
   ],
 };
 
@@ -40,6 +46,8 @@ const localApiDefaults = {
   DAJEONG_DB_NAME: "dajeong",
   DAJEONG_DB_USER: "dajeong",
   DAJEONG_DB_PASSWORD: "dajeong-local-only",
+  DAJEONG_COGNITO_ISSUER: "http://127.0.0.1:9090/cognito/local",
+  DAJEONG_API_AUDIENCE: "http://localhost:8080/api",
 };
 
 const publicPrefixes = ["NEXT_PUBLIC_", "EXPO_PUBLIC_"];

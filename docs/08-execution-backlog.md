@@ -43,7 +43,7 @@
 
 ### 아직 하지 않음
 
-- Cognito·소셜 로그인 구현
+- Cognito 실환경·소셜 IdP 연결과 Hosted UI 검증 (웹 PKCE·현재 사용자 세로 슬라이스 구현 중)
 - `User`, `Trip`, `Membership`, `Invite` 도메인 테이블과 API
 - Expo 실기기 검증과 신규 모바일 기능·health 화면
 - UI 시안 전체 반영

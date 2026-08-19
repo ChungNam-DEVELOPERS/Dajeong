@@ -1,8 +1,8 @@
 # 환경 설정 계약
 
-> 기준일: 2026-08-18
+> 기준일: 2026-08-19
 >
-> 범위: 현재 구현된 웹, 모바일, API 기반과 다음 health 세로 슬라이스
+> 범위: 현재 구현된 웹, 모바일, API 기반과 Cognito 로그인·현재 사용자 세로 슬라이스
 
 이 문서는 `local`, `staging`, `production`에서 사용하는 환경변수의 이름, 공개 범위, 주입 시점과 보관 위치를 정의한다. 실제 비밀값은 이 문서, 예제 파일, Git 기록, CI 로그에 남기지 않는다.
 
@@ -21,6 +21,11 @@ Staging과 Production은 DB 자격 증명, Cognito, 외부 API 키를 공유하�
 | 소유자 | 변수 | 공개 여부 | 주입 시점 | Local | Staging | Production |
 | --- | --- | --- | --- | --- | --- | --- |
 | Web | `NEXT_PUBLIC_API_BASE_URL` | 공개 | Next.js build time | `apps/web/.env.local` | Amplify 환경 설정 | Amplify 환경 설정 |
+| Web | `DAJEONG_WEB_BASE_URL` | 서버 전용 비밀 아님 | Next.js runtime | `http://localhost:3000` | Amplify 환경 설정 | Amplify 환경 설정 |
+| Web·Cognito | `DAJEONG_COGNITO_DOMAIN` | 서버 전용 비밀 아님 | Next.js runtime | 로컬 OIDC mock URL | Amplify 환경 설정 | Amplify 환경 설정 |
+| Web·Cognito | `DAJEONG_COGNITO_CLIENT_ID` | 서버 전용 비밀 아님 | Next.js runtime | 공개 로컬 app client ID | Amplify 환경 설정 | Amplify 환경 설정 |
+| API·Cognito | `DAJEONG_COGNITO_ISSUER` | 서버 전용 비밀 아님 | runtime | 로컬 OIDC mock issuer | SSM Parameter Store | SSM Parameter Store |
+| Web·API | `DAJEONG_API_AUDIENCE` | 서버 전용 비밀 아님 | runtime | `http://localhost:8080/api` | Amplify 환경 설정·SSM Parameter Store | Amplify 환경 설정·SSM Parameter Store |
 | Mobile | `EXPO_PUBLIC_API_BASE_URL` | 공개 | Expo bundle time | `apps/mobile/.env.local` | EAS environment | EAS environment |
 | API | `SPRING_PROFILES_ACTIVE` | 서버 전용 | runtime | 실행 명령의 `local` | 플랫폼의 `staging` | 플랫폼의 `production` |
 | API·DB | `DAJEONG_DB_HOST` | 서버 전용 | runtime | 루트 `.env` 또는 안전한 기본값 | SSM Parameter Store | SSM Parameter Store |
@@ -31,11 +36,14 @@ Staging과 Production은 DB 자격 증명, Cognito, 외부 API 키를 공유하�
 
 `staging`과 `production`의 API DB 변수는 모두 필수다. `application-staging.yml`과 `application-production.yml`은 기본값 없이 이 변수를 참조하므로, 값이 없으면 Spring이 시작 단계에서 누락 변수명을 포함해 실패한다.
 
-향후 Cognito와 외부 API를 구현할 때 추가할 변수의 이름과 보관 위치는 [외부 서비스·비밀정보 대장](./09-external-services.md)에 먼저 기록하고, 실제 사용이 시작될 때 이 활성 계약과 검증 스크립트에 추가한다.
+Cognito app client는 secret이 없는 public client로 만들고 Authorization Code + PKCE만 활성화한다. 웹은 `DAJEONG_COGNITO_DOMAIN`의 관리형 로그인으로 이동하며 callback URI는 `${DAJEONG_WEB_BASE_URL}/api/auth/callback/cognito`, sign-out URI는 `DAJEONG_WEB_BASE_URL`이다. 로그인 요청의 `resource`에는 `DAJEONG_API_AUDIENCE`를 넣어 access token의 `aud`를 API에 바인딩한다.
+
+API는 `DAJEONG_COGNITO_ISSUER`, `DAJEONG_API_AUDIENCE`, JWT 서명·만료와 `token_use=access`를 모두 검증한다. 실제 Cognito 값은 아직 발급 전이며 로컬 예제 URL은 계약·mock 테스트 전용으로 실제 로그인을 제공하지 않는다.
 
 ## 3. 공개·비밀 경계
 
 - `NEXT_PUBLIC_*`는 Next.js가 브라우저 번들에 build time 값으로 인라인한다. 빌드 후 환경을 승격해도 값이 바뀌지 않으므로 환경마다 다시 빌드한다.
+- 웹의 `DAJEONG_COGNITO_DOMAIN`, `DAJEONG_COGNITO_CLIENT_ID`, `DAJEONG_API_AUDIENCE`, `DAJEONG_WEB_BASE_URL`은 공개 가능한 식별자·URL이지만 서버 Route Handler에서만 읽는다. access token과 refresh token은 HttpOnly·SameSite 쿠키에 저장하고 클라이언트 JavaScript나 `NEXT_PUBLIC_*` 변수에 노출하지 않는다.
 - `EXPO_PUBLIC_*`는 Expo 앱 번들에서 읽을 수 있는 공개 설정이다.
 - `PASSWORD`, `SECRET`, `TOKEN`, `PRIVATE_KEY`, `API_KEY`, `SERVICE_ACCOUNT` 성격의 값에는 공개 접두사를 붙이지 않는다.
 - API DB 자격 증명과 외부 서비스 secret은 웹·앱 빌드 환경에 주입하지 않는다.
@@ -74,3 +82,4 @@ node scripts/check-env.mjs --app api --environment local
 3. 웹·앱 공개 URL은 해당 환경 빌드 전에 설정하고, API runtime secret은 번들 빌드 작업에 전달하지 않는다.
 4. 배포 로그에는 값 대신 설정 누락 변수명과 검증 결과만 남긴다.
 5. 변수 추가·이름 변경·폐기 시 이 문서와 `docs/09-external-services.md`, 예제 파일, 검증 계약을 같은 PR에서 갱신한다.
+6. Cognito callback·sign-out URL과 API resource identifier는 환경별로 정확히 일치해야 하며 Staging과 Production User Pool·app client를 공유하지 않는다.
