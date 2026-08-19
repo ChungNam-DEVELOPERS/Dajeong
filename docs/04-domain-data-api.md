@@ -103,6 +103,10 @@
 
 ## 6. 삭제·감사·보안
 
+- 계정 삭제는 `app_user`의 표시 이름과 Cognito subject 원문을 익명값으로 교체하고 `DELETED` 상태·삭제 시각을 기록한다.
+- 삭제된 access token이 내부 계정을 다시 만들지 못하도록 Cognito subject의 SHA-256 tombstone만 별도 보존한다. 원문 subject는 유지하지 않는다.
+- 삭제 사용자의 활성 멤버십은 종료하고, 해당 사용자가 방장인 `DRAFT`·`ACTIVE` 여행은 `ARCHIVED`로 전환하며 관련 활성 멤버십과 초대를 종료한다.
+- 실제 Cognito User Pool 사용자 삭제는 AWS 인프라 연결 후 API의 내부 삭제와 조정한다. 현재 웹은 내부 삭제 성공 시 refresh token 폐기를 시도하고 로컬 세션 쿠키를 제거한다.
 - 여행 종료 30일 후 `PrivatePreference`, 멤버별 후보 만족도, `Vote` 선택값을 삭제한다.
 - 투표 총계와 일정 버전은 익명 집계로 유지한다.
 - 일정 변경 감사 기록에는 행위 유형·시각·버전만 남기고 민감 입력은 남기지 않는다.
