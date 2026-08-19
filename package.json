@@ -13,6 +13,7 @@
     "check:api-client": "./services/api/gradlew -p services/api generateOpenApi && pnpm --filter @dajeong/api-client check",
     "check:configuration": "node --test scripts/environment-contract.test.mjs && pnpm check:env && pnpm check:secrets",
     "check:db": "docker compose config --quiet",
+    "check:dependency-security": "node --test scripts/dependency-security.test.mjs && pnpm audit --audit-level moderate",
     "check:env": "node scripts/check-env.mjs --app all --environment local --source example",
     "check:pr-policy": "node scripts/check-pr-policy.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
