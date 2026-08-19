@@ -1,13 +1,9 @@
+import { SystemHealthCard } from "./system-health-card";
+
 const foundationItems = [
   { label: "Routing", value: "App Router" },
   { label: "Quality", value: "Lint · Typecheck" },
   { label: "Theme", value: "Shared tokens" },
-] as const;
-
-const readinessItems = [
-  "Server Component 기본 구조",
-  "공통 TypeScript·ESLint 규칙",
-  "반응형 최소 홈 화면",
 ] as const;
 
 export default function HomePage() {
@@ -58,44 +54,7 @@ export default function HomePage() {
           </dl>
         </section>
 
-        <aside
-          className="relative w-full max-w-[560px] overflow-hidden rounded-3xl border border-line bg-panel p-[clamp(var(--space-lg),4vw,var(--space-xxl))] shadow-xl lg:max-w-none"
-          aria-labelledby="readiness-title"
-        >
-          <div
-            className="absolute -top-14 -right-10 size-36 rounded-full bg-highlight opacity-80"
-            aria-hidden="true"
-          />
-          <p className="relative mb-[var(--space-xs)] text-xs font-extrabold text-brand">
-            현재 단계
-          </p>
-          <h2
-            id="readiness-title"
-            className="relative text-[clamp(1.65rem,3vw,2.25rem)] font-extrabold tracking-[-0.035em]"
-          >
-            Next.js 웹 기반
-          </h2>
-          <ul className="my-[var(--space-xl)] grid list-none gap-[var(--space-md)] p-0">
-            {readinessItems.map((item) => (
-              <li
-                className="flex items-center gap-[var(--space-sm)] text-[0.95rem] font-semibold text-muted"
-                key={item}
-              >
-                <span
-                  className="grid size-[26px] shrink-0 place-items-center rounded-full bg-brand text-xs font-black text-white"
-                  aria-hidden="true"
-                >
-                  ✓
-                </span>
-                {item}
-              </li>
-            ))}
-          </ul>
-          <div className="grid gap-1 rounded-[18px] bg-soft p-[var(--space-md)]">
-            <span className="text-xs font-bold text-muted">웹의 다음 연결</span>
-            <strong className="text-[0.95rem]">API health 세로 슬라이스</strong>
-          </div>
-        </aside>
+        <SystemHealthCard />
       </div>
     </main>
   );
