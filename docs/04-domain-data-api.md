@@ -8,6 +8,7 @@
 | `Trip` | 제목, 대전 고정 지역, 시작·종료일, 방장, 상태 |
 | `Membership` | 여행·사용자, `HOST`/`MEMBER`, 활성 상태. 여행당 최대 6명 |
 | `Invite` | 해시된 코드, 만료 시각, 폐기 시각. 평문 코드는 생성 응답에서만 제공 |
+| `ItineraryDraft` | 여행별 현재 초안 revision과 마지막 발행 revision. 편집은 방장만 가능 |
 | `ItineraryVersion` | 여행, 버전 번호, 생성 원인, 이전 버전, 확정 시각 |
 | `ItinerarySlot` | 날짜·시간, 장소, 좌표, 실내외, 범주, 비용, 출처 |
 | `PrivatePreference` | 멤버별 최신 원본 응답. 본인과 계산 서비스만 접근 |
@@ -64,6 +65,7 @@
 | 메서드 | 경로 | 설명 |
 | --- | --- | --- |
 | `GET` | `/trips/{tripId}/itineraries/current` | 현재 확정 버전 조회 |
+| `GET` | `/trips/{tripId}/itineraries/draft` | 방장의 현재 초안과 revision 조회 |
 | `POST` | `/trips/{tripId}/itineraries/draft/slots` | 방장 슬롯 추가 |
 | `PATCH/DELETE` | `/trips/{tripId}/itineraries/draft/slots/{slotId}` | 방장 슬롯 변경·삭제 |
 | `POST` | `/trips/{tripId}/itineraries/draft/publish` | 기존 일정 기준 버전 발행 |
@@ -87,11 +89,18 @@
 
 ## 4. 공통 계약
 
-- 생성·변경 요청은 `Idempotency-Key`를 받는다.
-- 일정 편집은 `If-Match`에 버전을 보내며 불일치 시 `409 Conflict`와 최신 리소스 링크를 반환한다.
+- 재시도로 중복이 생길 수 있는 생성·발행 요청은 `Idempotency-Key`를 받는다.
+- 일정 슬롯 추가·변경·삭제와 발행은 `If-Match`에 초안 revision을 보내며 불일치 시 `409 Conflict` 및 `STALE_VERSION`을 반환한다.
 - 목록은 cursor pagination을 사용한다.
 - 오류 형식은 RFC 9457 Problem Details를 사용하고 `type`, `title`, `status`, `detail`, `instance`, `code`, `correlationId`를 포함한다.
 - 주요 코드는 `AUTH_REQUIRED`, `FORBIDDEN`, `INVITE_EXPIRED`, `TRIP_FULL`, `STALE_VERSION`, `VOTE_CLOSED`, `UPSTREAM_UNAVAILABLE`, `QUOTA_EXCEEDED`, `NO_FEASIBLE_PROPOSAL`이다.
+
+### 일정 초안·발행 규칙
+
+- `DRAFT`·`ACTIVE` 여행의 방장은 장소명, 주소, 시작·종료 시각, 분류, 실내외, 예상 비용을 직접 입력한다. 좌표는 위도·경도를 함께 입력하거나 둘 다 생략한다.
+- 슬롯은 여행 기간 안에 있어야 하고 동일 초안의 다른 슬롯과 시간이 겹치지 않아야 한다. 시간은 UTC로 저장하고 웹 입력·표시는 `Asia/Seoul`을 사용한다.
+- 발행은 현재 초안을 `ORIGINAL` 원인의 불변 버전으로 복사한다. 발행 후 편집은 다음 revision에만 반영되며 이전 버전을 바꾸지 않는다.
+- 활성 멤버는 현재 확정 버전을 볼 수 있지만 초안은 볼 수 없다. 아직 발행된 버전이 없으면 `404` 및 `ITINERARY_NOT_PUBLISHED`를 반환한다.
 
 ## 5. 투표와 적용 규칙
 

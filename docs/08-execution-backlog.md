@@ -9,6 +9,8 @@
 > 2026-08-19 결정: [Issue #31](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/31)에 따라 1차 공개 베타는 웹을 우선하고 모바일 기능은 웹 MVP 안정화 후 재개한다.
 >
 > 2026-08-19 진행: [Issue #35](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/35)에서 여행 생성 → DB 저장 → 웹 목록 세로 슬라이스를 구현하고 검증했다.
+>
+> 2026-08-19 진행: [Issue #41](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/41)에서 기존 일정 입력 → revision 기반 초안 편집 → 불변 버전 발행 웹 세로 슬라이스를 구현하고 검증했다.
 
 이 문서는 [종합 개발 계획](./00-development-plan.md)의 단계 0~1만 실행 단위로 분해한다. 전체 기간과 출시 기준은 [로드맵과 테스트](./07-roadmap-testing.md)를 따른다.
 
@@ -318,6 +320,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-19 | Issue #35 | 여행·방장 멤버십 원자 생성, 멱등 요청, cursor 목록 API와 웹 생성·목록 화면 구현 | PostgreSQL 통합 테스트, OpenAPI client 11건, 웹 상태 테스트 13건, production build, `/trips` 브라우저 오류 0건 | 초대·가입 세로 슬라이스 |
 | 2026-08-19 | Issue #37 | 7일 초대 발급·재발급 폐기, 로그인 복귀, 멱등 가입, 6명 동시성 제한과 웹 발급·가입 화면 구현 | API 25건, OpenAPI client 15건, 웹 상태·인증 테스트 17건, production build, Expo web 회귀 export 통과 | 계정 삭제 세로 슬라이스 |
 | 2026-08-19 | Issue #39 | 계정 식별정보 익명화, 삭제 token tombstone, 멤버십 종료·방장 여행 보관과 웹 2단계 삭제 흐름 구현 | API 28건, OpenAPI client 17건, 웹 상태·인증 테스트 19건, production build 통과 | 기존 일정 입력 세로 슬라이스 |
+| 2026-08-19 | Issue #41 | 여행 기간·중복 검증, revision 낙관적 잠금, 멱등 추가·발행, 불변 일정 버전과 웹 입력·편집·발행 흐름 구현 | API 31건, OpenAPI client 23건, 웹 상태·인증 테스트 24건, production build·Expo web export 통과 | 비공개 선호 입력 세로 슬라이스 |
 
 ## 9. 2단계 상세화 시점
 
@@ -329,5 +332,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 2. ~~여행 생성 → DB 저장 → 웹 목록~~ ([Issue #35](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/35))
 3. ~~초대 발급 → 로그인 복귀 → 3~6인 가입·권한 검증~~ ([Issue #37](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/37))
 4. ~~계정 삭제 → 도메인 처리 → 웹 완료 흐름~~ ([Issue #39](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/39))
+5. ~~기존 일정 입력 → revision 기반 초안 편집 → 불변 버전 발행~~ ([Issue #41](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/41))
+6. 비공개 선호 입력 → 본인 조회 → 멤버별 제출 상태 확인
 
 웹 공개 베타가 안정화되면 FND-05와 FND-12를 재개하고 위 세로 슬라이스의 모바일 화면·딥링크·푸시·실기기 검증을 별도 백로그로 상세화한다.
