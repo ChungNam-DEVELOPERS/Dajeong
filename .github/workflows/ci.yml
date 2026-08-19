@@ -59,29 +59,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify dependency security mitigations
-        run: pnpm check:dependency-security
-
-      - name: Verify toolchain
-        run: pnpm check:toolchain
-
-      - name: Validate environment contract and scan secrets
-        run: pnpm check:configuration
-
-      - name: Validate PostgreSQL Compose configuration
-        run: pnpm check:db
-
-      - name: Test and package API
-        run: pnpm check:api
-
-      - name: Verify generated OpenAPI client
-        run: pnpm check:api-client
-
-      - name: Lint and typecheck
-        run: pnpm check:shared-config
-
-      - name: Build web
-        run: pnpm --filter @dajeong/web build
-
-      - name: Export Expo web bundle
-        run: pnpm --filter @dajeong/mobile run export:web
+      - name: Run repository quality gate
+        run: pnpm check

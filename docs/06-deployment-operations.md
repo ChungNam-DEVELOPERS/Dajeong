@@ -56,6 +56,8 @@ AWS CDK TypeScript가 네트워크, 보안 그룹, RDS, Cognito, SQS, EventBridg
 
 PR CI는 `pnpm check:dependency-security`로 전이 의존성의 로컬 보안 패치, 노출 범위 가정, `pnpm audit --audit-level moderate`를 함께 검증한다. 감사 예외는 GHSA별 근거와 제거 조건이 있는 경우에만 `pnpm-workspace.yaml`에 등록한다.
 
+PR CI는 clean checkout에서 고정된 pnpm lockfile로 의존성을 설치한 뒤 루트 `pnpm check`만 실행한다. 이 단일 진입점이 Markdown, 환경·비밀값 계약, Spring·OpenAPI, workspace lint·typecheck·test, Next.js build와 Expo web export를 로컬과 같은 순서로 검증한다.
+
 | GHSA | 현재 완화 | 예외 제거 조건 |
 | --- | --- | --- |
 | [GHSA-w3rx-r6r6-pgpr](https://github.com/advisories/GHSA-w3rx-r6r6-pgpr) | `image-size@1.2.1`의 ICNS 파일·엔트리 길이를 검증하는 pnpm 패치와 악성 입력 회귀 테스트 | Expo·Metro가 해당 수정이 포함된 안전 버전을 제공할 때 패치와 예외를 함께 제거 |
