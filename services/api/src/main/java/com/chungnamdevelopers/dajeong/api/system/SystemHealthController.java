@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.DataAccessException;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,17 +32,23 @@ public class SystemHealthController {
         this.jdbcClientProvider = jdbcClientProvider;
     }
 
-    @Operation(summary = "시스템 상태 확인")
+    @Operation(operationId = "getSystemHealth", summary = "시스템 상태 확인")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
                     description = "데이터베이스와 스키마가 준비됨",
-                    content = @Content(schema = @Schema(implementation = SystemHealthResponse.class))
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = SystemHealthResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "503",
                     description = "데이터베이스 또는 스키마를 사용할 수 없음",
-                    content = @Content(schema = @Schema(implementation = SystemHealthResponse.class))
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = SystemHealthResponse.class)
+                    )
             )
     })
     @GetMapping("/health")

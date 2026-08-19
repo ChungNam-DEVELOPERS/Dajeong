@@ -12,6 +12,7 @@
     "typecheck": "tsc --project tsconfig.json"
   },
   "dependencies": {
+    "@dajeong/api-client": "workspace:*",
     "@dajeong/design-tokens": "workspace:*",
     "next": "16.3.1",
     "react": "19.2.8",
