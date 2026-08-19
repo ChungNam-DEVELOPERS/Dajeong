@@ -1,6 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "packages/api-client/generator"
   - "infra/*"
 allowBuilds:
   unrs-resolver: true

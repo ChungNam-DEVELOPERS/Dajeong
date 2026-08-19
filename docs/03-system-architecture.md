@@ -45,6 +45,7 @@ Node 패키지는 pnpm workspace와 Turborepo로 관리한다. Spring은 독립 
 - Next.js App Router와 Expo Router의 경로 이름을 도메인 기준으로 맞춘다.
 - 서버 상태는 TanStack Query, 작은 로컬 UI 상태는 각 플랫폼 기본 상태로 관리한다.
 - API 계약은 Spring OpenAPI 문서에서 생성하며 수동 DTO 중복 정의를 금지한다.
+- `pnpm generate:api-client`는 환경별 서버 주소를 제외한 OpenAPI 스키마와 `@dajeong/api-client` 타입을 생성하고, `pnpm check:api-client`는 Spring 계약과 커밋된 생성물의 불일치를 차단한다.
 - 웹 SSR은 공개 랜딩과 초대 메타데이터에만 사용한다. 로그인 이후 화면은 인증된 클라이언트 데이터 조회를 사용한다.
 - 인증은 시스템 브라우저의 Authorization Code+PKCE 흐름을 사용하고 토큰은 웹의 보안 쿠키 또는 앱 SecureStore에 저장한다.
 

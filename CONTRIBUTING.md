@@ -107,12 +107,13 @@ pnpm check:toolchain
 pnpm check:configuration
 pnpm check:db
 pnpm check:api
+pnpm check:api-client
 pnpm check:shared-config
 pnpm --filter @dajeong/web build
 pnpm --filter @dajeong/mobile run export:web
 ```
 
-OpenAPI generation, CDK, and deployment checks must be added to the same CI gate as those components are implemented.
+API 계약을 변경하면 `pnpm generate:api-client`로 OpenAPI 스키마와 TypeScript 타입을 함께 갱신한다. `pnpm check:api-client`는 현재 Spring 계약과 커밋된 생성물이 다르면 실패한다. CDK와 배포 검사는 해당 구성 요소가 구현될 때 같은 CI 게이트에 추가한다.
 
 ## Protected branches
 

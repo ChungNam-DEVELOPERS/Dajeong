@@ -67,6 +67,9 @@ jobs:
       - name: Test and package API
         run: pnpm check:api
 
+      - name: Verify generated OpenAPI client
+        run: pnpm check:api-client
+
       - name: Lint and typecheck
         run: pnpm check:shared-config
 

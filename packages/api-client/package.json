@@ -1,5 +1,26 @@
 {
   "name": "@dajeong/api-client",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "check": "pnpm check:generated && pnpm lint && pnpm typecheck && pnpm test",
+    "check:generated": "pnpm --dir generator check:generated",
+    "generate": "pnpm --dir generator generate",
+    "lint": "eslint src --max-warnings=0",
+    "test": "node --test tests/*.test.mjs",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@dajeong/config": "workspace:*",
+    "eslint": "9.39.5",
+    "typescript": "6.0.3"
+  }
 }
