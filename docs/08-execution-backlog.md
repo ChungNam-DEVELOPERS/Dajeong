@@ -154,8 +154,8 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | `DONE` | FND-11 | 웹 health 세로 슬라이스 | 0.25일 | FND-04, FND-10 |
 | `DEFERRED` | FND-12 | 앱 health 세로 슬라이스 | 0.25일 | 웹 MVP 안정화, FND-05, FND-10 |
 | `DONE` | FND-13 | 루트 품질 명령·Turbo 파이프라인 | 0.5일 | FND-03~04, FND-06~11 |
-| `DOING` | FND-14 | GitHub Actions PR CI | 0.5일 | FND-13 |
-| `TODO` | FND-15 | CDK staging 기반·synth·diff | 0.5일 | FND-14, EXT-02 |
+| `DONE` | FND-14 | GitHub Actions PR CI | 0.5일 | FND-13 |
+| `NEXT` | FND-15 | CDK staging 기반·synth·diff | 0.5일 | FND-14, EXT-02 |
 | `TODO` | FND-16 | GitHub Actions OIDC 배포 인증 | 0.5일 | FND-15 |
 | `TODO` | FND-17 | 최소 staging 배포·health smoke | 1일 | FND-11, FND-13~16 |
 | `TODO` | FND-18 | clean-room 재현·1단계 출구 게이트 | 0.5일 | FND-17 |
@@ -341,6 +341,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-19 | Issue #53 | 전원 참여 즉시 마감과 기한 배치 진입점, 최다 득표·공정성 rank 동률 해소, REPLAN 불변 일정 버전·양보 원장 원자적 적용, 웹 확정 결과·3초 폴링 표시 | API 48건, OpenAPI client 35건, 웹 상태·인증 테스트 37건, production build·Expo web export 통과 | 일정 변경 타임라인·인앱 알림 세로 슬라이스 |
 | 2026-08-20 | Issue #55 | 불변 일정 버전 감사 타임라인, 재조정 적용 트랜잭션의 활성 멤버별 알림 멱등 생성, cursor 목록·읽음 동기화, 알림함에서 확정 후보 이동 | API 48건, OpenAPI client 39건, 웹 상태·인증 테스트 42건, production build·Expo web export 통과 | FND-13 루트 품질 명령·Turbo 파이프라인 정리 |
 | 2026-08-20 | FND-13 | 루트 lint·typecheck·test·build와 API·OpenAPI를 포함한 단일 품질 게이트, Turbo 의존 그래프·환경 해시·build 산출물 캐시 구성 | `pnpm check` 통과, 동일 build 재실행 2/2 cache hit, 의도적 `TS2322`에서 루트 typecheck 종료 코드 2 확인 | FND-14 GitHub Actions PR CI |
+| 2026-08-20 | FND-14 | 고정 버전 Markdown lint를 추가하고 clean checkout PR CI를 루트 `pnpm check` 단일 진입점으로 통합 | 의도적 `MD024` [CI 실패](https://github.com/ChungNam-DEVELOPERS/Dajeong/actions/runs/32276639293) 후 probe 제거, 같은 PR의 [CI 성공](https://github.com/ChungNam-DEVELOPERS/Dajeong/actions/runs/32276921239) | FND-15 CDK staging 기반·synth·diff |
 
 ## 9. 2단계 상세화 시점
 
