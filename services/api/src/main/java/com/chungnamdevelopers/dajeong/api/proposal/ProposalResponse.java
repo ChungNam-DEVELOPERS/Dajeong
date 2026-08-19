@@ -23,6 +23,7 @@ public record ProposalResponse(
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int expectedCost,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int totalTravelMinutes,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED) BigDecimal minimumMemberSatisfaction,
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) BigDecimal weightedAverageSatisfaction
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) BigDecimal weightedAverageSatisfaction,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int voteCount
 ) {
 }

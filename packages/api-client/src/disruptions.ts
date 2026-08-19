@@ -15,6 +15,8 @@ type StartDisruptionReplanOperation =
   paths["/api/v1/disruptions/{disruptionId}/replans"]["post"];
 type GetProposalSetOperation =
   paths["/api/v1/proposal-sets/{proposalSetId}"]["get"];
+type UpsertProposalVoteOperation =
+  paths["/api/v1/proposal-sets/{proposalSetId}/vote"]["put"];
 
 export type CreateDisruptionRequest =
   CreateDisruptionOperation["requestBody"]["content"]["application/json"];
@@ -31,6 +33,8 @@ export type ProposalSetResponse =
   GetProposalSetOperation["responses"][200]["content"]["application/json"];
 export type ProposalResponse = ProposalSetResponse["proposals"][number];
 export type ProposalSetStatus = ProposalSetResponse["status"];
+export type VoteRequest =
+  UpsertProposalVoteOperation["requestBody"]["content"]["application/json"];
 
 export interface DisruptionTripOptions extends ApiClientOptions {
   accessToken?: string;
@@ -54,6 +58,10 @@ export interface ProposalSetOptions extends ApiClientOptions {
   accessToken?: string;
   proposalSetId: string;
   signal?: AbortSignal;
+}
+
+export interface UpsertProposalVoteOptions extends ProposalSetOptions {
+  request: VoteRequest;
 }
 
 export async function listDisruptions(
@@ -117,10 +125,33 @@ export async function getProposalSet(
   );
 }
 
+export async function upsertProposalVote(
+  options: UpsertProposalVoteOptions,
+): Promise<ProposalSetResponse> {
+  return requestJson<ProposalSetResponse>(
+    options,
+    `/api/v1/proposal-sets/${encodeURIComponent(options.proposalSetId)}/vote`,
+    "PUT",
+    [200],
+    options.request,
+  );
+}
+
+export async function withdrawProposalVote(
+  options: ProposalSetOptions,
+): Promise<ProposalSetResponse> {
+  return requestJson<ProposalSetResponse>(
+    options,
+    `/api/v1/proposal-sets/${encodeURIComponent(options.proposalSetId)}/vote`,
+    "DELETE",
+    [200],
+  );
+}
+
 async function requestJson<Response>(
   options: ApiClientOptions & { accessToken?: string; signal?: AbortSignal },
   path: string,
-  method: "GET" | "POST",
+  method: "DELETE" | "GET" | "POST" | "PUT",
   successStatuses: readonly number[],
   requestBody?: unknown,
   idempotencyKey?: string,

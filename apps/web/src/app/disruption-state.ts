@@ -2,6 +2,7 @@ import type {
   CreateDisruptionRequest,
   DisruptionResponse,
   ManualDisruptionType,
+  ProposalSetResponse,
   ReplanStartResponse,
 } from "@dajeong/api-client";
 
@@ -79,6 +80,38 @@ export function applyReplanStart(
         }
       : item,
   );
+}
+
+export function applyOptimisticProposalVote(
+  proposalSet: ProposalSetResponse,
+  proposalId: string | null,
+): ProposalSetResponse {
+  const previousProposalId = proposalSet.myVoteProposalId ?? null;
+  if (previousProposalId === proposalId) {
+    return proposalSet;
+  }
+  const participationDelta =
+    previousProposalId === null ? 1 : proposalId === null ? -1 : 0;
+  return {
+    ...proposalSet,
+    myVoteProposalId: proposalId,
+    participantCount: Math.max(
+      0,
+      Math.min(
+        proposalSet.eligibleMemberCount,
+        proposalSet.participantCount + participationDelta,
+      ),
+    ),
+    proposals: proposalSet.proposals.map((proposal) => {
+      const voteDelta =
+        (proposal.id === proposalId ? 1 : 0) -
+        (proposal.id === previousProposalId ? 1 : 0);
+      return {
+        ...proposal,
+        voteCount: Math.max(0, proposal.voteCount + voteDelta),
+      };
+    }),
+  };
 }
 
 export function proposalFailureMessage(code?: string | null): string {

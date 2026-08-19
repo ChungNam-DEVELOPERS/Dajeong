@@ -199,6 +199,8 @@ public class ProposalGenerationService {
                         set status = 'OPEN',
                             shortage_reason = :shortageReason,
                             failure_code = null,
+                            voting_opened_at = current_timestamp,
+                            voting_deadline_at = current_timestamp + interval '12 hours',
                             completed_at = current_timestamp,
                             updated_at = current_timestamp
                         where id = :id

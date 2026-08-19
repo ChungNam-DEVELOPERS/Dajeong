@@ -33,6 +33,8 @@ export {
   getProposalSet,
   listDisruptions,
   startDisruptionReplan,
+  upsertProposalVote,
+  withdrawProposalVote,
 } from "./disruptions.ts";
 export type {
   ApiClientOptions,
@@ -95,6 +97,8 @@ export type {
   ProposalSetResponse,
   ProposalSetStatus,
   ReplanStartResponse,
+  UpsertProposalVoteOptions,
+  VoteRequest,
 } from "./disruptions.ts";
 export type {
   components,

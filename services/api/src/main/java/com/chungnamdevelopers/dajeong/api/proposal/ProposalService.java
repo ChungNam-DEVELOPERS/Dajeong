@@ -60,7 +60,8 @@ public class ProposalService {
             requireActiveMember(jdbcClient, existing.get().proposalSetId(), currentUser.id());
             ProposalSetResponse proposalSet = loadResponse(
                     jdbcClient,
-                    existing.get().proposalSetId()
+                    existing.get().proposalSetId(),
+                    currentUser.id()
             );
             return new ReplanStartResponse(
                     disruptionId,
@@ -139,7 +140,7 @@ public class ProposalService {
         return new ReplanStartResponse(
                 disruptionId,
                 DisruptionStatus.ACKNOWLEDGED,
-                loadResponse(jdbcClient, proposalSetId)
+                loadResponse(jdbcClient, proposalSetId, currentUser.id())
         );
     }
 
@@ -150,26 +151,51 @@ public class ProposalService {
     ) {
         JdbcClient jdbcClient = requireJdbcClient();
         requireActiveMember(jdbcClient, proposalSetId, currentUser.id());
-        return loadResponse(jdbcClient, proposalSetId);
+        return loadResponse(jdbcClient, proposalSetId, currentUser.id());
     }
 
     ProposalSetResponse loadResponse(JdbcClient jdbcClient, UUID proposalSetId) {
+        return loadResponse(jdbcClient, proposalSetId, null);
+    }
+
+    ProposalSetResponse loadResponse(
+            JdbcClient jdbcClient,
+            UUID proposalSetId,
+            UUID currentUserId
+    ) {
         ProposalSetRow set = jdbcClient.sql("""
                         select
-                            id,
-                            disruption_id,
-                            trip_id,
-                            itinerary_version_id,
-                            status,
-                            candidate_limit,
-                            shortage_reason,
-                            failure_code,
-                            created_at,
-                            started_at,
-                            completed_at,
-                            updated_at
-                        from public.proposal_set
-                        where id = :id
+                            ps.id,
+                            ps.disruption_id,
+                            ps.trip_id,
+                            ps.itinerary_version_id,
+                            ps.status,
+                            ps.candidate_limit,
+                            ps.shortage_reason,
+                            ps.failure_code,
+                            ps.voting_opened_at,
+                            ps.voting_deadline_at,
+                            ps.created_at,
+                            ps.started_at,
+                            ps.completed_at,
+                            ps.updated_at,
+                            (
+                                select count(*)
+                                from public.trip_membership m
+                                where m.trip_id = ps.trip_id
+                                  and m.status = 'ACTIVE'
+                            ) as eligible_member_count,
+                            (
+                                select count(*)
+                                from public.vote v
+                                join public.trip_membership m
+                                  on m.trip_id = ps.trip_id
+                                 and m.user_id = v.user_id
+                                 and m.status = 'ACTIVE'
+                                where v.proposal_set_id = ps.id
+                            ) as participant_count
+                        from public.proposal_set ps
+                        where ps.id = :id
                         """)
                 .param("id", proposalSetId)
                 .query((resultSet, rowNumber) -> new ProposalSetRow(
@@ -181,10 +207,20 @@ public class ProposalService {
                         resultSet.getInt("candidate_limit"),
                         resultSet.getString("shortage_reason"),
                         resultSet.getString("failure_code"),
+                        nullableInstant(resultSet.getObject(
+                                "voting_opened_at",
+                                Timestamp.class
+                        )),
+                        nullableInstant(resultSet.getObject(
+                                "voting_deadline_at",
+                                Timestamp.class
+                        )),
                         resultSet.getObject("created_at", Timestamp.class).toInstant(),
                         nullableInstant(resultSet.getObject("started_at", Timestamp.class)),
                         nullableInstant(resultSet.getObject("completed_at", Timestamp.class)),
-                        resultSet.getObject("updated_at", Timestamp.class).toInstant()
+                        resultSet.getObject("updated_at", Timestamp.class).toInstant(),
+                        resultSet.getInt("eligible_member_count"),
+                        resultSet.getInt("participant_count")
                 ))
                 .optional()
                 .orElseThrow(() -> new ApiException(
@@ -194,25 +230,37 @@ public class ProposalService {
                 ));
         List<ProposalResponse> proposals = jdbcClient.sql("""
                         select
-                            id,
-                            rank,
-                            title,
-                            summary,
-                            starts_at,
-                            ends_at,
-                            place_name,
-                            address,
-                            latitude,
-                            longitude,
-                            indoor,
-                            category,
-                            expected_cost,
-                            total_travel_minutes,
-                            minimum_member_satisfaction,
-                            weighted_average_satisfaction
-                        from public.proposal
-                        where proposal_set_id = :proposalSetId
-                        order by rank
+                            p.id,
+                            p.rank,
+                            p.title,
+                            p.summary,
+                            p.starts_at,
+                            p.ends_at,
+                            p.place_name,
+                            p.address,
+                            p.latitude,
+                            p.longitude,
+                            p.indoor,
+                            p.category,
+                            p.expected_cost,
+                            p.total_travel_minutes,
+                            p.minimum_member_satisfaction,
+                            p.weighted_average_satisfaction,
+                            (
+                                select count(*)
+                                from public.vote v
+                                join public.trip_membership m
+                                  on m.trip_id = ps.trip_id
+                                 and m.user_id = v.user_id
+                                 and m.status = 'ACTIVE'
+                                where v.proposal_set_id = p.proposal_set_id
+                                  and v.proposal_id = p.id
+                            ) as vote_count
+                        from public.proposal p
+                        join public.proposal_set ps
+                          on ps.id = p.proposal_set_id
+                        where p.proposal_set_id = :proposalSetId
+                        order by p.rank
                         """)
                 .param("proposalSetId", proposalSetId)
                 .query((resultSet, rowNumber) -> new ProposalResponse(
@@ -231,9 +279,23 @@ public class ProposalService {
                         resultSet.getInt("expected_cost"),
                         resultSet.getInt("total_travel_minutes"),
                         resultSet.getBigDecimal("minimum_member_satisfaction"),
-                        resultSet.getBigDecimal("weighted_average_satisfaction")
+                        resultSet.getBigDecimal("weighted_average_satisfaction"),
+                        resultSet.getInt("vote_count")
                 ))
                 .list();
+        UUID myVoteProposalId = currentUserId == null
+                ? null
+                : jdbcClient.sql("""
+                                select proposal_id
+                                from public.vote
+                                where proposal_set_id = :proposalSetId
+                                  and user_id = :userId
+                                """)
+                        .param("proposalSetId", proposalSetId)
+                        .param("userId", currentUserId)
+                        .query(UUID.class)
+                        .optional()
+                        .orElse(null);
         return new ProposalSetResponse(
                 set.id(),
                 set.disruptionId(),
@@ -242,8 +304,13 @@ public class ProposalService {
                 set.status(),
                 set.candidateLimit(),
                 proposals.size(),
+                set.eligibleMemberCount(),
+                set.participantCount(),
+                myVoteProposalId,
                 set.shortageReason(),
                 set.failureCode(),
+                set.votingOpenedAt(),
+                set.votingDeadlineAt(),
                 set.createdAt(),
                 set.startedAt(),
                 set.completedAt(),
@@ -407,10 +474,14 @@ public class ProposalService {
             int candidateLimit,
             String shortageReason,
             String failureCode,
+            Instant votingOpenedAt,
+            Instant votingDeadlineAt,
             Instant createdAt,
             Instant startedAt,
             Instant completedAt,
-            Instant updatedAt
+            Instant updatedAt,
+            int eligibleMemberCount,
+            int participantCount
     ) {
     }
 }

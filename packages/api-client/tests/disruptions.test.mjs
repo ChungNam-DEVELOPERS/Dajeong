@@ -8,6 +8,8 @@ import {
   getProposalSet,
   listDisruptions,
   startDisruptionReplan,
+  upsertProposalVote,
+  withdrawProposalVote,
 } from "../src/index.ts";
 
 const disruption = {
@@ -33,8 +35,10 @@ const proposalSet = {
   candidateLimit: 3,
   createdAt: "2026-08-19T10:00:00Z",
   disruptionId: disruption.id,
+  eligibleMemberCount: 2,
   id: "proposal-set-1",
   itineraryVersionId: disruption.itineraryVersionId,
+  participantCount: 0,
   proposals: [],
   status: "QUEUED",
   tripId: disruption.tripId,
@@ -166,6 +170,42 @@ test("후보 세트 식별자를 인코딩해 그룹 공개 후보를 조회한�
   assert.equal(captured.init.method, "GET");
   assert.equal(captured.init.headers.get("Authorization"), "Bearer private-token");
   assert.deepEqual(response, proposalSet);
+});
+
+test("익명 투표 생성·변경과 철회는 같은 후보 세트 경로를 사용한다", async () => {
+  const requests = [];
+  const fetch = async (url, init) => {
+    requests.push({ init, url: String(url) });
+    return Response.json(proposalSet);
+  };
+  await upsertProposalVote({
+    accessToken: "private-token",
+    baseUrl: "https://api.example.com",
+    fetch,
+    proposalSetId: "proposal / set",
+    request: { proposalId: "proposal-2" },
+  });
+  await withdrawProposalVote({
+    accessToken: "private-token",
+    baseUrl: "https://api.example.com",
+    fetch,
+    proposalSetId: "proposal / set",
+  });
+
+  assert.equal(
+    requests[0].url,
+    "https://api.example.com/api/v1/proposal-sets/proposal%20%2F%20set/vote",
+  );
+  assert.equal(requests[0].init.method, "PUT");
+  assert.equal(
+    requests[0].init.headers.get("Authorization"),
+    "Bearer private-token",
+  );
+  assert.deepEqual(JSON.parse(requests[0].init.body), {
+    proposalId: "proposal-2",
+  });
+  assert.equal(requests[1].init.method, "DELETE");
+  assert.equal(requests[1].init.body, undefined);
 });
 
 test("문제 API 오류 상태와 본문을 보존한다", async () => {
