@@ -336,7 +336,12 @@ public class DisruptionService {
                             d.type,
                             d.description,
                             d.reported_by_user_id,
-                            u.display_name,
+                            coalesce(u.display_name, '기상청 단기예보') as reporter_display_name,
+                            d.weather_grid_x,
+                            d.weather_grid_y,
+                            d.precipitation_probability,
+                            d.forecast_at,
+                            d.forecast_issued_at,
                             d.status,
                             d.reported_at,
                             d.updated_at
@@ -345,7 +350,7 @@ public class DisruptionService {
                           on v.id = d.itinerary_version_id
                         join public.itinerary_slot s
                           on s.id = d.itinerary_slot_id
-                        join public.app_user u
+                        left join public.app_user u
                           on u.id = d.reported_by_user_id
                         where d.id = :id
                         """)
@@ -362,12 +367,21 @@ public class DisruptionService {
                         DisruptionType.valueOf(resultSet.getString("type")),
                         resultSet.getString("description"),
                         resultSet.getObject("reported_by_user_id", UUID.class),
-                        resultSet.getString("display_name"),
+                        resultSet.getString("reporter_display_name"),
+                        resultSet.getObject("weather_grid_x", Integer.class),
+                        resultSet.getObject("weather_grid_y", Integer.class),
+                        resultSet.getObject("precipitation_probability", Integer.class),
+                        nullableInstant(resultSet.getObject("forecast_at", Timestamp.class)),
+                        nullableInstant(resultSet.getObject("forecast_issued_at", Timestamp.class)),
                         DisruptionStatus.valueOf(resultSet.getString("status")),
                         resultSet.getObject("reported_at", Timestamp.class).toInstant(),
                         resultSet.getObject("updated_at", Timestamp.class).toInstant()
                 ))
                 .single();
+    }
+
+    private Instant nullableInstant(Timestamp value) {
+        return value == null ? null : value.toInstant();
     }
 
     private void requireEditableTrip(TripStatus status) {

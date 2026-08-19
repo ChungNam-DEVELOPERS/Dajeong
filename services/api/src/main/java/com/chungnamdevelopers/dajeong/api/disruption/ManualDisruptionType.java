@@ -1,7 +1,6 @@
 package com.chungnamdevelopers.dajeong.api.disruption;
 
-public enum DisruptionType {
-    WEATHER,
+public enum ManualDisruptionType {
     CLOSURE,
     TRAFFIC,
     OTHER

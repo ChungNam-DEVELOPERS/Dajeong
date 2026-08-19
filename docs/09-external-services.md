@@ -28,7 +28,7 @@
 | Google Cloud OAuth | Cognito OIDC 로그인 | `NOT_CHECKED` | 테스트 사용자·게시 상태 확인 | 웹·앱 client 구분 기록 |
 | Apple Developer | Sign in with Apple·iOS 배포 | `NOT_CHECKED` | 가입·심사·갱신일 확인 | identifier·key 필요 목록 기록 |
 | TourAPI `KorService2` | 대전 장소 검색 | `NOT_CHECKED` | 일일 할당량·이용조건 확인 | 활용 신청과 예제 응답 보존 |
-| 기상청 단기예보 | 강수확률 자동 감지 | `NOT_CHECKED` | 일일 할당량·발표 주기 확인 | 활용 신청과 예제 응답 보존 |
+| 기상청 단기예보 | 강수확률 자동 감지 | `MOCK_READY` | 일일 할당량·발표 주기 확인 | 활용 신청 후 실제 어댑터·스케줄을 연결하고 예제 응답 보존 |
 | ODsay Basic | 대중교통 이동시간 | `NOT_CHECKED` | 일일 한도·계약 시작일로부터 6개월 종료 확인 | 신청 후 종료 예정일 기록 |
 | Amazon Bedrock | 제한된 구조화·설명 생성 | `NOT_CHECKED` | 모델 접근·일일 예산 상한 확인 | 서울 리전 후보 모델 기록 |
 | Expo·EAS | 앱 build·push·submit | `NOT_CHECKED` | organization·plan 한도 확인 | 계정과 project ID 후보 확인 |
@@ -85,3 +85,4 @@
 | --- | --- | --- | --- |
 | 2026-08-18 | 전체 | 서비스 대장과 환경 변수 보관 기준 생성 | EXT-02 AWS 계정·비용 보호 |
 | 2026-08-19 | Cognito | PKCE 웹 로그인과 API resource binding용 활성 변수 계약 추가, 로컬 mock 준비 | 실제 User Pool·도메인·app client 생성 후 Hosted UI 검증 |
+| 2026-08-19 | 기상청 | 키 없는 정상·빈 결과·오류 fixture와 강수확률 자동 감지 어댑터 계약 준비 | 활용 신청, 할당량·발표 주기 확인 후 실제 단기예보 어댑터 연결 |

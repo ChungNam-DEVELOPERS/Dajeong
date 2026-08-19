@@ -18,7 +18,8 @@ export type DisruptionResponse =
   CreateDisruptionOperation["responses"][201]["content"]["application/json"];
 export type DisruptionListResponse =
   ListDisruptionsOperation["responses"][200]["content"]["application/json"];
-export type DisruptionType = CreateDisruptionRequest["type"];
+export type ManualDisruptionType = CreateDisruptionRequest["type"];
+export type DisruptionType = DisruptionResponse["type"];
 export type DisruptionStatus = DisruptionResponse["status"];
 
 export interface DisruptionTripOptions extends ApiClientOptions {

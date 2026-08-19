@@ -53,7 +53,7 @@ class SystemHealthIntegrationTests {
                 .list();
 
         assertThat(migrationVersions).containsExactly(
-                "1", "2", "3", "4", "5", "6", "7", "8"
+                "1", "2", "3", "4", "5", "6", "7", "8", "9"
         );
         assertThat(jdbcClient.sql("select count(*) from public.system_health where id = 1")
                 .query(Integer.class)
