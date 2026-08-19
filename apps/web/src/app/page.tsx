@@ -1,4 +1,5 @@
 import { SystemHealthCard } from "./system-health-card";
+import Link from "next/link";
 
 const foundationItems = [
   { label: "Routing", value: "App Router" },
@@ -33,6 +34,21 @@ export default function HomePage() {
             계획부터 추억까지 한곳에서 나눌 수 있는 여행 공간을 만들고
             있어요.
           </p>
+
+          <div className="mt-[var(--space-xl)] flex flex-col gap-3 sm:flex-row">
+            <Link
+              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand px-6 py-3 font-extrabold text-white transition hover:bg-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              href="/login"
+            >
+              여행 시작하기
+            </Link>
+            <Link
+              className="inline-flex min-h-12 items-center justify-center rounded-xl border border-line bg-white/70 px-6 py-3 font-extrabold transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              href="/me"
+            >
+              내 공간 확인하기
+            </Link>
+          </div>
 
           <dl
             className="mt-[var(--space-xl)] grid max-w-[660px] grid-cols-1 gap-[var(--space-sm)] sm:mt-[var(--space-xxl)] sm:grid-cols-3"
