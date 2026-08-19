@@ -751,6 +751,10 @@
             "format": "int32",
             "type": "integer"
           },
+          "voteCount": {
+            "format": "int32",
+            "type": "integer"
+          },
           "weightedAverageSatisfaction": {
             "type": "number"
           }
@@ -771,6 +775,7 @@
           "summary",
           "title",
           "totalTravelMinutes",
+          "voteCount",
           "weightedAverageSatisfaction"
         ],
         "type": "object"
@@ -800,6 +805,10 @@
             "format": "uuid",
             "type": "string"
           },
+          "eligibleMemberCount": {
+            "format": "int32",
+            "type": "integer"
+          },
           "failureCode": {
             "type": [
               "string",
@@ -813,6 +822,17 @@
           "itineraryVersionId": {
             "format": "uuid",
             "type": "string"
+          },
+          "myVoteProposalId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "participantCount": {
+            "format": "int32",
+            "type": "integer"
           },
           "proposals": {
             "items": {
@@ -850,6 +870,20 @@
           "updatedAt": {
             "format": "date-time",
             "type": "string"
+          },
+          "votingDeadlineAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "votingOpenedAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -857,8 +891,10 @@
           "candidateLimit",
           "createdAt",
           "disruptionId",
+          "eligibleMemberCount",
           "id",
           "itineraryVersionId",
+          "participantCount",
           "proposals",
           "status",
           "tripId",
@@ -987,6 +1023,18 @@
           "startDate",
           "status",
           "title"
+        ],
+        "type": "object"
+      },
+      "VoteRequest": {
+        "properties": {
+          "proposalId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposalId"
         ],
         "type": "object"
       }
@@ -1282,6 +1330,109 @@
           }
         ],
         "summary": "재조정 후보 작업과 그룹 공개 후보 조회",
+        "tags": [
+          "proposal-controller"
+        ]
+      }
+    },
+    "/api/v1/proposal-sets/{proposalSetId}/vote": {
+      "delete": {
+        "operationId": "withdrawProposalVote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposalSetId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalSetResponse"
+                }
+              }
+            },
+            "description": "투표 철회 후 집계"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "활성 멤버십 없음"
+          },
+          "409": {
+            "description": "투표 마감"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "마감 전 내 익명 투표 철회",
+        "tags": [
+          "proposal-controller"
+        ]
+      },
+      "put": {
+        "operationId": "upsertProposalVote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposalSetId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalSetResponse"
+                }
+              }
+            },
+            "description": "투표 반영 후 집계"
+          },
+          "400": {
+            "description": "다른 세트 후보"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "활성 멤버십 없음"
+          },
+          "409": {
+            "description": "투표 마감"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "내 익명 투표 생성 또는 변경",
         "tags": [
           "proposal-controller"
         ]

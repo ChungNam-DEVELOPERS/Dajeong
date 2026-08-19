@@ -22,6 +22,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -39,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -241,6 +243,195 @@ class ProposalGenerationIntegrationTests {
         assertThat(cancelled.failureCode()).isEqualTo("STALE_ITINERARY");
         assertThat(cancelled.proposals()).isEmpty();
         assertThat(currentVersionNumber(tripId)).isEqualTo(2);
+    }
+
+    @Test
+    void createsChangesAndWithdrawsOneAnonymousVotePerMember() throws Exception {
+        String host = "vote-host";
+        String member = "vote-member";
+        String outsider = "vote-outsider";
+        String tripId = createdTripId(host, "익명 투표 여행");
+        joinTrip(tripId, host, member);
+        savePreference(tripId, host, 12_000, 2, 3, "CULTURE", "CAFE");
+        savePreference(tripId, member, 8_000, 3, 2, "NATURE", "ACTIVITY");
+        String slotId = publishSlot(tripId, host, 0, "투표 야외 장소", "10:00", "11:30");
+        String disruptionId = createDisruption(
+                tripId,
+                host,
+                slotId,
+                "투표할 후보가 필요해요.",
+                "vote-disruption"
+        );
+        String proposalSetId = startReplan(disruptionId, host, "vote-replan");
+        candidateClient.respondFromFixture("/fixtures/proposal/normal.json");
+        ProposalSetResponse generated = generationService.generate(
+                UUID.fromString(proposalSetId)
+        );
+        String firstProposalId = generated.proposals().get(0).id().toString();
+        String secondProposalId = generated.proposals().get(1).id().toString();
+        assertThat(generated.eligibleMemberCount()).isEqualTo(2);
+        assertThat(generated.participantCount()).isZero();
+        assertThat(generated.votingOpenedAt()).isNotNull();
+        assertThat(generated.votingDeadlineAt()).isAfter(generated.votingOpenedAt());
+
+        vote(proposalSetId, host, firstProposalId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.participantCount").value(1))
+                .andExpect(jsonPath("$.myVoteProposalId").value(firstProposalId))
+                .andExpect(jsonPath("$.proposals[0].voteCount").value(1));
+        vote(proposalSetId, host, firstProposalId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.participantCount").value(1))
+                .andExpect(jsonPath("$.proposals[0].voteCount").value(1));
+        vote(proposalSetId, host, secondProposalId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.participantCount").value(1))
+                .andExpect(jsonPath("$.proposals[0].voteCount").value(0))
+                .andExpect(jsonPath("$.proposals[1].voteCount").value(1));
+        vote(proposalSetId, member, secondProposalId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.participantCount").value(2))
+                .andExpect(jsonPath("$.eligibleMemberCount").value(2))
+                .andExpect(jsonPath("$.proposals[1].voteCount").value(2));
+
+        MvcResult hostView = mockMvc.perform(get(
+                                "/api/v1/proposal-sets/{id}",
+                                proposalSetId
+                        )
+                        .with(user(host)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.myVoteProposalId").value(secondProposalId))
+                .andReturn();
+        assertThat(hostView.getResponse().getContentAsString())
+                .doesNotContain(member)
+                .doesNotContain("userId")
+                .doesNotContain("voter");
+
+        withdrawVote(proposalSetId, host)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.participantCount").value(1))
+                .andExpect(jsonPath("$.myVoteProposalId").doesNotExist())
+                .andExpect(jsonPath("$.proposals[1].voteCount").value(1));
+        withdrawVote(proposalSetId, host)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.participantCount").value(1));
+        mockMvc.perform(get("/api/v1/proposal-sets/{id}", proposalSetId)
+                        .with(user(member)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.myVoteProposalId").value(secondProposalId));
+        vote(proposalSetId, outsider, firstProposalId)
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("PROPOSAL_FORBIDDEN"));
+
+        assertThat(jdbcClient.sql("""
+                        select count(*)
+                        from public.vote
+                        where proposal_set_id = cast(:proposalSetId as uuid)
+                        """)
+                .param("proposalSetId", proposalSetId)
+                .query(Integer.class)
+                .single()).isEqualTo(1);
+    }
+
+    @Test
+    void rejectsCandidatesFromAnotherSetAndVotesOutsideTheOpenWindow()
+            throws Exception {
+        String host = "vote-boundary-host";
+        String tripId = createdTripId(host, "투표 경계 여행");
+        savePreference(tripId, host, 10_000, 3, 3, "CULTURE", "CAFE");
+        String slotId = publishSlot(tripId, host, 0, "투표 경계 장소", "10:00", "11:00");
+        candidateClient.respondFromFixture("/fixtures/proposal/normal.json");
+
+        String firstDisruptionId = createDisruption(
+                tripId,
+                host,
+                slotId,
+                "첫 번째 투표",
+                "vote-boundary-first-disruption"
+        );
+        String firstSetId = startReplan(
+                firstDisruptionId,
+                host,
+                "vote-boundary-first-replan"
+        );
+        ProposalSetResponse firstSet = generationService.generate(
+                UUID.fromString(firstSetId)
+        );
+
+        String secondDisruptionId = createDisruption(
+                tripId,
+                host,
+                slotId,
+                "두 번째 투표",
+                "vote-boundary-second-disruption"
+        );
+        String secondSetId = startReplan(
+                secondDisruptionId,
+                host,
+                "vote-boundary-second-replan"
+        );
+        ProposalSetResponse secondSet = generationService.generate(
+                UUID.fromString(secondSetId)
+        );
+
+        vote(firstSetId, host, secondSet.proposals().get(0).id().toString())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PROPOSAL_NOT_IN_SET"));
+
+        jdbcClient.sql("""
+                        update public.proposal_set
+                        set voting_opened_at = current_timestamp - interval '13 hours',
+                            voting_deadline_at = current_timestamp - interval '1 hour'
+                        where id = cast(:proposalSetId as uuid)
+                        """)
+                .param("proposalSetId", firstSetId)
+                .update();
+        vote(firstSetId, host, firstSet.proposals().get(0).id().toString())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("VOTE_CLOSED"));
+        withdrawVote(firstSetId, host)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("VOTE_CLOSED"));
+
+        jdbcClient.sql("""
+                        update public.proposal_set
+                        set status = 'FAILED'
+                        where id = cast(:proposalSetId as uuid)
+                        """)
+                .param("proposalSetId", secondSetId)
+                .update();
+        vote(secondSetId, host, secondSet.proposals().get(0).id().toString())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("VOTE_CLOSED"));
+    }
+
+    private ResultActions vote(
+            String proposalSetId,
+            String subject,
+            String proposalId
+    ) throws Exception {
+        return mockMvc.perform(put(
+                                "/api/v1/proposal-sets/{id}/vote",
+                                proposalSetId
+                        )
+                        .with(user(subject))
+                        .contentType("application/json")
+                        .content("""
+                                {
+                                  "proposalId": "%s"
+                                }
+                                """.formatted(proposalId)));
+    }
+
+    private ResultActions withdrawVote(
+            String proposalSetId,
+            String subject
+    ) throws Exception {
+        return mockMvc.perform(delete(
+                                "/api/v1/proposal-sets/{id}/vote",
+                                proposalSetId
+                        )
+                .with(user(subject)));
     }
 
     private ProposalSetResponse generateForNewTrip(

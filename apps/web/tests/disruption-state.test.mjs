@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  applyOptimisticProposalVote,
   applyReplanStart,
   createEmptyDisruptionDraft,
   getWeatherEvidence,
@@ -122,4 +123,32 @@ test("후보 실패 코드를 사용자가 복구할 수 있는 문구로 구분
   assert.match(proposalFailureMessage("STALE_ITINERARY"), /일정 버전/);
   assert.match(proposalFailureMessage("UPSTREAM_UNAVAILABLE"), /연결하지 못/);
   assert.match(proposalFailureMessage("UNKNOWN"), /완료하지 못/);
+});
+
+test("내 투표의 낙관적 생성·변경·철회는 집계를 중복하지 않는다", () => {
+  const proposalSet = {
+    eligibleMemberCount: 3,
+    myVoteProposalId: null,
+    participantCount: 0,
+    proposals: [
+      { id: "proposal-1", voteCount: 0 },
+      { id: "proposal-2", voteCount: 0 },
+    ],
+  };
+
+  const created = applyOptimisticProposalVote(proposalSet, "proposal-1");
+  assert.equal(created.participantCount, 1);
+  assert.deepEqual(created.proposals.map(({ voteCount }) => voteCount), [1, 0]);
+  assert.equal(
+    applyOptimisticProposalVote(created, "proposal-1"),
+    created,
+  );
+
+  const changed = applyOptimisticProposalVote(created, "proposal-2");
+  assert.equal(changed.participantCount, 1);
+  assert.deepEqual(changed.proposals.map(({ voteCount }) => voteCount), [0, 1]);
+
+  const withdrawn = applyOptimisticProposalVote(changed, null);
+  assert.equal(withdrawn.participantCount, 0);
+  assert.deepEqual(withdrawn.proposals.map(({ voteCount }) => voteCount), [0, 0]);
 });

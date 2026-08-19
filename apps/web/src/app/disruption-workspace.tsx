@@ -9,6 +9,8 @@ import {
   getTrip,
   listDisruptions,
   startDisruptionReplan,
+  upsertProposalVote,
+  withdrawProposalVote,
   type DisruptionListResponse,
   type ItineraryVersionResponse,
   type ProposalSetResponse,
@@ -18,6 +20,7 @@ import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 
 import {
+  applyOptimisticProposalVote,
   applyReplanStart,
   createEmptyDisruptionDraft,
   getWeatherEvidence,
@@ -202,6 +205,79 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
     }
   }
 
+  async function updateProposalVote(
+    proposalSetId: string,
+    proposalId: string | null,
+  ) {
+    if (state.phase !== "ready") {
+      return;
+    }
+    const previousProposalSet = state.proposalSets[proposalSetId];
+    if (previousProposalSet === undefined) {
+      return;
+    }
+    setBusy(`vote:${proposalSetId}`);
+    setNotice("");
+    setState((current) =>
+      current.phase === "ready"
+        ? {
+            ...current,
+            proposalSets: {
+              ...current.proposalSets,
+              [proposalSetId]: applyOptimisticProposalVote(
+                current.proposalSets[proposalSetId] ?? previousProposalSet,
+                proposalId,
+              ),
+            },
+          }
+        : current,
+    );
+    try {
+      const options = {
+        baseUrl: window.location.origin,
+        proposalSetId,
+      };
+      const proposalSet =
+        proposalId === null
+          ? await withdrawProposalVote(options)
+          : await upsertProposalVote({
+              ...options,
+              request: { proposalId },
+            });
+      setState((current) =>
+        current.phase === "ready"
+          ? {
+              ...current,
+              proposalSets: {
+                ...current.proposalSets,
+                [proposalSetId]: proposalSet,
+              },
+            }
+          : current,
+      );
+      setNotice(
+        proposalId === null
+          ? "내 투표를 철회했습니다."
+          : "내 투표를 반영했습니다. 개인별 선택은 다른 멤버에게 공개되지 않습니다.",
+      );
+    } catch (error: unknown) {
+      setState((current) =>
+        current.phase === "ready"
+          ? {
+              ...current,
+              proposalSets: {
+                ...current.proposalSets,
+                [proposalSetId]: previousProposalSet,
+              },
+            }
+          : current,
+      );
+      setNotice(readApiMessage(error, "투표를 반영하지 못해 이전 선택으로 되돌렸습니다."));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   if (state.phase === "loading") {
     return <WorkspaceNotice ariaBusy title="문제 현황을 불러오고 있어요">잠시만 기다려 주세요.</WorkspaceNotice>;
   }
@@ -370,8 +446,12 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
                   <p className="mt-4 text-xs font-bold text-[#6f665a]">{item.reporterDisplayName} · {dateTimeFormatter.format(new Date(item.reportedAt))}</p>
 
                   <ProposalSetDetails
-                    busy={busy === `proposal:${item.proposalSetId}`}
+                    busy={
+                      busy === `proposal:${item.proposalSetId}` ||
+                      busy === `vote:${item.proposalSetId}`
+                    }
                     onRefresh={refreshProposalSet}
+                    onVote={updateProposalVote}
                     proposalSet={
                       item.proposalSetId
                         ? state.proposalSets[item.proposalSetId]
@@ -467,10 +547,12 @@ function WeatherEvidenceDetails({
 function ProposalSetDetails({
   busy,
   onRefresh,
+  onVote,
   proposalSet,
 }: Readonly<{
   busy: boolean;
   onRefresh: (proposalSetId: string) => Promise<void>;
+  onVote: (proposalSetId: string, proposalId: string | null) => Promise<void>;
   proposalSet?: ProposalSetResponse;
 }>) {
   if (proposalSet === undefined) {
@@ -511,22 +593,54 @@ function ProposalSetDetails({
       ) : null}
       {proposalSet.status === "OPEN" ? (
         <div className="mt-4 space-y-3">
-          {proposalSet.proposals.map((proposal) => (
-            <article className="rounded-xl border border-[#dce9d9] bg-white p-4" key={proposal.id}>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h5 className="font-black">{proposal.rank}. {proposal.title}</h5>
-                <span className="text-xs font-black text-[#3c713d]">최저 만족도 {Math.round(proposal.minimumMemberSatisfaction)}점</span>
-              </div>
-              <p className="mt-2 text-sm font-semibold leading-6 text-[#6f665a]">{proposal.summary}</p>
-              <dl className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                <div><dt className="font-bold text-[#6f665a]">시간</dt><dd className="mt-1 font-extrabold">{dateTimeFormatter.format(new Date(proposal.startsAt))}</dd></div>
-                <div><dt className="font-bold text-[#6f665a]">예상 비용</dt><dd className="mt-1 font-extrabold">{costFormatter.format(proposal.expectedCost)}원</dd></div>
-                <div><dt className="font-bold text-[#6f665a]">이동</dt><dd className="mt-1 font-extrabold">{proposal.totalTravelMinutes}분</dd></div>
-                <div><dt className="font-bold text-[#6f665a]">가중 평균</dt><dd className="mt-1 font-extrabold">{Math.round(proposal.weightedAverageSatisfaction)}점</dd></div>
-              </dl>
-            </article>
-          ))}
-          <p className="text-xs font-bold leading-5 text-[#6f665a]">개인별 선호와 만족도는 공개하지 않습니다. 투표 기능은 다음 단계에서 연결됩니다.</p>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#e7f3e4] px-4 py-3 text-sm font-extrabold text-[#315d32]">
+            <span>참여 {proposalSet.participantCount}/{proposalSet.eligibleMemberCount}명</span>
+            {proposalSet.votingDeadlineAt ? (
+              <span>마감 {dateTimeFormatter.format(new Date(proposalSet.votingDeadlineAt))}</span>
+            ) : null}
+          </div>
+          {proposalSet.proposals.map((proposal) => {
+            const selected = proposalSet.myVoteProposalId === proposal.id;
+            return (
+              <article
+                className={`rounded-xl border bg-white p-4 ${selected ? "border-[#3c713d] ring-2 ring-[#5b9f5a33]" : "border-[#dce9d9]"}`}
+                key={proposal.id}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h5 className="font-black">{proposal.rank}. {proposal.title}</h5>
+                  <span className="text-xs font-black text-[#3c713d]">익명 {proposal.voteCount}표</span>
+                </div>
+                <p className="mt-2 text-sm font-semibold leading-6 text-[#6f665a]">{proposal.summary}</p>
+                <dl className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-5">
+                  <div><dt className="font-bold text-[#6f665a]">시간</dt><dd className="mt-1 font-extrabold">{dateTimeFormatter.format(new Date(proposal.startsAt))}</dd></div>
+                  <div><dt className="font-bold text-[#6f665a]">예상 비용</dt><dd className="mt-1 font-extrabold">{costFormatter.format(proposal.expectedCost)}원</dd></div>
+                  <div><dt className="font-bold text-[#6f665a]">이동</dt><dd className="mt-1 font-extrabold">{proposal.totalTravelMinutes}분</dd></div>
+                  <div><dt className="font-bold text-[#6f665a]">최저 만족도</dt><dd className="mt-1 font-extrabold">{Math.round(proposal.minimumMemberSatisfaction)}점</dd></div>
+                  <div><dt className="font-bold text-[#6f665a]">가중 평균</dt><dd className="mt-1 font-extrabold">{Math.round(proposal.weightedAverageSatisfaction)}점</dd></div>
+                </dl>
+                <button
+                  aria-pressed={selected}
+                  className={`mt-4 min-h-11 w-full rounded-xl px-4 py-2 text-sm font-extrabold transition disabled:opacity-50 ${selected ? "bg-[#e7f3e4] text-[#315d32]" : "bg-[#3c713d] text-white hover:bg-[#315d32]"}`}
+                  disabled={busy || selected}
+                  onClick={() => void onVote(proposalSet.id, proposal.id)}
+                  type="button"
+                >
+                  {selected ? "내가 선택한 후보" : "이 후보에 투표"}
+                </button>
+              </article>
+            );
+          })}
+          {proposalSet.myVoteProposalId ? (
+            <button
+              className="min-h-10 w-full rounded-xl border border-[#aac7a5] bg-white px-3 py-2 text-sm font-extrabold disabled:opacity-50"
+              disabled={busy}
+              onClick={() => void onVote(proposalSet.id, null)}
+              type="button"
+            >
+              내 투표 철회
+            </button>
+          ) : null}
+          <p className="text-xs font-bold leading-5 text-[#6f665a]">개인별 선호·만족도·투표 선택은 공개하지 않고 후보별 득표수와 총 참여 인원만 표시합니다.</p>
         </div>
       ) : null}
     </section>
@@ -588,7 +702,7 @@ function readApiMessage(error: unknown, fallback: string): string {
 const typeLabel = { CLOSURE: "휴관", OTHER: "기타", TRAFFIC: "교통", WEATHER: "날씨" } as const;
 const statusLabel = { ACKNOWLEDGED: "요청 접수", DETECTED: "확인 필요", DISMISSED: "원본 유지", FAILED: "후보 실패", GENERATING: "후보 생성 중", VOTING: "후보 준비" } as const;
 const statusClassName = { ACKNOWLEDGED: "text-[#3c713d]", DETECTED: "text-[#a35b00]", DISMISSED: "text-[#6f665a]", FAILED: "text-red-700", GENERATING: "text-[#3c713d]", VOTING: "text-[#3c713d]" } as const;
-const proposalSetLabel = { CANCELLED: "후보 작업 취소", FAILED: "후보 생성 실패", GENERATING: "후보 생성 중", OPEN: "투표 전 후보 준비", QUEUED: "후보 생성 대기" } as const;
+const proposalSetLabel = { CANCELLED: "후보 작업 취소", FAILED: "후보 생성 실패", GENERATING: "후보 생성 중", OPEN: "익명 투표 진행", QUEUED: "후보 생성 대기" } as const;
 const costFormatter = new Intl.NumberFormat("ko-KR");
 const inputClassName = "mt-2 min-h-12 w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-semibold outline-none transition focus:border-brand focus:ring-3 focus:ring-[#5b9f5a22] aria-invalid:border-red-600 disabled:bg-soft disabled:text-[#6f665a]";
 const primaryClassName = "mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#3c713d] px-6 py-3 font-extrabold text-white transition hover:bg-[#315d32] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";

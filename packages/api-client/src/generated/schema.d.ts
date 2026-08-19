@@ -90,6 +90,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/proposal-sets/{proposalSetId}/vote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 내 익명 투표 생성 또는 변경 */
+        put: operations["upsertProposalVote"];
+        post?: never;
+        /** 마감 전 내 익명 투표 철회 */
+        delete: operations["withdrawProposalVote"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/health": {
         parameters: {
             query?: never;
@@ -540,6 +558,8 @@ export interface components {
             title: string;
             /** Format: int32 */
             totalTravelMinutes: number;
+            /** Format: int32 */
+            voteCount: number;
             weightedAverageSatisfaction: number;
         };
         ProposalSetResponse: {
@@ -553,11 +573,17 @@ export interface components {
             createdAt: string;
             /** Format: uuid */
             disruptionId: string;
+            /** Format: int32 */
+            eligibleMemberCount: number;
             failureCode?: string | null;
             /** Format: uuid */
             id: string;
             /** Format: uuid */
             itineraryVersionId: string;
+            /** Format: uuid */
+            myVoteProposalId?: string | null;
+            /** Format: int32 */
+            participantCount: number;
             proposals: components["schemas"]["ProposalResponse"][];
             shortageReason?: string | null;
             /** Format: date-time */
@@ -568,6 +594,10 @@ export interface components {
             tripId: string;
             /** Format: date-time */
             updatedAt: string;
+            /** Format: date-time */
+            votingDeadlineAt?: string | null;
+            /** Format: date-time */
+            votingOpenedAt?: string | null;
         };
         ReplanStartResponse: {
             /** Format: uuid */
@@ -602,6 +632,10 @@ export interface components {
             /** @enum {string} */
             status: "DRAFT" | "ACTIVE" | "COMPLETED" | "ARCHIVED";
             title: string;
+        };
+        VoteRequest: {
+            /** Format: uuid */
+            proposalId: string;
         };
     };
     responses: never;
@@ -855,6 +889,103 @@ export interface operations {
             };
             /** @description 후보 작업 없음 */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upsertProposalVote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposalSetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoteRequest"];
+            };
+        };
+        responses: {
+            /** @description 투표 반영 후 집계 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalSetResponse"];
+                };
+            };
+            /** @description 다른 세트 후보 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 활성 멤버십 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 투표 마감 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    withdrawProposalVote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposalSetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 투표 철회 후 집계 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalSetResponse"];
+                };
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 활성 멤버십 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 투표 마감 */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
