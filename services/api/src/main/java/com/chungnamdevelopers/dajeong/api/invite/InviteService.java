@@ -54,7 +54,7 @@ public class InviteService {
     @Transactional
     public InviteResponse issue(CurrentUserResponse currentUser, UUID tripId) {
         JdbcClient jdbcClient = requireJdbcClient();
-        lockJoinableTrip(jdbcClient, tripId);
+        lockJoinableTrip(jdbcClient, tripId, false);
         requireActiveHost(jdbcClient, tripId, currentUser.id());
 
         Instant now = clock.instant();
@@ -106,7 +106,7 @@ public class InviteService {
         UUID tripId = findInviteTripId(jdbcClient, codeHash)
                 .orElseThrow(this::inviteGone);
 
-        lockJoinableTrip(jdbcClient, tripId);
+        lockJoinableTrip(jdbcClient, tripId, true);
         InviteState invite = loadInviteState(jdbcClient, codeHash)
                 .orElseThrow(this::inviteGone);
         if (invite.revokedAt() != null
@@ -166,7 +166,11 @@ public class InviteService {
         );
     }
 
-    private void lockJoinableTrip(JdbcClient jdbcClient, UUID tripId) {
+    private void lockJoinableTrip(
+            JdbcClient jdbcClient,
+            UUID tripId,
+            boolean joiningByInvite
+    ) {
         boolean exists = jdbcClient.sql("""
                         select id
                         from public.trip
@@ -179,6 +183,9 @@ public class InviteService {
                 .optional()
                 .isPresent();
         if (!exists) {
+            if (joiningByInvite) {
+                throw inviteGone();
+            }
             throw new ApiException(
                     HttpStatus.FORBIDDEN,
                     "INVITE_FORBIDDEN",

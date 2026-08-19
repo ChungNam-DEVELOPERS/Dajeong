@@ -51,6 +51,8 @@ export interface CurrentUserRequestOptions extends ApiClientOptions {
   signal?: AbortSignal;
 }
 
+export type DeleteCurrentUserRequestOptions = CurrentUserRequestOptions;
+
 export interface DajeongApiClient {
   createTrip(
     request: CreateTripRequest,
@@ -60,6 +62,10 @@ export interface DajeongApiClient {
       signal?: AbortSignal;
     },
   ): Promise<TripSummaryResponse>;
+  deleteCurrentUser(options?: {
+    accessToken?: string;
+    signal?: AbortSignal;
+  }): Promise<void>;
   getCurrentUser(options?: {
     accessToken?: string;
     signal?: AbortSignal;
@@ -85,6 +91,8 @@ export function createApiClient(options: ApiClientOptions): DajeongApiClient {
   return {
     createTrip: (request, requestOptions) =>
       createTrip({ ...options, ...requestOptions, request }),
+    deleteCurrentUser: (requestOptions = {}) =>
+      deleteCurrentUser({ ...options, ...requestOptions }),
     getCurrentUser: (requestOptions = {}) =>
       getCurrentUser({ ...options, ...requestOptions }),
     getSystemHealth: (requestOptions = {}) =>
@@ -96,6 +104,26 @@ export function createApiClient(options: ApiClientOptions): DajeongApiClient {
     listTrips: (requestOptions = {}) =>
       listTrips({ ...options, ...requestOptions }),
   };
+}
+
+export async function deleteCurrentUser(
+  options: DeleteCurrentUserRequestOptions,
+): Promise<void> {
+  const fetchImplementation = options.fetch ?? globalThis.fetch;
+  const response = await fetchImplementation(
+    buildApiUrl(options.baseUrl, CURRENT_USER_PATH),
+    {
+      headers: jsonHeaders(options.accessToken),
+      method: "DELETE",
+      signal: options.signal,
+    },
+  );
+
+  if (response.status === 204) {
+    return;
+  }
+
+  throw new ApiClientError(response.status, await readErrorBody(response));
 }
 
 export async function getSystemHealth(
