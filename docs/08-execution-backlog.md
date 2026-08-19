@@ -21,6 +21,8 @@
 > 2026-08-19 진행: [Issue #51](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/51)에서 익명 투표 생성·변경·철회 → 후보별 득표수·참여 인원 집계 → 본인 외 개인별 선택 비공개 세로 슬라이스를 구현하고 검증했다.
 >
 > 2026-08-19 진행: [Issue #53](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/53)에서 전원 참여·12시간 마감 → 최다 득표·공정성 순위 승자 선정 → 새 일정 버전·양보 원장 원자적 적용 세로 슬라이스를 구현하고 검증했다.
+>
+> 2026-08-20 진행: [Issue #55](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/55)에서 불변 일정 버전 감사 타임라인 → 재조정 적용 알림 원자·멱등 생성 → 읽음 처리·확정 후보 이동 세로 슬라이스를 구현했다.
 
 이 문서는 [종합 개발 계획](./00-development-plan.md)의 단계 0~1만 실행 단위로 분해한다. 전체 기간과 출시 기준은 [로드맵과 테스트](./07-roadmap-testing.md)를 따른다.
 
@@ -337,6 +339,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-19 | Issue #49 | 멱등 재조정 작업, 버전 고정, 개인별 비공개 점수와 양보 가중치, 결정론 순위로 검증된 후보 최대 3개를 생성하고 진행·실패·부족·stale 상태를 웹에 표시 | API 43건, OpenAPI client 33건, 웹 상태·인증 테스트 35건, production build·Expo web export 통과 | 익명 투표·집계 세로 슬라이스 |
 | 2026-08-19 | Issue #51 | 멤버별 한 표를 비공개 저장하고 투표 생성·변경·철회를 멱등 처리하며, 후보별 득표수·참여 인원과 현재 사용자 본인 선택만 API·웹에 표시 | API 45건, OpenAPI client 34건, 웹 상태·인증 테스트 36건, production build·Expo web export 통과 | 투표 마감·승자 선정·일정 적용 세로 슬라이스 |
 | 2026-08-19 | Issue #53 | 전원 참여 즉시 마감과 기한 배치 진입점, 최다 득표·공정성 rank 동률 해소, REPLAN 불변 일정 버전·양보 원장 원자적 적용, 웹 확정 결과·3초 폴링 표시 | API 48건, OpenAPI client 35건, 웹 상태·인증 테스트 37건, production build·Expo web export 통과 | 일정 변경 타임라인·인앱 알림 세로 슬라이스 |
+| 2026-08-20 | Issue #55 | 불변 일정 버전 감사 타임라인, 재조정 적용 트랜잭션의 활성 멤버별 알림 멱등 생성, cursor 목록·읽음 동기화, 알림함에서 확정 후보 이동 | API 48건, OpenAPI client 39건, 웹 상태·인증 테스트 42건, production build·Expo web export 통과 | FND-13 루트 품질 명령·Turbo 파이프라인 정리 |
 
 ## 9. 2단계 상세화 시점
 
@@ -355,6 +358,6 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 9. ~~재조정 요청 → 검증 가능한 후보 1~3개 생성 → 진행·실패·후보 부족 확인~~ ([Issue #49](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/49))
 10. ~~익명 투표 생성·변경·철회 → 득표수·참여 인원 집계 → 개인별 선택 비공개 확인~~ ([Issue #51](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/51))
 11. ~~전원 참여·12시간 마감 → 동률 공정성 규칙으로 승자 선정 → 새 일정 버전·양보 원장 원자적 적용~~ ([Issue #53](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/53))
-12. 일정 변경 감사 타임라인 → 인앱 알림 생성·읽음 → 해당 여행·후보 결과로 이동
+12. ~~일정 변경 감사 타임라인 → 인앱 알림 생성·읽음 → 해당 여행·후보 결과로 이동~~ ([Issue #55](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/55))
 
 웹 공개 베타가 안정화되면 FND-05와 FND-12를 재개하고 위 세로 슬라이스의 모바일 화면·딥링크·푸시·실기기 검증을 별도 백로그로 상세화한다.

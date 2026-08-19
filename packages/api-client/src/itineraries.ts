@@ -9,6 +9,8 @@ import {
 
 type CurrentOperation =
   paths["/api/v1/trips/{tripId}/itineraries/current"]["get"];
+type TimelineOperation =
+  paths["/api/v1/trips/{tripId}/itineraries/timeline"]["get"];
 type DraftOperation =
   paths["/api/v1/trips/{tripId}/itineraries/draft"]["get"];
 type AddSlotOperation =
@@ -18,6 +20,9 @@ export type ItineraryDraftResponse =
   DraftOperation["responses"][200]["content"]["application/json"];
 export type ItineraryVersionResponse =
   CurrentOperation["responses"][200]["content"]["application/json"];
+export type ItineraryTimelineResponse =
+  TimelineOperation["responses"][200]["content"]["application/json"];
+export type ItineraryTimelineItem = ItineraryTimelineResponse["items"][number];
 export type ItinerarySlotRequest =
   AddSlotOperation["requestBody"]["content"]["application/json"];
 export type ItinerarySlotResponse = ItineraryDraftResponse["slots"][number];
@@ -31,6 +36,12 @@ export interface ItineraryRequestOptions extends ApiClientOptions {
 export interface ItineraryRevisionRequestOptions
   extends ItineraryRequestOptions {
   revision: number;
+}
+
+export interface ItineraryTimelineRequestOptions
+  extends ItineraryRequestOptions {
+  cursor?: string;
+  limit?: number;
 }
 
 export interface AddItineraryDraftSlotOptions
@@ -75,6 +86,28 @@ export async function getCurrentItinerary(
     "GET",
     [200],
   );
+}
+
+export async function getItineraryTimeline(
+  options: ItineraryTimelineRequestOptions,
+): Promise<ItineraryTimelineResponse> {
+  const fetchImplementation = options.fetch ?? globalThis.fetch;
+  const url = new URL(buildApiUrl(options.baseUrl, timelinePath(options.tripId)));
+  if (options.cursor) {
+    url.searchParams.set("cursor", options.cursor);
+  }
+  if (options.limit !== undefined) {
+    url.searchParams.set("limit", String(options.limit));
+  }
+  const response = await fetchImplementation(url, {
+    headers: jsonHeaders(options.accessToken),
+    method: "GET",
+    signal: options.signal,
+  });
+  if (response.status === 200) {
+    return (await response.json()) as ItineraryTimelineResponse;
+  }
+  throw new ApiClientError(response.status, await readErrorBody(response));
 }
 
 export async function addItineraryDraftSlot(
@@ -160,6 +193,10 @@ async function requestJson<T>(
 
 function currentPath(tripId: string) {
   return `/api/v1/trips/${encodeURIComponent(tripId)}/itineraries/current`;
+}
+
+function timelinePath(tripId: string) {
+  return `/api/v1/trips/${encodeURIComponent(tripId)}/itineraries/timeline`;
 }
 
 function draftPath(tripId: string) {

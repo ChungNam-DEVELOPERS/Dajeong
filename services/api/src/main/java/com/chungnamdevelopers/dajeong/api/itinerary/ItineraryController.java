@@ -12,11 +12,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -25,12 +28,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/trips/{tripId}/itineraries")
+@Validated
 public class ItineraryController {
 
     private final IdentityService identityService;
@@ -114,6 +119,46 @@ public class ItineraryController {
             @PathVariable UUID tripId
     ) {
         return itineraryService.getCurrent(currentUser(jwt), tripId);
+    }
+
+    @Operation(
+            operationId = "getItineraryTimeline",
+            summary = "일정 변경 감사 타임라인 조회",
+            security = @SecurityRequirement(name = SecurityConfiguration.BEARER_AUTH)
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "불변 일정 버전 기반 최신순 변경 이력",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ItineraryTimelineResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "잘못된 cursor 또는 limit", content = @Content),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 요청", content = @Content),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "활성 멤버십 없음",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiErrorResponse.class)
+                    )
+            )
+    })
+    @GetMapping("/timeline")
+    public ItineraryTimelineResponse getTimeline(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID tripId,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(50) int limit
+    ) {
+        return itineraryService.getTimeline(
+                currentUser(jwt),
+                tripId,
+                cursor,
+                limit
+        );
     }
 
     @Operation(

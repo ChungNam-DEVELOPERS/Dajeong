@@ -17,7 +17,7 @@
 | `ProposalSet` | 생성 작업, 후보 버전, 마감·승자·적용 버전, 상태, 입력 스냅샷 해시 |
 | `Proposal` | 변경 슬롯, 검증 데이터, 멤버별 비공개 만족도, 그룹 요약 |
 | `Vote` | 후보 세트·멤버당 한 행, 선택 후보, 갱신 시각 |
-| `Notification` | 사용자, 종류, 이동 대상, 읽음 시각 |
+| `Notification` | 사용자·여행, 종류, 후보 세트·적용 버전, 생성·읽음 시각 |
 | `OutboxEvent` | 이벤트 종류, payload, 발행·재시도 상태 |
 
 모든 엔티티는 UTC로 저장하고 사용자에게는 Asia/Seoul로 표시한다. 금액은 원 단위 정수, 좌표는 WGS84를 사용한다.
@@ -65,6 +65,7 @@
 | 메서드 | 경로 | 설명 |
 | --- | --- | --- |
 | `GET` | `/trips/{tripId}/itineraries/current` | 현재 확정 버전 조회 |
+| `GET` | `/trips/{tripId}/itineraries/timeline` | 불변 버전 기반 일정 변경 타임라인 |
 | `GET` | `/trips/{tripId}/itineraries/draft` | 방장의 현재 초안과 revision 조회 |
 | `POST` | `/trips/{tripId}/itineraries/draft/slots` | 방장 슬롯 추가 |
 | `PATCH/DELETE` | `/trips/{tripId}/itineraries/draft/slots/{slotId}` | 방장 슬롯 변경·삭제 |
@@ -114,6 +115,14 @@
 - 인증된 본인에게만 `myVoteProposalId`를 반환해 선택 변경·철회를 지원하며, 다른 멤버의 식별자와 선택은 어떤 그룹 응답에도 포함하지 않는다.
 - 마감 응답은 `winnerProposalId`, `closingReason`, `closedAt`, `appliedItineraryVersionId`, `appliedAt`을 추가로 반환한다.
 
+### 일정 변경 타임라인·알림 규칙
+
+- 별도의 중복 감사 로그 대신 기존 `ItineraryVersion`의 `ORIGINAL/REPLAN`, 이전 버전, 확정 시각을 타임라인의 원본으로 사용한다.
+- 타임라인은 활성 여행 멤버에게만 최신 버전순 cursor pagination으로 반환하고, 행위·시각·버전과 그룹 공개 확정 후보만 포함한다.
+- `REPLAN` 일정 적용과 활성 멤버별 `ITINERARY_REPLAN_APPLIED` 알림 생성은 같은 DB 트랜잭션에서 수행한다. `proposalSet + user + type`을 unique로 두어 마감 재시도가 중복 알림을 만들지 않게 한다.
+- 알림 목록과 읽음 처리는 인증된 본인의 활성 여행 알림에만 적용한다. 읽음 재시도는 첫 `readAt`을 보존한다.
+- 일정 확정 알림은 해당 여행의 후보 결과로 이동한다. 이전 일정 버전에 대한 알림은 소급 생성하지 않는다.
+
 ## 6. 삭제·감사·보안
 
 - 계정 삭제는 `app_user`의 표시 이름과 Cognito subject 원문을 익명값으로 교체하고 `DELETED` 상태·삭제 시각을 기록한다.
@@ -122,5 +131,5 @@
 - 실제 Cognito User Pool 사용자 삭제는 AWS 인프라 연결 후 API의 내부 삭제와 조정한다. 현재 웹은 내부 삭제 성공 시 refresh token 폐기를 시도하고 로컬 세션 쿠키를 제거한다.
 - 여행 종료 30일 후 `PrivatePreference`, 멤버별 후보 만족도, `Vote` 선택값을 삭제한다.
 - 투표 총계와 일정 버전은 익명 집계로 유지한다.
-- 일정 변경 감사 기록에는 행위 유형·시각·버전만 남기고 민감 입력은 남기지 않는다.
+- 일정 변경 감사 응답에는 행위 유형·시각·버전과 멤버 공개 확정 결과만 남기고 개인별 선호·점수·투표는 남기지 않는다.
 - DB 쿼리와 직렬화 테스트에서 다른 사용자의 민감 행을 반환할 수 없는지 검증한다.

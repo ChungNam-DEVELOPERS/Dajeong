@@ -15,9 +15,14 @@ export {
   deleteItineraryDraftSlot,
   getCurrentItinerary,
   getItineraryDraft,
+  getItineraryTimeline,
   publishItineraryDraft,
   updateItineraryDraftSlot,
 } from "./itineraries.ts";
+export {
+  listNotifications,
+  readNotification,
+} from "./notifications.ts";
 export {
   issueTripInvite,
   joinTripByInvite,
@@ -62,10 +67,20 @@ export type {
   ItineraryRevisionRequestOptions,
   ItinerarySlotRequest,
   ItinerarySlotResponse,
+  ItineraryTimelineItem,
+  ItineraryTimelineRequestOptions,
+  ItineraryTimelineResponse,
   ItineraryVersionResponse,
   PublishItineraryDraftOptions,
   UpdateItineraryDraftSlotOptions,
 } from "./itineraries.ts";
+export type {
+  ListNotificationsOptions,
+  NotificationListResponse,
+  NotificationResponse,
+  NotificationType,
+  ReadNotificationOptions,
+} from "./notifications.ts";
 export type {
   InviteResponse,
   IssueTripInviteOptions,

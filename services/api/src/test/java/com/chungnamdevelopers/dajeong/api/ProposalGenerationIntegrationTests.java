@@ -434,6 +434,7 @@ class ProposalGenerationIntegrationTests {
             throws Exception {
         String host = "finalize-full-host";
         String member = "finalize-full-member";
+        String outsider = "finalize-full-outsider";
         String tripId = createdTripId(host, "전원 투표 확정 여행");
         joinTrip(tripId, host, member);
         savePreference(tripId, host, 12_000, 2, 3, "CULTURE", "CAFE");
@@ -536,8 +537,173 @@ class ProposalGenerationIntegrationTests {
                     .isEqualByComparingTo(expected);
         }
 
+        assertThat(jdbcClient.sql("""
+                        select count(*)
+                        from public.notification
+                        where proposal_set_id = cast(:proposalSetId as uuid)
+                        """)
+                .param("proposalSetId", proposalSetId)
+                .query(Integer.class)
+                .single()).isEqualTo(2);
+
+        MvcResult timelineFirstPage = mockMvc.perform(get(
+                                "/api/v1/trips/{tripId}/itineraries/timeline",
+                                tripId
+                        )
+                        .with(user(host))
+                        .param("limit", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tripId").value(tripId))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].itineraryVersionId")
+                        .value(appliedVersionId.toString()))
+                .andExpect(jsonPath("$.items[0].versionNumber").value(2))
+                .andExpect(jsonPath("$.items[0].reason").value("REPLAN"))
+                .andExpect(jsonPath("$.items[0].previousVersionNumber").value(1))
+                .andExpect(jsonPath("$.items[0].proposalSetId").value(proposalSetId))
+                .andExpect(jsonPath("$.items[0].winnerProposalId")
+                        .value(rankOneProposalId))
+                .andExpect(jsonPath("$.items[0].winnerTitle")
+                        .value(generated.proposals().get(0).title()))
+                .andExpect(jsonPath("$.items[0].disruptionType").value("OTHER"))
+                .andExpect(jsonPath("$.items[0].previousPlaceName")
+                        .value("교체할 야외 장소"))
+                .andExpect(jsonPath("$.items[0].currentPlaceName")
+                        .value(generated.proposals().get(0).placeName()))
+                .andExpect(jsonPath("$.items[0].publishedByUserId").doesNotExist())
+                .andExpect(jsonPath("$.nextCursor").isNotEmpty())
+                .andReturn();
+        String timelineCursor = JsonPath.read(
+                timelineFirstPage.getResponse().getContentAsString(),
+                "$.nextCursor"
+        );
+        mockMvc.perform(get("/api/v1/trips/{tripId}/itineraries/timeline", tripId)
+                        .with(user(member))
+                        .param("cursor", timelineCursor)
+                        .param("limit", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].versionNumber").value(1))
+                .andExpect(jsonPath("$.items[0].reason").value("ORIGINAL"))
+                .andExpect(jsonPath("$.items[0].proposalSetId").doesNotExist())
+                .andExpect(jsonPath("$.nextCursor").doesNotExist());
+        mockMvc.perform(get("/api/v1/trips/{tripId}/itineraries/timeline", tripId)
+                        .with(user(host))
+                        .param("cursor", "not-a-cursor"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_ITINERARY_CURSOR"));
+        mockMvc.perform(get("/api/v1/trips/{tripId}/itineraries/timeline", tripId)
+                        .with(user(outsider)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ITINERARY_FORBIDDEN"));
+
+        MvcResult hostNotifications = mockMvc.perform(get("/api/v1/notifications")
+                        .with(user(host)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].type")
+                        .value("ITINERARY_REPLAN_APPLIED"))
+                .andExpect(jsonPath("$.items[0].tripId").value(tripId))
+                .andExpect(jsonPath("$.items[0].tripTitle")
+                        .value("전원 투표 확정 여행"))
+                .andExpect(jsonPath("$.items[0].proposalSetId").value(proposalSetId))
+                .andExpect(jsonPath("$.items[0].itineraryVersionId")
+                        .value(appliedVersionId.toString()))
+                .andExpect(jsonPath("$.items[0].itineraryVersionNumber").value(2))
+                .andExpect(jsonPath("$.items[0].winnerProposalId")
+                        .value(rankOneProposalId))
+                .andExpect(jsonPath("$.items[0].winnerTitle")
+                        .value(generated.proposals().get(0).title()))
+                .andExpect(jsonPath("$.items[0].readAt").doesNotExist())
+                .andExpect(jsonPath("$.items[0].userId").doesNotExist())
+                .andExpect(jsonPath("$.items[0].memberScore").doesNotExist())
+                .andReturn();
+        String hostNotificationId = JsonPath.read(
+                hostNotifications.getResponse().getContentAsString(),
+                "$.items[0].id"
+        );
+        MvcResult firstRead = mockMvc.perform(post(
+                                "/api/v1/notifications/{notificationId}/read",
+                                hostNotificationId
+                        )
+                        .with(user(host)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.readAt").isNotEmpty())
+                .andReturn();
+        String firstReadAt = JsonPath.read(
+                firstRead.getResponse().getContentAsString(),
+                "$.readAt"
+        );
+        mockMvc.perform(post(
+                                "/api/v1/notifications/{notificationId}/read",
+                                hostNotificationId
+                        )
+                        .with(user(host)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.readAt").value(firstReadAt));
+        mockMvc.perform(post(
+                                "/api/v1/notifications/{notificationId}/read",
+                                hostNotificationId
+                        )
+                        .with(user(member)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOTIFICATION_NOT_FOUND"));
+        mockMvc.perform(get("/api/v1/notifications").with(user(outsider)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isEmpty());
+        mockMvc.perform(get("/api/v1/notifications")
+                        .with(user(host))
+                        .param("cursor", "not-a-cursor"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_NOTIFICATION_CURSOR"));
+
+        MvcResult memberNotifications = mockMvc.perform(get("/api/v1/notifications")
+                        .with(user(member)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andReturn();
+        String memberNotificationId = JsonPath.read(
+                memberNotifications.getResponse().getContentAsString(),
+                "$.items[0].id"
+        );
+        jdbcClient.sql("""
+                        update public.trip_membership m
+                        set status = 'LEFT',
+                            ended_at = current_timestamp,
+                            updated_at = current_timestamp
+                        from public.app_user u
+                        where m.trip_id = cast(:tripId as uuid)
+                          and m.user_id = u.id
+                          and u.cognito_subject = :subject
+                        """)
+                .param("tripId", tripId)
+                .param("subject", member)
+                .update();
+        mockMvc.perform(get("/api/v1/trips/{tripId}/itineraries/timeline", tripId)
+                        .with(user(member)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("ITINERARY_FORBIDDEN"));
+        mockMvc.perform(get("/api/v1/notifications").with(user(member)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isEmpty());
+        mockMvc.perform(post(
+                                "/api/v1/notifications/{notificationId}/read",
+                                memberNotificationId
+                        )
+                        .with(user(member)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOTIFICATION_NOT_FOUND"));
+
         finalizationService.closeDue(Instant.now(), 100);
         assertThat(currentVersionNumber(tripId)).isEqualTo(2);
+        assertThat(jdbcClient.sql("""
+                        select count(*)
+                        from public.notification
+                        where proposal_set_id = cast(:proposalSetId as uuid)
+                        """)
+                .param("proposalSetId", proposalSetId)
+                .query(Integer.class)
+                .single()).isEqualTo(2);
     }
 
     @Test

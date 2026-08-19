@@ -7,6 +7,7 @@ import {
   deleteItineraryDraftSlot,
   getCurrentItinerary,
   getItineraryDraft,
+  getItineraryTimeline,
   publishItineraryDraft,
   updateItineraryDraftSlot,
 } from "../src/index.ts";
@@ -66,6 +67,50 @@ test("일정 초안과 현재 버전을 여행별 경로로 조회한다", async
     `https://api.example.com/api/v1/trips/${tripId}/itineraries/current`,
   );
   assert.equal(calls[0].init.method, "GET");
+});
+
+test("일정 변경 타임라인 cursor와 limit을 보존한다", async () => {
+  let call;
+  const timeline = {
+    items: [
+      {
+        currentPlaceName: "실내 미술관",
+        disruptionType: "WEATHER",
+        itineraryVersionId: "version-2",
+        occurredAt: "2026-08-19T09:00:00Z",
+        previousPlaceName: "야외 공원",
+        previousVersionNumber: 1,
+        proposalSetId: "proposal-set-1",
+        reason: "REPLAN",
+        versionNumber: 2,
+        winnerProposalId: "proposal-1",
+        winnerTitle: "실내 미술관으로 변경",
+      },
+    ],
+    nextCursor: "next timeline",
+    tripId,
+  };
+  assert.deepEqual(
+    await getItineraryTimeline({
+      accessToken: "timeline-token",
+      baseUrl: "https://api.example.com",
+      cursor: "previous timeline",
+      fetch: async (url, init) => {
+        call = { init, url: String(url) };
+        return Response.json(timeline);
+      },
+      limit: 10,
+      tripId,
+    }),
+    timeline,
+  );
+  assert.equal(
+    call.url,
+    `https://api.example.com/api/v1/trips/${tripId}/itineraries/timeline` +
+      "?cursor=previous+timeline&limit=10",
+  );
+  assert.equal(call.init.method, "GET");
+  assert.equal(call.init.headers.get("Authorization"), "Bearer timeline-token");
 });
 
 test("초안 슬롯 추가에 인증·revision·멱등 헤더와 JSON을 전달한다", async () => {

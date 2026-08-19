@@ -74,6 +74,10 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
           .sort()
           .join(",")
       : "";
+  const renderedProposalSetIds =
+    state.phase === "ready"
+      ? Object.keys(state.proposalSets).sort().join(",")
+      : "";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -148,6 +152,22 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
       window.clearInterval(intervalId);
     };
   }, [pollableProposalSetIds]);
+
+  useEffect(() => {
+    if (!renderedProposalSetIds || !window.location.hash) {
+      return;
+    }
+    const targetId = decodeURIComponent(window.location.hash.slice(1));
+    if (!targetId.startsWith("proposal-set-")) {
+      return;
+    }
+    const frameId = window.requestAnimationFrame(() => {
+      const target = document.getElementById(targetId);
+      target?.focus({ preventScroll: true });
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  }, [renderedProposalSetIds]);
 
   async function submitReport(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -646,7 +666,11 @@ function ProposalSetDetails({
   const showCandidates =
     proposalSet.status === "OPEN" || proposalSet.status === "APPLIED";
   return (
-    <section className="mt-5 rounded-2xl border border-[#cbdcc7] bg-[#f4faf2] p-4">
+    <section
+      className="mt-5 scroll-mt-8 rounded-2xl border border-[#cbdcc7] bg-[#f4faf2] p-4"
+      id={`proposal-set-${proposalSet.id}`}
+      tabIndex={-1}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black tracking-[0.08em] text-[#557255] uppercase">Replan proposals</p>

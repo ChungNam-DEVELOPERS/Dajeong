@@ -443,6 +443,112 @@
         ],
         "type": "object"
       },
+      "ItineraryTimelineItemResponse": {
+        "properties": {
+          "currentPlaceName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "disruptionType": {
+            "enum": [
+              "WEATHER",
+              "CLOSURE",
+              "TRAFFIC",
+              "OTHER"
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "itineraryVersionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "occurredAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "previousPlaceName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "previousVersionNumber": {
+            "format": "int32",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "proposalSetId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "enum": [
+              "ORIGINAL",
+              "REPLAN"
+            ],
+            "type": "string"
+          },
+          "versionNumber": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "winnerProposalId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "winnerTitle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "itineraryVersionId",
+          "occurredAt",
+          "reason",
+          "versionNumber"
+        ],
+        "type": "object"
+      },
+      "ItineraryTimelineResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItineraryTimelineItemResponse"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tripId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "tripId"
+        ],
+        "type": "object"
+      },
       "ItineraryVersionResponse": {
         "properties": {
           "draftRevision": {
@@ -494,6 +600,90 @@
           "slots",
           "tripId",
           "versionNumber"
+        ],
+        "type": "object"
+      },
+      "NotificationListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationResponse"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "NotificationResponse": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "itineraryVersionId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "itineraryVersionNumber": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "proposalSetId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "readAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tripId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "tripTitle": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "ITINERARY_REPLAN_APPLIED"
+            ],
+            "type": "string"
+          },
+          "winnerProposalId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "winnerTitle": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "id",
+          "itineraryVersionId",
+          "itineraryVersionNumber",
+          "proposalSetId",
+          "tripId",
+          "tripTitle",
+          "type",
+          "winnerProposalId",
+          "winnerTitle"
         ],
         "type": "object"
       },
@@ -1329,6 +1519,110 @@
         "summary": "현재 사용자 조회",
         "tags": [
           "current-user-controller"
+        ]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "listNotifications",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "format": "int32",
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListResponse"
+                }
+              }
+            },
+            "description": "현재 사용자의 활성 여행 알림"
+          },
+          "400": {
+            "description": "잘못된 cursor 또는 limit"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "내 인앱 알림 목록",
+        "tags": [
+          "notification-controller"
+        ]
+      }
+    },
+    "/api/v1/notifications/{notificationId}/read": {
+      "post": {
+        "operationId": "readNotification",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notificationId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationResponse"
+                }
+              }
+            },
+            "description": "읽음 시각이 동기화된 알림"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "내 활성 여행 알림이 아님"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "내 인앱 알림 읽음 처리",
+        "tags": [
+          "notification-controller"
         ]
       }
     },
@@ -2299,6 +2593,79 @@
           }
         ],
         "summary": "일정 초안 슬롯 수정",
+        "tags": [
+          "itinerary-controller"
+        ]
+      }
+    },
+    "/api/v1/trips/{tripId}/itineraries/timeline": {
+      "get": {
+        "operationId": "getItineraryTimeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "format": "int32",
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItineraryTimelineResponse"
+                }
+              }
+            },
+            "description": "불변 일정 버전 기반 최신순 변경 이력"
+          },
+          "400": {
+            "description": "잘못된 cursor 또는 limit"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "활성 멤버십 없음"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "일정 변경 감사 타임라인 조회",
         "tags": [
           "itinerary-controller"
         ]

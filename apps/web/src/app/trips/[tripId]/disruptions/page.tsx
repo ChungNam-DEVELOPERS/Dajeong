@@ -24,6 +24,12 @@ export default async function TripDisruptionPage({
           <div className="flex items-center gap-2">
             <Link
               className="rounded-full border border-line bg-white px-4 py-2 text-sm font-extrabold transition hover:bg-soft"
+              href="/notifications"
+            >
+              알림함
+            </Link>
+            <Link
+              className="rounded-full border border-line bg-white px-4 py-2 text-sm font-extrabold transition hover:bg-soft"
               href={`/trips/${tripId}/preferences`}
             >
               나의 선호
