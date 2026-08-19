@@ -3,7 +3,11 @@ export {
   createApiClient,
   getCurrentUser,
   getSystemHealth,
-} from "./system-health";
+} from "./system-health.ts";
+export {
+  createTrip,
+  listTrips,
+} from "./trips.ts";
 export type {
   ApiClientOptions,
   CurrentUserRequestOptions,
@@ -12,7 +16,14 @@ export type {
   SystemHealthRequestOptions,
   SystemHealthResponse,
   SystemHealthStatus,
-} from "./system-health";
+} from "./system-health.ts";
+export type {
+  CreateTripRequest,
+  CreateTripRequestOptions,
+  ListTripsRequestOptions,
+  TripListResponse,
+  TripSummaryResponse,
+} from "./trips.ts";
 export type {
   components,
   operations,

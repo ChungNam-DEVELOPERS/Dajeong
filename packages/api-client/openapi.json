@@ -1,6 +1,32 @@
 {
   "components": {
     "schemas": {
+      "CreateTripRequest": {
+        "properties": {
+          "endDate": {
+            "example": "2026-08-23",
+            "format": "date",
+            "type": "string"
+          },
+          "startDate": {
+            "example": "2026-08-21",
+            "format": "date",
+            "type": "string"
+          },
+          "title": {
+            "example": "대전 여름 여행",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "required": [
+          "endDate",
+          "startDate",
+          "title"
+        ],
+        "type": "object"
+      },
       "CurrentUserResponse": {
         "description": "현재 로그인한 내부 사용자",
         "properties": {
@@ -51,6 +77,79 @@
         "required": [
           "database",
           "status"
+        ],
+        "type": "object"
+      },
+      "TripListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TripSummaryResponse"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "TripSummaryResponse": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "endDate": {
+            "format": "date",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "region": {
+            "enum": [
+              "DAEJEON"
+            ],
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "HOST",
+              "MEMBER"
+            ],
+            "type": "string"
+          },
+          "startDate": {
+            "format": "date",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "DRAFT",
+              "ACTIVE",
+              "COMPLETED",
+              "ARCHIVED"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "endDate",
+          "id",
+          "region",
+          "role",
+          "startDate",
+          "status",
+          "title"
         ],
         "type": "object"
       }
@@ -129,6 +228,129 @@
         "summary": "시스템 상태 확인",
         "tags": [
           "system-health-controller"
+        ]
+      }
+    },
+    "/api/v1/trips": {
+      "get": {
+        "operationId": "listTrips",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "format": "int32",
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripListResponse"
+                }
+              }
+            },
+            "description": "현재 사용자의 활성 여행 목록"
+          },
+          "400": {
+            "description": "잘못된 cursor 또는 limit"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "503": {
+            "description": "여행 저장소 사용 불가"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "내 여행 목록",
+        "tags": [
+          "trip-controller"
+        ]
+      },
+      "post": {
+        "operationId": "createTrip",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripSummaryResponse"
+                }
+              }
+            },
+            "description": "동일한 멱등 요청으로 생성된 여행 반환"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripSummaryResponse"
+                }
+              }
+            },
+            "description": "여행과 방장 멤버십 생성"
+          },
+          "400": {
+            "description": "잘못된 생성 요청"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "409": {
+            "description": "멱등 키 재사용 충돌"
+          },
+          "503": {
+            "description": "여행 저장소 사용 불가"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "여행 생성",
+        "tags": [
+          "trip-controller"
         ]
       }
     }
