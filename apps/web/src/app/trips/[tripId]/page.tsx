@@ -21,12 +21,20 @@ export default async function TripItineraryPage({
           >
             ← 내 여행
           </Link>
-          <Link
-            className="rounded-full border border-line bg-white/70 px-4 py-2 text-sm font-extrabold transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-            href="/me"
-          >
-            내 계정
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              className="rounded-full border border-brand bg-[#edf7ea] px-4 py-2 text-sm font-extrabold text-brand-strong transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              href={`/trips/${tripId}/preferences`}
+            >
+              나의 선호
+            </Link>
+            <Link
+              className="rounded-full border border-line bg-white/70 px-4 py-2 text-sm font-extrabold transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              href="/me"
+            >
+              내 계정
+            </Link>
+          </div>
         </header>
         <ItineraryWorkspace tripId={tripId} />
       </div>
