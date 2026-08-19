@@ -32,7 +32,8 @@ export interface paths {
         get: operations["getCurrentUser"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** 현재 사용자 계정 삭제 */
+        delete: operations["deleteCurrentUser"];
         options?: never;
         head?: never;
         patch?: never;
@@ -243,6 +244,47 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CurrentUserResponse"];
                 };
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 이미 삭제된 계정 */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 사용자 저장소를 사용할 수 없음 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteCurrentUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 계정 개인정보와 활성 도메인 관계 삭제 */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description 인증되지 않은 요청 */
             401: {

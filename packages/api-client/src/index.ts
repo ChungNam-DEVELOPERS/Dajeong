@@ -1,6 +1,7 @@
 export {
   ApiClientError,
   createApiClient,
+  deleteCurrentUser,
   getCurrentUser,
   getSystemHealth,
 } from "./system-health.ts";
@@ -16,6 +17,7 @@ export type {
   ApiClientOptions,
   CurrentUserRequestOptions,
   CurrentUserResponse,
+  DeleteCurrentUserRequestOptions,
   DajeongApiClient,
   SystemHealthRequestOptions,
   SystemHealthResponse,

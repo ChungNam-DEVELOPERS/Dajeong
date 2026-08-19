@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   ApiClientError,
+  deleteCurrentUser,
   getCurrentUser,
 } from "../src/system-health.ts";
 
@@ -45,6 +46,42 @@ test("웹 BFF 호출은 access token 없이도 같은 계약을 사용할 수 �
   });
 
   assert.equal(authorization, null);
+});
+
+test("계정 삭제 요청에 인증 헤더를 전달하고 204를 성공으로 처리한다", async () => {
+  let call;
+  const response = await deleteCurrentUser({
+    accessToken: "deletion-access-token",
+    baseUrl: "https://api.example.com/",
+    fetch: async (url, init) => {
+      call = { init, url };
+      return new Response(null, { status: 204 });
+    },
+  });
+
+  assert.equal(response, undefined);
+  assert.equal(call.url, "https://api.example.com/api/v1/me");
+  assert.equal(call.init.method, "DELETE");
+  assert.equal(
+    call.init.headers.get("Authorization"),
+    "Bearer deletion-access-token",
+  );
+});
+
+test("계정 삭제 실패 상태와 오류 본문을 보존한다", async () => {
+  await assert.rejects(
+    deleteCurrentUser({
+      baseUrl: "https://api.example.com",
+      fetch: async () =>
+        Response.json({ code: "ACCOUNT_DELETE_FAILED" }, { status: 409 }),
+    }),
+    (error) => {
+      assert.ok(error instanceof ApiClientError);
+      assert.equal(error.status, 409);
+      assert.deepEqual(error.responseBody, { code: "ACCOUNT_DELETE_FAILED" });
+      return true;
+    },
+  );
 });
 
 test("인증 실패 상태와 오류 본문을 보존한다", async () => {

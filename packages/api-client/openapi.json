@@ -272,6 +272,29 @@
       }
     },
     "/api/v1/me": {
+      "delete": {
+        "operationId": "deleteCurrentUser",
+        "responses": {
+          "204": {
+            "description": "계정 개인정보와 활성 도메인 관계 삭제"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "503": {
+            "description": "사용자 저장소를 사용할 수 없음"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "현재 사용자 계정 삭제",
+        "tags": [
+          "current-user-controller"
+        ]
+      },
       "get": {
         "operationId": "getCurrentUser",
         "responses": {
@@ -287,6 +310,16 @@
           },
           "401": {
             "description": "인증되지 않은 요청"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "이미 삭제된 계정"
           },
           "503": {
             "description": "사용자 저장소를 사용할 수 없음"
