@@ -4,6 +4,7 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
+    "build": "pnpm export:web",
     "start": "pnpm check:env && expo start",
     "dev": "pnpm check:env && expo start",
     "android": "pnpm check:env && expo start --android",

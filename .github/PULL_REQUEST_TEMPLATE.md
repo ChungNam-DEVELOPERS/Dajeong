@@ -15,14 +15,7 @@
 
 ## 검증
 
-- [ ] `pnpm check:toolchain`
-- [ ] `pnpm check:configuration`
-- [ ] `pnpm check:db`
-- [ ] `pnpm check:api`
-- [ ] `pnpm check:api-client`
-- [ ] `pnpm check:shared-config`
-- [ ] `pnpm --filter @dajeong/web build`
-- [ ] `pnpm --filter @dajeong/mobile run export:web`
+- [ ] `pnpm check`
 - [ ] 그 밖의 관련 검사나 수동 검증 결과를 아래에 작성했습니다.
 
 ## 배포 영향

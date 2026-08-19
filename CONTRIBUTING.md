@@ -103,17 +103,12 @@ Production deployment will eventually run from `main` after GitHub Environment a
 Run the checks relevant to the changed area. The current workspace baseline is:
 
 ```bash
-pnpm check:toolchain
-pnpm check:configuration
-pnpm check:db
-pnpm check:api
-pnpm check:api-client
-pnpm check:shared-config
-pnpm --filter @dajeong/web build
-pnpm --filter @dajeong/mobile run export:web
+pnpm check
 ```
 
-API 계약을 변경하면 `pnpm generate:api-client`로 OpenAPI 스키마와 TypeScript 타입을 함께 갱신한다. `pnpm check:api-client`는 현재 Spring 계약과 커밋된 생성물이 다르면 실패한다. CDK와 배포 검사는 해당 구성 요소가 구현될 때 같은 CI 게이트에 추가한다.
+`pnpm check`는 의존성 보안, 툴체인, 환경 계약, Compose, Spring API, OpenAPI 생성물, workspace lint·typecheck·test와 웹·Expo web build를 순서대로 검증한다. 특정 영역만 빠르게 확인할 때는 루트 `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build` 또는 각 `check:*` 명령을 사용할 수 있다.
+
+API 계약을 변경하면 `pnpm generate:api-client`로 OpenAPI 스키마와 TypeScript 타입을 함께 갱신한다. `pnpm check:api-client`는 현재 Spring 계약과 커밋된 생성물이 다르면 실패한다. CDK와 배포 검사는 해당 구성 요소가 구현될 때 같은 품질 게이트에 추가한다.
 
 ## Protected branches
 

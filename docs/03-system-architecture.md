@@ -40,6 +40,10 @@ docs/
 
 Node 패키지는 pnpm workspace와 Turborepo로 관리한다. Spring은 독립 Gradle wrapper를 가지며 루트 명령이 두 빌드 체계를 조정한다.
 
+- 루트 `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`는 Turbo 작업 그래프로 해당 스크립트가 있는 workspace만 실행한다.
+- `pnpm build`는 Next.js production build와 Expo web export를 함께 실행하고 `.next`, `dist` 산출물을 캐시한다. 공개 build 환경 변수는 Turbo 해시에 포함해 값이 달라지면 캐시를 무효화한다.
+- 루트 `pnpm check`는 의존성 보안부터 Spring API·OpenAPI 생성물, workspace 정적 검사·테스트·build까지 한 번에 실행하며 하위 작업의 실패 코드를 그대로 반환한다.
+
 ## 3. 프런트엔드
 
 - Next.js App Router와 Expo Router의 경로 이름을 도메인 기준으로 맞춘다.
