@@ -194,6 +194,41 @@ export interface paths {
         patch: operations["updateItineraryDraftSlot"];
         trace?: never;
     };
+    "/api/v1/trips/{tripId}/preferences/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 내 비공개 선호 조회 */
+        get: operations["getMyPrivatePreference"];
+        /** 내 비공개 선호 저장 */
+        put: operations["saveMyPrivatePreference"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trips/{tripId}/preferences/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 멤버별 선호 제출 여부 조회 */
+        get: operations["getPreferenceSubmissionStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -305,6 +340,60 @@ export interface components {
             tripId: string;
             /** Format: int32 */
             versionNumber: number;
+        };
+        PreferenceMemberStatusResponse: {
+            displayName: string;
+            /** Format: uuid */
+            memberId: string;
+            /** @enum {string} */
+            role: "HOST" | "MEMBER";
+            submitted: boolean;
+        };
+        PreferenceStatusResponse: {
+            members: components["schemas"]["PreferenceMemberStatusResponse"][];
+            /** Format: int32 */
+            submittedCount: number;
+            /** Format: int32 */
+            totalCount: number;
+            /** Format: uuid */
+            tripId: string;
+        };
+        PrivatePreferenceRequest: {
+            /**
+             * Format: int32
+             * @example 3
+             */
+            activityLevel: number;
+            /**
+             * Format: int32
+             * @example 50000
+             */
+            budgetPerPerson: number;
+            preferredCategories: ("NATURE" | "FOOD" | "CAFE" | "CULTURE" | "SHOPPING" | "ACTIVITY" | "EXPERIENCE")[];
+            priorities: ("FLEXIBLE_SCHEDULE" | "NATURE_HEALING" | "FOOD_EXPLORATION" | "MINIMIZE_TRAVEL" | "SAVE_BUDGET")[];
+            /**
+             * Format: int32
+             * @example 2
+             */
+            travelTolerance: number;
+        };
+        PrivatePreferenceResponse: {
+            /** Format: int32 */
+            activityLevel: number;
+            /** Format: int32 */
+            budgetPerPerson: number;
+            preferredCategories: ("NATURE" | "FOOD" | "CAFE" | "CULTURE" | "SHOPPING" | "ACTIVITY" | "EXPERIENCE")[];
+            priorities: ("FLEXIBLE_SCHEDULE" | "NATURE_HEALING" | "FOOD_EXPLORATION" | "MINIMIZE_TRAVEL" | "SAVE_BUDGET")[];
+            /** Format: date-time */
+            submittedAt: string;
+            /** Format: int32 */
+            travelTolerance: number;
+            /** Format: uuid */
+            tripId: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: uuid */
+            userId: string;
         };
         SystemHealthResponse: {
             /** @enum {string} */
@@ -1041,6 +1130,143 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ApiErrorResponse"];
                 };
+            };
+        };
+    };
+    getMyPrivatePreference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 현재 로그인 멤버의 원본 선호 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivatePreferenceResponse"];
+                };
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 활성 멤버십 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 아직 제출한 선호 없음 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    saveMyPrivatePreference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrivatePreferenceRequest"];
+            };
+        };
+        responses: {
+            /** @description 저장된 현재 로그인 멤버의 원본 선호 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivatePreferenceResponse"];
+                };
+            };
+            /** @description 잘못된 선호 입력 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 활성 멤버십 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 선호 변경이 종료된 여행 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getPreferenceSubmissionStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 원본 선호를 제외한 활성 멤버별 제출 여부 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferenceStatusResponse"];
+                };
+            };
+            /** @description 인증되지 않은 요청 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 활성 멤버십 없음 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

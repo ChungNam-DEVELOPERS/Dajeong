@@ -314,6 +314,200 @@
         ],
         "type": "object"
       },
+      "PreferenceMemberStatusResponse": {
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "memberId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "HOST",
+              "MEMBER"
+            ],
+            "type": "string"
+          },
+          "submitted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "displayName",
+          "memberId",
+          "role",
+          "submitted"
+        ],
+        "type": "object"
+      },
+      "PreferenceStatusResponse": {
+        "properties": {
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/PreferenceMemberStatusResponse"
+            },
+            "type": "array"
+          },
+          "submittedCount": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "totalCount": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "tripId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "members",
+          "submittedCount",
+          "totalCount",
+          "tripId"
+        ],
+        "type": "object"
+      },
+      "PrivatePreferenceRequest": {
+        "properties": {
+          "activityLevel": {
+            "example": 3,
+            "format": "int32",
+            "maximum": 5,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "budgetPerPerson": {
+            "example": 50000,
+            "format": "int32",
+            "maximum": 100000000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "preferredCategories": {
+            "items": {
+              "enum": [
+                "NATURE",
+                "FOOD",
+                "CAFE",
+                "CULTURE",
+                "SHOPPING",
+                "ACTIVITY",
+                "EXPERIENCE"
+              ],
+              "type": "string"
+            },
+            "maxItems": 7,
+            "minItems": 1,
+            "type": "array"
+          },
+          "priorities": {
+            "items": {
+              "enum": [
+                "FLEXIBLE_SCHEDULE",
+                "NATURE_HEALING",
+                "FOOD_EXPLORATION",
+                "MINIMIZE_TRAVEL",
+                "SAVE_BUDGET"
+              ],
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "type": "array"
+          },
+          "travelTolerance": {
+            "example": 2,
+            "format": "int32",
+            "maximum": 5,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "activityLevel",
+          "budgetPerPerson",
+          "preferredCategories",
+          "priorities",
+          "travelTolerance"
+        ],
+        "type": "object"
+      },
+      "PrivatePreferenceResponse": {
+        "properties": {
+          "activityLevel": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "budgetPerPerson": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "preferredCategories": {
+            "items": {
+              "enum": [
+                "NATURE",
+                "FOOD",
+                "CAFE",
+                "CULTURE",
+                "SHOPPING",
+                "ACTIVITY",
+                "EXPERIENCE"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "priorities": {
+            "items": {
+              "enum": [
+                "FLEXIBLE_SCHEDULE",
+                "NATURE_HEALING",
+                "FOOD_EXPLORATION",
+                "MINIMIZE_TRAVEL",
+                "SAVE_BUDGET"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "submittedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "travelTolerance": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "tripId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "userId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "activityLevel",
+          "budgetPerPerson",
+          "preferredCategories",
+          "priorities",
+          "submittedAt",
+          "travelTolerance",
+          "tripId",
+          "updatedAt",
+          "userId"
+        ],
+        "type": "object"
+      },
       "SystemHealthResponse": {
         "properties": {
           "database": {
@@ -1260,6 +1454,166 @@
         "summary": "일정 초안 슬롯 수정",
         "tags": [
           "itinerary-controller"
+        ]
+      }
+    },
+    "/api/v1/trips/{tripId}/preferences/me": {
+      "get": {
+        "operationId": "getMyPrivatePreference",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivatePreferenceResponse"
+                }
+              }
+            },
+            "description": "현재 로그인 멤버의 원본 선호"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "활성 멤버십 없음"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "아직 제출한 선호 없음"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "내 비공개 선호 조회",
+        "tags": [
+          "preference-controller"
+        ]
+      },
+      "put": {
+        "operationId": "saveMyPrivatePreference",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrivatePreferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivatePreferenceResponse"
+                }
+              }
+            },
+            "description": "저장된 현재 로그인 멤버의 원본 선호"
+          },
+          "400": {
+            "description": "잘못된 선호 입력"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "활성 멤버십 없음"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "선호 변경이 종료된 여행"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "내 비공개 선호 저장",
+        "tags": [
+          "preference-controller"
+        ]
+      }
+    },
+    "/api/v1/trips/{tripId}/preferences/status": {
+      "get": {
+        "operationId": "getPreferenceSubmissionStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tripId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferenceStatusResponse"
+                }
+              }
+            },
+            "description": "원본 선호를 제외한 활성 멤버별 제출 여부"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "403": {
+            "description": "활성 멤버십 없음"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "멤버별 선호 제출 여부 조회",
+        "tags": [
+          "preference-controller"
         ]
       }
     }
