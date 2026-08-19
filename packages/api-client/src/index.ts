@@ -7,8 +7,17 @@ export {
 } from "./system-health.ts";
 export {
   createTrip,
+  getTrip,
   listTrips,
 } from "./trips.ts";
+export {
+  addItineraryDraftSlot,
+  deleteItineraryDraftSlot,
+  getCurrentItinerary,
+  getItineraryDraft,
+  publishItineraryDraft,
+  updateItineraryDraftSlot,
+} from "./itineraries.ts";
 export {
   issueTripInvite,
   joinTripByInvite,
@@ -26,10 +35,23 @@ export type {
 export type {
   CreateTripRequest,
   CreateTripRequestOptions,
+  GetTripRequestOptions,
   ListTripsRequestOptions,
   TripListResponse,
   TripSummaryResponse,
 } from "./trips.ts";
+export type {
+  AddItineraryDraftSlotOptions,
+  DeleteItineraryDraftSlotOptions,
+  ItineraryDraftResponse,
+  ItineraryRequestOptions,
+  ItineraryRevisionRequestOptions,
+  ItinerarySlotRequest,
+  ItinerarySlotResponse,
+  ItineraryVersionResponse,
+  PublishItineraryDraftOptions,
+  UpdateItineraryDraftSlotOptions,
+} from "./itineraries.ts";
 export type {
   InviteResponse,
   IssueTripInviteOptions,

@@ -52,6 +52,8 @@ class OpenApiDocumentGenerationTests {
                         .value("listTrips"))
                 .andExpect(jsonPath("$.paths['/api/v1/trips'].get.security[0].bearerAuth")
                         .isArray())
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}'].get.operationId")
+                        .value("getTrip"))
                 .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/invites'].post.operationId")
                         .value("issueTripInvite"))
                 .andExpect(jsonPath("$.paths['/api/v1/invites/{code}/join'].post.operationId")
@@ -59,6 +61,24 @@ class OpenApiDocumentGenerationTests {
                 .andExpect(jsonPath("$.paths['/api/v1/invites/{code}/join'].post.responses['409']"
                         + ".content['application/json'].schema['$ref']")
                         .value("#/components/schemas/ApiErrorResponse"))
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/itineraries/draft']"
+                        + ".get.operationId")
+                        .value("getItineraryDraft"))
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/itineraries/current']"
+                        + ".get.operationId")
+                        .value("getCurrentItinerary"))
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/itineraries/draft/slots']"
+                        + ".post.operationId")
+                        .value("addItineraryDraftSlot"))
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/itineraries/draft/slots/{slotId}']"
+                        + ".patch.operationId")
+                        .value("updateItineraryDraftSlot"))
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/itineraries/draft/slots/{slotId}']"
+                        + ".delete.operationId")
+                        .value("deleteItineraryDraftSlot"))
+                .andExpect(jsonPath("$.paths['/api/v1/trips/{tripId}/itineraries/draft/publish']"
+                        + ".post.operationId")
+                        .value("publishItineraryDraft"))
                 .andReturn()
                 .getResponse()
                 .getContentAsString(StandardCharsets.UTF_8);

@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   ApiClientError,
   createTrip,
+  getTrip,
   listTrips,
 } from "../src/index.ts";
 
@@ -70,6 +71,27 @@ test("웹 BFF용 여행 목록 요청에 cursor와 limit을 보존한다", async
     "https://web.example.com/api/v1/trips?cursor=next-page&limit=10",
   );
   assert.deepEqual(response, { items: [trip], nextCursor: "last-page" });
+});
+
+test("여행 상세 요청에 trip ID와 인증 헤더를 전달한다", async () => {
+  let request;
+  const response = await getTrip({
+    accessToken: "trip-token",
+    baseUrl: "https://api.example.com",
+    fetch: async (url, init) => {
+      request = { init, url };
+      return Response.json(trip);
+    },
+    tripId: trip.id,
+  });
+
+  assert.deepEqual(response, trip);
+  assert.equal(
+    request.url,
+    `https://api.example.com/api/v1/trips/${trip.id}`,
+  );
+  assert.equal(request.init.method, "GET");
+  assert.equal(request.init.headers.get("Authorization"), "Bearer trip-token");
 });
 
 test("여행 API 오류 상태와 본문을 보존한다", async () => {

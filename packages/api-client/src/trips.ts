@@ -12,6 +12,7 @@ const TRIPS_PATH = "/api/v1/trips";
 type TripsPath = paths[typeof TRIPS_PATH];
 type CreateTripOperation = TripsPath["post"];
 type ListTripsOperation = TripsPath["get"];
+type GetTripOperation = paths["/api/v1/trips/{tripId}"]["get"];
 
 export type CreateTripRequest =
   CreateTripOperation["requestBody"]["content"]["application/json"];
@@ -32,6 +33,12 @@ export interface ListTripsRequestOptions extends ApiClientOptions {
   cursor?: string;
   limit?: number;
   signal?: AbortSignal;
+}
+
+export interface GetTripRequestOptions extends ApiClientOptions {
+  accessToken?: string;
+  signal?: AbortSignal;
+  tripId: string;
 }
 
 export async function createTrip(
@@ -79,6 +86,31 @@ export async function listTrips(
 
   if (response.status === 200) {
     return (await response.json()) as TripListResponse;
+  }
+
+  throw new ApiClientError(response.status, await readErrorBody(response));
+}
+
+export async function getTrip(
+  options: GetTripRequestOptions,
+): Promise<
+  GetTripOperation["responses"][200]["content"]["application/json"]
+> {
+  const fetchImplementation = options.fetch ?? globalThis.fetch;
+  const response = await fetchImplementation(
+    buildApiUrl(
+      options.baseUrl,
+      `${TRIPS_PATH}/${encodeURIComponent(options.tripId)}`,
+    ),
+    {
+      headers: jsonHeaders(options.accessToken),
+      method: "GET",
+      signal: options.signal,
+    },
+  );
+
+  if (response.status === 200) {
+    return (await response.json()) as TripSummaryResponse;
   }
 
   throw new ApiClientError(response.status, await readErrorBody(response));

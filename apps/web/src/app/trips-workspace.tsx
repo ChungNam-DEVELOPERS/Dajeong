@@ -7,6 +7,7 @@ import {
   type CreateTripRequest,
   type TripSummaryResponse,
 } from "@dajeong/api-client";
+import Link from "next/link";
 import { useEffect, useReducer, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
@@ -438,6 +439,12 @@ function TripCard({ trip }: Readonly<{ trip: TripSummaryResponse }>) {
       <p className="mt-2 text-sm font-bold text-muted">
         {trip.role === "HOST" ? "내가 만든 여행" : "함께하는 여행"}
       </p>
+      <Link
+        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-extrabold transition hover:bg-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+        href={`/trips/${trip.id}`}
+      >
+        {trip.role === "HOST" ? "일정 관리" : "일정 보기"}
+      </Link>
       {trip.role === "HOST" &&
       (trip.status === "DRAFT" || trip.status === "ACTIVE") ? (
         <TripInviteControl tripId={trip.id} />
