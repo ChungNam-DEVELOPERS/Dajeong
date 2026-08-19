@@ -1,6 +1,36 @@
 {
   "components": {
     "schemas": {
+      "CurrentUserResponse": {
+        "description": "현재 로그인한 내부 사용자",
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "DELETED"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "displayName",
+          "id",
+          "status"
+        ],
+        "type": "object"
+      },
       "SystemHealthResponse": {
         "properties": {
           "database": {
@@ -24,6 +54,13 @@
         ],
         "type": "object"
       }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
     }
   },
   "info": {
@@ -32,6 +69,38 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/me": {
+      "get": {
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponse"
+                }
+              }
+            },
+            "description": "현재 사용자를 조회하거나 처음 생성함"
+          },
+          "401": {
+            "description": "인증되지 않은 요청"
+          },
+          "503": {
+            "description": "사용자 저장소를 사용할 수 없음"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "현재 사용자 조회",
+        "tags": [
+          "current-user-controller"
+        ]
+      }
+    },
     "/api/v1/system/health": {
       "get": {
         "operationId": "getSystemHealth",

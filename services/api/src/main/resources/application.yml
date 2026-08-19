@@ -30,3 +30,8 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+dajeong:
+  auth:
+    issuer: http://127.0.0.1:9090/cognito/local
+    audience: http://localhost:8080/api

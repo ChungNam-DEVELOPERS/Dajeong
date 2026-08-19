@@ -17,3 +17,8 @@ management:
       group:
         readiness:
           include: readinessState,db
+
+dajeong:
+  auth:
+    issuer: ${DAJEONG_COGNITO_ISSUER}
+    audience: ${DAJEONG_API_AUDIENCE}
