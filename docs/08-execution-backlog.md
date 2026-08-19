@@ -7,6 +7,8 @@
 > 목표: 다음 10개 개발일 동안 웹 로컬 세로 슬라이스, CI, 최소 staging health를 재현 가능하게 완성한다.
 
 > 2026-08-19 결정: [Issue #31](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/31)에 따라 1차 공개 베타는 웹을 우선하고 모바일 기능은 웹 MVP 안정화 후 재개한다.
+>
+> 2026-08-19 진행: [Issue #35](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/35)에서 여행 생성 → DB 저장 → 웹 목록 세로 슬라이스를 구현하고 검증했다.
 
 이 문서는 [종합 개발 계획](./00-development-plan.md)의 단계 0~1만 실행 단위로 분해한다. 전체 기간과 출시 기준은 [로드맵과 테스트](./07-roadmap-testing.md)를 따른다.
 
@@ -38,13 +40,15 @@
 - pnpm·Turborepo 모노레포와 공통 설정
 - Next.js 웹, Spring Boot API, PostgreSQL·Flyway 기반과 기존 Expo 앱 골격
 - OpenAPI 생성 클라이언트를 쓰는 웹 health 세로 슬라이스
+- 웹 PKCE 세션·현재 사용자와 여행 생성·내 여행 목록 세로 슬라이스
+- `User`, `Trip`, `Membership` 최소 도메인 테이블과 생성·조회 API
 - 기존 Expo 앱의 lint·typecheck·export 회귀 검사
 - 로컬 품질 명령, GitHub Actions CI, CDK 기반, 최소 staging 생존 검사
 
 ### 아직 하지 않음
 
-- Cognito 실환경·소셜 IdP 연결과 Hosted UI 검증 (웹 PKCE·현재 사용자 세로 슬라이스 구현 중)
-- `User`, `Trip`, `Membership`, `Invite` 도메인 테이블과 API
+- Cognito 실환경·소셜 IdP 연결과 Hosted UI 검증
+- 여행 상세·수정, 멤버 초대·가입, `Invite` 도메인 테이블과 API
 - Expo 실기기 검증과 신규 모바일 기능·health 화면
 - UI 시안 전체 반영
 - TourAPI·기상청·ODsay·Bedrock 실제 연동
@@ -311,6 +315,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | 2026-08-18 | FND-09 | Local·Staging·Production 환경 설정 계약과 공개 경계, fail-fast 검증, secret 검사 구성 | `pnpm check:configuration`, 누락 변수 실패, Spring·웹·Expo 검증 통과 | FND-10 |
 | 2026-08-19 | FND-10 | Spring OpenAPI 계약에서 웹·앱 공용 TypeScript 타입과 health client 생성 | `pnpm check:api-client`, 웹·앱 import smoke, 연속 생성 diff 없음, 의도적 스키마 불일치 감지 | FND-11 |
 | 2026-08-19 | FND-11 | 생성 client와 웹 Route Handler로 health loading·UP·DOWN·연결 실패·재시도 화면 구현 | 웹 상태 전이 테스트 3건, lint·typecheck·production build, 브라우저 정상·503·중단·복구 확인 | FND-13 |
+| 2026-08-19 | Issue #35 | 여행·방장 멤버십 원자 생성, 멱등 요청, cursor 목록 API와 웹 생성·목록 화면 구현 | PostgreSQL 통합 테스트, OpenAPI client 11건, 웹 상태 테스트 13건, production build, `/trips` 브라우저 오류 0건 | 초대·가입 세로 슬라이스 |
 
 ## 9. 2단계 상세화 시점
 
@@ -318,8 +323,8 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 
 예정 세로 슬라이스:
 
-1. Cognito 기본 로그인 → `/api/v1/me` → 웹 사용자 표시
-2. 여행 생성 → DB 저장 → 웹 목록
+1. ~~Cognito 기본 로그인 → `/api/v1/me` → 웹 사용자 표시~~
+2. ~~여행 생성 → DB 저장 → 웹 목록~~ ([Issue #35](https://github.com/ChungNam-DEVELOPERS/Dajeong/issues/35))
 3. 초대 발급 → 로그인 복귀 → 3~6인 가입·권한 검증
 4. 계정 삭제 → 도메인 처리 → 웹 완료 흐름
 
