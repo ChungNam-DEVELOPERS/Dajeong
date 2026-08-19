@@ -389,7 +389,7 @@ export interface components {
             /** Format: date-time */
             slotStartsAt: string;
             /** @enum {string} */
-            status: "DETECTED" | "ACKNOWLEDGED" | "GENERATING" | "VOTING" | "FAILED" | "DISMISSED";
+            status: "DETECTED" | "ACKNOWLEDGED" | "GENERATING" | "VOTING" | "APPLIED" | "FAILED" | "DISMISSED";
             /** Format: uuid */
             tripId: string;
             /** @enum {string} */
@@ -474,7 +474,7 @@ export interface components {
             /** Format: date-time */
             publishedAt: string;
             /** @enum {string} */
-            reason: "ORIGINAL";
+            reason: "ORIGINAL" | "REPLAN";
             slots: components["schemas"]["ItinerarySlotResponse"][];
             /** Format: uuid */
             tripId: string;
@@ -563,10 +563,18 @@ export interface components {
             weightedAverageSatisfaction: number;
         };
         ProposalSetResponse: {
+            /** Format: date-time */
+            appliedAt?: string | null;
+            /** Format: uuid */
+            appliedItineraryVersionId?: string | null;
             /** Format: int32 */
             candidateCount: number;
             /** Format: int32 */
             candidateLimit: number;
+            /** Format: date-time */
+            closedAt?: string | null;
+            /** @enum {string|null} */
+            closingReason?: "ALL_MEMBERS_VOTED" | "DEADLINE" | null;
             /** Format: date-time */
             completedAt?: string | null;
             /** Format: date-time */
@@ -589,7 +597,7 @@ export interface components {
             /** Format: date-time */
             startedAt?: string | null;
             /** @enum {string} */
-            status: "QUEUED" | "GENERATING" | "OPEN" | "FAILED" | "CANCELLED";
+            status: "QUEUED" | "GENERATING" | "OPEN" | "CLOSED" | "APPLIED" | "FAILED" | "CANCELLED";
             /** Format: uuid */
             tripId: string;
             /** Format: date-time */
@@ -598,12 +606,14 @@ export interface components {
             votingDeadlineAt?: string | null;
             /** Format: date-time */
             votingOpenedAt?: string | null;
+            /** Format: uuid */
+            winnerProposalId?: string | null;
         };
         ReplanStartResponse: {
             /** Format: uuid */
             disruptionId: string;
             /** @enum {string} */
-            disruptionStatus: "DETECTED" | "ACKNOWLEDGED" | "GENERATING" | "VOTING" | "FAILED" | "DISMISSED";
+            disruptionStatus: "DETECTED" | "ACKNOWLEDGED" | "GENERATING" | "VOTING" | "APPLIED" | "FAILED" | "DISMISSED";
             proposalSet: components["schemas"]["ProposalSetResponse"];
         };
         SystemHealthResponse: {

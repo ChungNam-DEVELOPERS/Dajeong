@@ -98,6 +98,7 @@ export type {
   ProposalSetStatus,
   ReplanStartResponse,
   UpsertProposalVoteOptions,
+  VoteClosingReason,
   VoteRequest,
 } from "./disruptions.ts";
 export type {

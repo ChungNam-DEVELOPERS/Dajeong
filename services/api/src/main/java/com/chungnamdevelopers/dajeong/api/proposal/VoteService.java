@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -15,13 +16,16 @@ public class VoteService {
 
     private final ObjectProvider<JdbcClient> jdbcClientProvider;
     private final ProposalService proposalService;
+    private final VoteFinalizationService finalizationService;
 
     public VoteService(
             ObjectProvider<JdbcClient> jdbcClientProvider,
-            ProposalService proposalService
+            ProposalService proposalService,
+            VoteFinalizationService finalizationService
     ) {
         this.jdbcClientProvider = jdbcClientProvider;
         this.proposalService = proposalService;
+        this.finalizationService = finalizationService;
     }
 
     @Transactional
@@ -48,10 +52,10 @@ public class VoteService {
                 .param("userId", currentUser.id())
                 .param("proposalId", request.proposalId())
                 .update();
-        return proposalService.loadResponse(
-                jdbcClient,
+        return finalizationService.finalizeWhenComplete(
                 proposalSetId,
-                currentUser.id()
+                currentUser.id(),
+                Instant.now()
         );
     }
 
@@ -94,6 +98,14 @@ public class VoteService {
                          and m.user_id = :userId
                          and m.status = 'ACTIVE'
                         where ps.id = :proposalSetId
+                          and exists (
+                              select 1
+                              from public.proposal p
+                              join public.proposal_member_score pms
+                                on pms.proposal_id = p.id
+                               and pms.user_id = :userId
+                              where p.proposal_set_id = ps.id
+                          )
                         for update of ps
                         """)
                 .param("proposalSetId", proposalSetId)

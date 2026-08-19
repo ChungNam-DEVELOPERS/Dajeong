@@ -116,6 +116,8 @@ export function applyOptimisticProposalVote(
 
 export function proposalFailureMessage(code?: string | null): string {
   switch (code) {
+    case "NO_VOTES":
+      return "마감까지 참여한 표가 없어 원본 일정을 유지했습니다.";
     case "NO_FEASIBLE_PROPOSAL":
       return "검증 가능한 후보를 찾지 못했습니다. 원본 일정을 유지하거나 직접 편집해 주세요.";
     case "PREFERENCES_INCOMPLETE":
@@ -129,6 +131,34 @@ export function proposalFailureMessage(code?: string | null): string {
     default:
       return "후보 생성을 완료하지 못했습니다. 원본 일정은 변경되지 않았습니다.";
   }
+}
+
+export function proposalResolutionMessage(
+  proposalSet: ProposalSetResponse,
+): string | null {
+  if (proposalSet.status === "APPLIED") {
+    const winner = proposalSet.proposals.find(
+      (proposal) => proposal.id === proposalSet.winnerProposalId,
+    );
+    const closing =
+      proposalSet.closingReason === "ALL_MEMBERS_VOTED"
+        ? "전원 참여로"
+        : "12시간 마감 결과로";
+    return winner
+      ? `${closing} ${winner.title} 후보가 확정되어 새 일정에 반영됐습니다.`
+      : `${closing} 선택된 후보가 새 일정에 반영됐습니다.`;
+  }
+  if (proposalSet.status === "CANCELLED" && proposalSet.closedAt) {
+    return proposalFailureMessage(proposalSet.failureCode);
+  }
+  return null;
+}
+
+export function isVoteResolved(proposalSet: ProposalSetResponse): boolean {
+  return (
+    proposalSet.status === "APPLIED" ||
+    (proposalSet.status === "CANCELLED" && Boolean(proposalSet.closedAt))
+  );
 }
 
 export function getWeatherEvidence(

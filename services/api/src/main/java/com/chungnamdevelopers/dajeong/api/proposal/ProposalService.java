@@ -175,15 +175,25 @@ public class ProposalService {
                             ps.failure_code,
                             ps.voting_opened_at,
                             ps.voting_deadline_at,
+                            ps.winner_proposal_id,
+                            ps.applied_itinerary_version_id,
+                            ps.closing_reason,
+                            ps.closed_at,
+                            ps.applied_at,
                             ps.created_at,
                             ps.started_at,
                             ps.completed_at,
                             ps.updated_at,
                             (
-                                select count(*)
-                                from public.trip_membership m
-                                where m.trip_id = ps.trip_id
+                                select count(distinct pms.user_id)
+                                from public.proposal p
+                                join public.proposal_member_score pms
+                                  on pms.proposal_id = p.id
+                                join public.trip_membership m
+                                  on m.trip_id = ps.trip_id
+                                 and m.user_id = pms.user_id
                                   and m.status = 'ACTIVE'
+                                where p.proposal_set_id = ps.id
                             ) as eligible_member_count,
                             (
                                 select count(*)
@@ -193,6 +203,14 @@ public class ProposalService {
                                  and m.user_id = v.user_id
                                  and m.status = 'ACTIVE'
                                 where v.proposal_set_id = ps.id
+                                  and exists (
+                                      select 1
+                                      from public.proposal p
+                                      join public.proposal_member_score pms
+                                        on pms.proposal_id = p.id
+                                       and pms.user_id = v.user_id
+                                      where p.proposal_set_id = ps.id
+                                  )
                             ) as participant_count
                         from public.proposal_set ps
                         where ps.id = :id
@@ -215,6 +233,15 @@ public class ProposalService {
                                 "voting_deadline_at",
                                 Timestamp.class
                         )),
+                        resultSet.getObject("winner_proposal_id", UUID.class),
+                        resultSet.getObject("applied_itinerary_version_id", UUID.class),
+                        resultSet.getString("closing_reason") == null
+                                ? null
+                                : VoteClosingReason.valueOf(
+                                        resultSet.getString("closing_reason")
+                                ),
+                        nullableInstant(resultSet.getObject("closed_at", Timestamp.class)),
+                        nullableInstant(resultSet.getObject("applied_at", Timestamp.class)),
                         resultSet.getObject("created_at", Timestamp.class).toInstant(),
                         nullableInstant(resultSet.getObject("started_at", Timestamp.class)),
                         nullableInstant(resultSet.getObject("completed_at", Timestamp.class)),
@@ -255,6 +282,12 @@ public class ProposalService {
                                  and m.status = 'ACTIVE'
                                 where v.proposal_set_id = p.proposal_set_id
                                   and v.proposal_id = p.id
+                                  and exists (
+                                      select 1
+                                      from public.proposal_member_score pms
+                                      where pms.proposal_id = p.id
+                                        and pms.user_id = v.user_id
+                                  )
                             ) as vote_count
                         from public.proposal p
                         join public.proposal_set ps
@@ -311,6 +344,11 @@ public class ProposalService {
                 set.failureCode(),
                 set.votingOpenedAt(),
                 set.votingDeadlineAt(),
+                set.winnerProposalId(),
+                set.appliedItineraryVersionId(),
+                set.closingReason(),
+                set.closedAt(),
+                set.appliedAt(),
                 set.createdAt(),
                 set.startedAt(),
                 set.completedAt(),
@@ -476,6 +514,11 @@ public class ProposalService {
             String failureCode,
             Instant votingOpenedAt,
             Instant votingDeadlineAt,
+            UUID winnerProposalId,
+            UUID appliedItineraryVersionId,
+            VoteClosingReason closingReason,
+            Instant closedAt,
+            Instant appliedAt,
             Instant createdAt,
             Instant startedAt,
             Instant completedAt,

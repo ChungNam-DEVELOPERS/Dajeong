@@ -7,6 +7,7 @@ import com.chungnamdevelopers.dajeong.api.proposal.ProposalCandidateException;
 import com.chungnamdevelopers.dajeong.api.proposal.ProposalGenerationService;
 import com.chungnamdevelopers.dajeong.api.proposal.ProposalSearchRequest;
 import com.chungnamdevelopers.dajeong.api.proposal.ProposalSetResponse;
+import com.chungnamdevelopers.dajeong.api.proposal.VoteFinalizationService;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -71,6 +74,9 @@ class ProposalGenerationIntegrationTests {
 
     @Autowired
     private ProposalGenerationService generationService;
+
+    @Autowired
+    private VoteFinalizationService finalizationService;
 
     @Test
     void createsAtMostThreeDeterministicProposalsWithoutExposingMemberScores()
@@ -249,11 +255,22 @@ class ProposalGenerationIntegrationTests {
     void createsChangesAndWithdrawsOneAnonymousVotePerMember() throws Exception {
         String host = "vote-host";
         String member = "vote-member";
+        String waitingMember = "vote-waiting-member";
         String outsider = "vote-outsider";
         String tripId = createdTripId(host, "익명 투표 여행");
         joinTrip(tripId, host, member);
+        joinTrip(tripId, host, waitingMember);
         savePreference(tripId, host, 12_000, 2, 3, "CULTURE", "CAFE");
         savePreference(tripId, member, 8_000, 3, 2, "NATURE", "ACTIVITY");
+        savePreference(
+                tripId,
+                waitingMember,
+                10_000,
+                2,
+                2,
+                "CAFE",
+                "CULTURE"
+        );
         String slotId = publishSlot(tripId, host, 0, "투표 야외 장소", "10:00", "11:30");
         String disruptionId = createDisruption(
                 tripId,
@@ -269,7 +286,7 @@ class ProposalGenerationIntegrationTests {
         );
         String firstProposalId = generated.proposals().get(0).id().toString();
         String secondProposalId = generated.proposals().get(1).id().toString();
-        assertThat(generated.eligibleMemberCount()).isEqualTo(2);
+        assertThat(generated.eligibleMemberCount()).isEqualTo(3);
         assertThat(generated.participantCount()).isZero();
         assertThat(generated.votingOpenedAt()).isNotNull();
         assertThat(generated.votingDeadlineAt()).isAfter(generated.votingOpenedAt());
@@ -291,7 +308,7 @@ class ProposalGenerationIntegrationTests {
         vote(proposalSetId, member, secondProposalId)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.participantCount").value(2))
-                .andExpect(jsonPath("$.eligibleMemberCount").value(2))
+                .andExpect(jsonPath("$.eligibleMemberCount").value(3))
                 .andExpect(jsonPath("$.proposals[1].voteCount").value(2));
 
         MvcResult hostView = mockMvc.perform(get(
@@ -392,6 +409,13 @@ class ProposalGenerationIntegrationTests {
         withdrawVote(firstSetId, host)
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("VOTE_CLOSED"));
+        jdbcClient.sql("""
+                        update public.proposal_set
+                        set status = 'FAILED'
+                        where id = cast(:proposalSetId as uuid)
+                        """)
+                .param("proposalSetId", firstSetId)
+                .update();
 
         jdbcClient.sql("""
                         update public.proposal_set
@@ -403,6 +427,373 @@ class ProposalGenerationIntegrationTests {
         vote(secondSetId, host, secondSet.proposals().get(0).id().toString())
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("VOTE_CLOSED"));
+    }
+
+    @Test
+    void closesImmediatelyOnFullParticipationAndAppliesTieByFairnessRank()
+            throws Exception {
+        String host = "finalize-full-host";
+        String member = "finalize-full-member";
+        String tripId = createdTripId(host, "전원 투표 확정 여행");
+        joinTrip(tripId, host, member);
+        savePreference(tripId, host, 12_000, 2, 3, "CULTURE", "CAFE");
+        savePreference(tripId, member, 8_000, 3, 2, "NATURE", "ACTIVITY");
+        addSlot(tripId, host, 0, "교체할 야외 장소", "10:00", "11:30");
+        addSlot(tripId, host, 1, "유지할 점심 장소", "13:00", "14:00");
+        String affectedSlotId = publish(tripId, host, 2);
+        String sourceVersionId = currentVersionId(tripId).toString();
+        String disruptionId = createDisruption(
+                tripId,
+                host,
+                affectedSlotId,
+                "전원 투표로 바로 확정해요.",
+                "finalize-full-disruption"
+        );
+        String proposalSetId = startReplan(
+                disruptionId,
+                host,
+                "finalize-full-replan"
+        );
+        candidateClient.respondFromFixture("/fixtures/proposal/normal.json");
+        ProposalSetResponse generated = generationService.generate(
+                UUID.fromString(proposalSetId)
+        );
+        String rankOneProposalId = generated.proposals().get(0).id().toString();
+        String rankTwoProposalId = generated.proposals().get(1).id().toString();
+
+        setConcessionScore(tripId, host, "20.00");
+        setConcessionScore(tripId, member, "40.00");
+        List<MemberRegret> regrets = memberRegrets(
+                proposalSetId,
+                rankOneProposalId
+        );
+
+        vote(proposalSetId, host, rankTwoProposalId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("OPEN"));
+        vote(proposalSetId, member, rankOneProposalId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APPLIED"))
+                .andExpect(jsonPath("$.winnerProposalId").value(rankOneProposalId))
+                .andExpect(jsonPath("$.closingReason").value("ALL_MEMBERS_VOTED"))
+                .andExpect(jsonPath("$.appliedItineraryVersionId").isNotEmpty());
+
+        assertThat(currentVersionNumber(tripId)).isEqualTo(2);
+        UUID appliedVersionId = currentVersionId(tripId);
+        assertThat(jdbcClient.sql("""
+                        select reason
+                        from public.itinerary_version
+                        where id = :versionId
+                        """)
+                .param("versionId", appliedVersionId)
+                .query(String.class)
+                .single()).isEqualTo("REPLAN");
+        assertThat(jdbcClient.sql("""
+                        select previous_version_id
+                        from public.itinerary_version
+                        where id = :versionId
+                        """)
+                .param("versionId", appliedVersionId)
+                .query(UUID.class)
+                .single()).isEqualTo(UUID.fromString(sourceVersionId));
+        assertThat(jdbcClient.sql("""
+                        select place_name
+                        from public.itinerary_slot
+                        where itinerary_version_id = :versionId
+                        order by starts_at
+                        """)
+                .param("versionId", appliedVersionId)
+                .query(String.class)
+                .list()).containsExactly(
+                        generated.proposals().get(0).placeName(),
+                        "유지할 점심 장소"
+                );
+        assertThat(jdbcClient.sql("""
+                        select place_name
+                        from public.itinerary_slot
+                        where id = cast(:slotId as uuid)
+                        """)
+                .param("slotId", affectedSlotId)
+                .query(String.class)
+                .single()).isEqualTo("교체할 야외 장소");
+        assertThat(jdbcClient.sql("""
+                        select status
+                        from public.disruption
+                        where id = cast(:disruptionId as uuid)
+                        """)
+                .param("disruptionId", disruptionId)
+                .query(String.class)
+                .single()).isEqualTo("APPLIED");
+
+        for (MemberRegret regret : regrets) {
+            BigDecimal expected = regret.oldScore()
+                    .multiply(new BigDecimal("0.7"))
+                    .add(regret.regret())
+                    .max(BigDecimal.ZERO)
+                    .min(new BigDecimal("100"))
+                    .setScale(2, RoundingMode.HALF_UP);
+            assertThat(concessionScore(tripId, regret.userId()))
+                    .isEqualByComparingTo(expected);
+        }
+
+        finalizationService.closeDue(Instant.now(), 100);
+        assertThat(currentVersionNumber(tripId)).isEqualTo(2);
+    }
+
+    @Test
+    void closesDueVoteWithPartialParticipationOnlyOnce() throws Exception {
+        String host = "finalize-due-host";
+        String member = "finalize-due-member";
+        String tripId = createdTripId(host, "기한 투표 확정 여행");
+        joinTrip(tripId, host, member);
+        savePreference(tripId, host, 12_000, 2, 3, "CULTURE", "CAFE");
+        savePreference(tripId, member, 8_000, 3, 2, "NATURE", "ACTIVITY");
+        String slotId = publishSlot(
+                tripId,
+                host,
+                0,
+                "기한 투표 야외 장소",
+                "10:00",
+                "11:30"
+        );
+        String disruptionId = createDisruption(
+                tripId,
+                host,
+                slotId,
+                "기한까지 들어온 표로 확정해요.",
+                "finalize-due-disruption"
+        );
+        String proposalSetId = startReplan(
+                disruptionId,
+                host,
+                "finalize-due-replan"
+        );
+        candidateClient.respondFromFixture("/fixtures/proposal/normal.json");
+        ProposalSetResponse generated = generationService.generate(
+                UUID.fromString(proposalSetId)
+        );
+        String votedProposalId = generated.proposals().get(1).id().toString();
+        vote(proposalSetId, host, votedProposalId)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("OPEN"));
+        expireVote(proposalSetId);
+
+        assertThat(finalizationService.closeDue(Instant.now(), 100).appliedCount())
+                .isGreaterThanOrEqualTo(1);
+        mockMvc.perform(get("/api/v1/proposal-sets/{id}", proposalSetId)
+                        .with(user(member)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APPLIED"))
+                .andExpect(jsonPath("$.winnerProposalId").value(votedProposalId))
+                .andExpect(jsonPath("$.closingReason").value("DEADLINE"));
+        assertThat(currentVersionNumber(tripId)).isEqualTo(2);
+
+        finalizationService.closeDue(Instant.now(), 100);
+        assertThat(currentVersionNumber(tripId)).isEqualTo(2);
+    }
+
+    @Test
+    void cancelsNoVoteAndStaleDeadlineResultsWithoutCreatingVersions()
+            throws Exception {
+        String noVoteHost = "finalize-no-vote-host";
+        String noVoteTripId = createdTripId(noVoteHost, "무투표 취소 여행");
+        savePreference(
+                noVoteTripId,
+                noVoteHost,
+                10_000,
+                2,
+                2,
+                "CULTURE",
+                "CAFE"
+        );
+        String noVoteSlotId = publishSlot(
+                noVoteTripId,
+                noVoteHost,
+                0,
+                "무투표 야외 장소",
+                "10:00",
+                "11:00"
+        );
+        String noVoteDisruptionId = createDisruption(
+                noVoteTripId,
+                noVoteHost,
+                noVoteSlotId,
+                "표가 없으면 원본을 유지해요.",
+                "finalize-no-vote-disruption"
+        );
+        String noVoteSetId = startReplan(
+                noVoteDisruptionId,
+                noVoteHost,
+                "finalize-no-vote-replan"
+        );
+        candidateClient.respondFromFixture("/fixtures/proposal/normal.json");
+        generationService.generate(UUID.fromString(noVoteSetId));
+        expireVote(noVoteSetId);
+
+        String staleHost = "finalize-stale-host";
+        String staleTripId = createdTripId(staleHost, "오래된 투표 취소 여행");
+        savePreference(
+                staleTripId,
+                staleHost,
+                10_000,
+                2,
+                2,
+                "CULTURE",
+                "CAFE"
+        );
+        String staleSlotId = publishSlot(
+                staleTripId,
+                staleHost,
+                0,
+                "오래된 투표 야외 장소",
+                "10:00",
+                "11:00"
+        );
+        String staleDisruptionId = createDisruption(
+                staleTripId,
+                staleHost,
+                staleSlotId,
+                "새 일정이 생기면 적용하지 않아요.",
+                "finalize-stale-disruption"
+        );
+        String staleSetId = startReplan(
+                staleDisruptionId,
+                staleHost,
+                "finalize-stale-replan"
+        );
+        candidateClient.respondFromFixture("/fixtures/proposal/normal.json");
+        generationService.generate(UUID.fromString(staleSetId));
+        addSlot(
+                staleTripId,
+                staleHost,
+                1,
+                "새로 발행한 장소",
+                "13:00",
+                "14:00"
+        );
+        publish(staleTripId, staleHost, 2);
+        expireVote(staleSetId);
+
+        assertThat(finalizationService.closeDue(Instant.now(), 100).cancelledCount())
+                .isGreaterThanOrEqualTo(2);
+        assertCancelled(noVoteSetId, noVoteHost, "NO_VOTES");
+        assertCancelled(staleSetId, staleHost, "STALE_ITINERARY");
+        assertThat(currentVersionNumber(noVoteTripId)).isEqualTo(1);
+        assertThat(currentVersionNumber(staleTripId)).isEqualTo(2);
+    }
+
+    private void assertCancelled(
+            String proposalSetId,
+            String subject,
+            String failureCode
+    ) throws Exception {
+        mockMvc.perform(get("/api/v1/proposal-sets/{id}", proposalSetId)
+                        .with(user(subject)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.failureCode").value(failureCode))
+                .andExpect(jsonPath("$.closingReason").value("DEADLINE"))
+                .andExpect(jsonPath("$.winnerProposalId").doesNotExist())
+                .andExpect(jsonPath("$.appliedItineraryVersionId").doesNotExist());
+    }
+
+    private void expireVote(String proposalSetId) {
+        jdbcClient.sql("""
+                        update public.proposal_set
+                        set voting_opened_at = current_timestamp - interval '13 hours',
+                            voting_deadline_at = current_timestamp - interval '1 second'
+                        where id = cast(:proposalSetId as uuid)
+                        """)
+                .param("proposalSetId", proposalSetId)
+                .update();
+    }
+
+    private void setConcessionScore(
+            String tripId,
+            String subject,
+            String score
+    ) {
+        jdbcClient.sql("""
+                        update public.concession_ledger cl
+                        set score = cast(:score as numeric)
+                        from public.app_user u
+                        where cl.trip_id = cast(:tripId as uuid)
+                          and cl.user_id = u.id
+                          and u.cognito_subject = :subject
+                        """)
+                .param("score", score)
+                .param("tripId", tripId)
+                .param("subject", subject)
+                .update();
+    }
+
+    private List<MemberRegret> memberRegrets(
+            String proposalSetId,
+            String winnerProposalId
+    ) {
+        return jdbcClient.sql("""
+                        select
+                            pms.user_id,
+                            cl.score as old_score,
+                            max(pms.utility) - max(
+                                case
+                                    when p.id = cast(:winnerProposalId as uuid)
+                                    then pms.utility
+                                end
+                            ) as regret
+                        from public.proposal p
+                        join public.proposal_member_score pms
+                          on pms.proposal_id = p.id
+                        join public.proposal_set ps
+                          on ps.id = p.proposal_set_id
+                        join public.concession_ledger cl
+                          on cl.trip_id = ps.trip_id
+                         and cl.user_id = pms.user_id
+                        where p.proposal_set_id = cast(:proposalSetId as uuid)
+                        group by pms.user_id, cl.score
+                        order by pms.user_id
+                        """)
+                .param("winnerProposalId", winnerProposalId)
+                .param("proposalSetId", proposalSetId)
+                .query((resultSet, rowNumber) -> new MemberRegret(
+                        resultSet.getObject("user_id", UUID.class),
+                        resultSet.getBigDecimal("old_score"),
+                        resultSet.getBigDecimal("regret")
+                ))
+                .list();
+    }
+
+    private BigDecimal concessionScore(String tripId, UUID userId) {
+        return jdbcClient.sql("""
+                        select score
+                        from public.concession_ledger
+                        where trip_id = cast(:tripId as uuid)
+                          and user_id = :userId
+                        """)
+                .param("tripId", tripId)
+                .param("userId", userId)
+                .query(BigDecimal.class)
+                .single();
+    }
+
+    private UUID currentVersionId(String tripId) {
+        return jdbcClient.sql("""
+                        select id
+                        from public.itinerary_version
+                        where trip_id = cast(:tripId as uuid)
+                        order by version_number desc
+                        limit 1
+                        """)
+                .param("tripId", tripId)
+                .query(UUID.class)
+                .single();
+    }
+
+    private record MemberRegret(
+            UUID userId,
+            BigDecimal oldScore,
+            BigDecimal regret
+    ) {
     }
 
     private ResultActions vote(

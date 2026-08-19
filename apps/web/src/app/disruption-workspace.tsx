@@ -24,7 +24,9 @@ import {
   applyReplanStart,
   createEmptyDisruptionDraft,
   getWeatherEvidence,
+  isVoteResolved,
   proposalFailureMessage,
+  proposalResolutionMessage,
   replaceDisruption,
   toCreateDisruptionRequest,
   validateDisruptionDraft,
@@ -60,6 +62,18 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [requestKey, setRequestKey] = useState(0);
+  const pollableProposalSetIds =
+    state.phase === "ready"
+      ? Object.values(state.proposalSets)
+          .filter((proposalSet) =>
+            ["QUEUED", "GENERATING", "OPEN", "CLOSED"].includes(
+              proposalSet.status,
+            ),
+          )
+          .map((proposalSet) => proposalSet.id)
+          .sort()
+          .join(",")
+      : "";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -75,6 +89,65 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
       });
     return () => controller.abort();
   }, [requestKey, tripId]);
+
+  useEffect(() => {
+    if (!pollableProposalSetIds) {
+      return;
+    }
+    const controller = new AbortController();
+    let polling = false;
+    const proposalSetIds = pollableProposalSetIds.split(",");
+    const poll = async () => {
+      if (polling) {
+        return;
+      }
+      polling = true;
+      try {
+        const proposalSets = await Promise.all(
+          proposalSetIds.map((proposalSetId) =>
+            getProposalSet({
+              baseUrl: window.location.origin,
+              proposalSetId,
+              signal: controller.signal,
+            }),
+          ),
+        );
+        if (controller.signal.aborted) {
+          return;
+        }
+        setState((current) =>
+          current.phase === "ready"
+            ? {
+                ...current,
+                proposalSets: {
+                  ...current.proposalSets,
+                  ...Object.fromEntries(
+                    proposalSets.map((proposalSet) => [
+                      proposalSet.id,
+                      proposalSet,
+                    ]),
+                  ),
+                },
+              }
+            : current,
+        );
+        const resolution = proposalSets.find(isVoteResolved);
+        if (resolution) {
+          setNotice(proposalResolutionMessage(resolution) ?? "투표 결과가 확정됐습니다.");
+          setRequestKey((current) => current + 1);
+        }
+      } catch {
+        // 수동 새로고침 경로를 유지하고 다음 폴링에서 다시 시도합니다.
+      } finally {
+        polling = false;
+      }
+    };
+    const intervalId = window.setInterval(() => void poll(), 3_000);
+    return () => {
+      controller.abort();
+      window.clearInterval(intervalId);
+    };
+  }, [pollableProposalSetIds]);
 
   async function submitReport(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -197,7 +270,13 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
             }
           : current,
       );
-      setNotice("후보 준비 상태를 새로 확인했습니다.");
+      setNotice(
+        proposalResolutionMessage(proposalSet) ??
+          "후보 준비 상태를 새로 확인했습니다.",
+      );
+      if (isVoteResolved(proposalSet)) {
+        setRequestKey((current) => current + 1);
+      }
     } catch (error: unknown) {
       setNotice(readApiMessage(error, "후보 상태를 확인하지 못했습니다."));
     } finally {
@@ -256,10 +335,14 @@ export function DisruptionWorkspace({ tripId }: Readonly<{ tripId: string }>) {
           : current,
       );
       setNotice(
-        proposalId === null
-          ? "내 투표를 철회했습니다."
-          : "내 투표를 반영했습니다. 개인별 선택은 다른 멤버에게 공개되지 않습니다.",
+        proposalResolutionMessage(proposalSet) ??
+          (proposalId === null
+            ? "내 투표를 철회했습니다."
+            : "내 투표를 반영했습니다. 개인별 선택은 다른 멤버에게 공개되지 않습니다."),
       );
+      if (isVoteResolved(proposalSet)) {
+        setRequestKey((current) => current + 1);
+      }
     } catch (error: unknown) {
       setState((current) =>
         current.phase === "ready"
@@ -559,6 +642,9 @@ function ProposalSetDetails({
     return null;
   }
   const inProgress = proposalSet.status === "QUEUED" || proposalSet.status === "GENERATING";
+  const resolutionMessage = proposalResolutionMessage(proposalSet);
+  const showCandidates =
+    proposalSet.status === "OPEN" || proposalSet.status === "APPLIED";
   return (
     <section className="mt-5 rounded-2xl border border-[#cbdcc7] bg-[#f4faf2] p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -581,7 +667,19 @@ function ProposalSetDetails({
           검증 가능한 장소와 그룹 조건을 대조하고 있습니다. 준비되는 동안 원본 일정은 그대로 유지됩니다.
         </p>
       ) : null}
-      {proposalSet.status === "FAILED" || proposalSet.status === "CANCELLED" ? (
+      {resolutionMessage ? (
+        <div className="mt-3 rounded-xl bg-[#e7f3e4] p-4 text-sm font-semibold leading-6 text-[#315d32]">
+          <p>{resolutionMessage}</p>
+          {proposalSet.status === "APPLIED" ? (
+            <Link
+              className="mt-3 inline-flex font-black underline underline-offset-4"
+              href={`/trips/${proposalSet.tripId}`}
+            >
+              새 일정 확인
+            </Link>
+          ) : null}
+        </div>
+      ) : proposalSet.status === "FAILED" || proposalSet.status === "CANCELLED" ? (
         <p className="mt-3 rounded-xl bg-white p-3 text-sm font-semibold leading-6 text-[#7a4b0f]">
           {proposalFailureMessage(proposalSet.failureCode)}
         </p>
@@ -591,24 +689,29 @@ function ProposalSetDetails({
           {proposalSet.shortageReason}
         </p>
       ) : null}
-      {proposalSet.status === "OPEN" ? (
+      {showCandidates ? (
         <div className="mt-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#e7f3e4] px-4 py-3 text-sm font-extrabold text-[#315d32]">
             <span>참여 {proposalSet.participantCount}/{proposalSet.eligibleMemberCount}명</span>
-            {proposalSet.votingDeadlineAt ? (
+            {proposalSet.closedAt ? (
+              <span>마감 {dateTimeFormatter.format(new Date(proposalSet.closedAt))}</span>
+            ) : proposalSet.votingDeadlineAt ? (
               <span>마감 {dateTimeFormatter.format(new Date(proposalSet.votingDeadlineAt))}</span>
             ) : null}
           </div>
           {proposalSet.proposals.map((proposal) => {
             const selected = proposalSet.myVoteProposalId === proposal.id;
+            const winner = proposalSet.winnerProposalId === proposal.id;
             return (
               <article
-                className={`rounded-xl border bg-white p-4 ${selected ? "border-[#3c713d] ring-2 ring-[#5b9f5a33]" : "border-[#dce9d9]"}`}
+                className={`rounded-xl border bg-white p-4 ${winner || selected ? "border-[#3c713d] ring-2 ring-[#5b9f5a33]" : "border-[#dce9d9]"}`}
                 key={proposal.id}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h5 className="font-black">{proposal.rank}. {proposal.title}</h5>
-                  <span className="text-xs font-black text-[#3c713d]">익명 {proposal.voteCount}표</span>
+                  <span className="text-xs font-black text-[#3c713d]">
+                    {winner ? "확정 · " : ""}익명 {proposal.voteCount}표
+                  </span>
                 </div>
                 <p className="mt-2 text-sm font-semibold leading-6 text-[#6f665a]">{proposal.summary}</p>
                 <dl className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-5">
@@ -618,19 +721,21 @@ function ProposalSetDetails({
                   <div><dt className="font-bold text-[#6f665a]">최저 만족도</dt><dd className="mt-1 font-extrabold">{Math.round(proposal.minimumMemberSatisfaction)}점</dd></div>
                   <div><dt className="font-bold text-[#6f665a]">가중 평균</dt><dd className="mt-1 font-extrabold">{Math.round(proposal.weightedAverageSatisfaction)}점</dd></div>
                 </dl>
-                <button
-                  aria-pressed={selected}
-                  className={`mt-4 min-h-11 w-full rounded-xl px-4 py-2 text-sm font-extrabold transition disabled:opacity-50 ${selected ? "bg-[#e7f3e4] text-[#315d32]" : "bg-[#3c713d] text-white hover:bg-[#315d32]"}`}
-                  disabled={busy || selected}
-                  onClick={() => void onVote(proposalSet.id, proposal.id)}
-                  type="button"
-                >
-                  {selected ? "내가 선택한 후보" : "이 후보에 투표"}
-                </button>
+                {proposalSet.status === "OPEN" ? (
+                  <button
+                    aria-pressed={selected}
+                    className={`mt-4 min-h-11 w-full rounded-xl px-4 py-2 text-sm font-extrabold transition disabled:opacity-50 ${selected ? "bg-[#e7f3e4] text-[#315d32]" : "bg-[#3c713d] text-white hover:bg-[#315d32]"}`}
+                    disabled={busy || selected}
+                    onClick={() => void onVote(proposalSet.id, proposal.id)}
+                    type="button"
+                  >
+                    {selected ? "내가 선택한 후보" : "이 후보에 투표"}
+                  </button>
+                ) : null}
               </article>
             );
           })}
-          {proposalSet.myVoteProposalId ? (
+          {proposalSet.status === "OPEN" && proposalSet.myVoteProposalId ? (
             <button
               className="min-h-10 w-full rounded-xl border border-[#aac7a5] bg-white px-3 py-2 text-sm font-extrabold disabled:opacity-50"
               disabled={busy}
@@ -700,9 +805,9 @@ function readApiMessage(error: unknown, fallback: string): string {
 }
 
 const typeLabel = { CLOSURE: "휴관", OTHER: "기타", TRAFFIC: "교통", WEATHER: "날씨" } as const;
-const statusLabel = { ACKNOWLEDGED: "요청 접수", DETECTED: "확인 필요", DISMISSED: "원본 유지", FAILED: "후보 실패", GENERATING: "후보 생성 중", VOTING: "후보 준비" } as const;
-const statusClassName = { ACKNOWLEDGED: "text-[#3c713d]", DETECTED: "text-[#a35b00]", DISMISSED: "text-[#6f665a]", FAILED: "text-red-700", GENERATING: "text-[#3c713d]", VOTING: "text-[#3c713d]" } as const;
-const proposalSetLabel = { CANCELLED: "후보 작업 취소", FAILED: "후보 생성 실패", GENERATING: "후보 생성 중", OPEN: "익명 투표 진행", QUEUED: "후보 생성 대기" } as const;
+const statusLabel = { ACKNOWLEDGED: "요청 접수", APPLIED: "일정 반영", DETECTED: "확인 필요", DISMISSED: "원본 유지", FAILED: "후보 실패", GENERATING: "후보 생성 중", VOTING: "후보 준비" } as const;
+const statusClassName = { ACKNOWLEDGED: "text-[#3c713d]", APPLIED: "text-[#3c713d]", DETECTED: "text-[#a35b00]", DISMISSED: "text-[#6f665a]", FAILED: "text-red-700", GENERATING: "text-[#3c713d]", VOTING: "text-[#3c713d]" } as const;
+const proposalSetLabel = { APPLIED: "그룹 투표로 일정 확정", CANCELLED: "후보 작업 취소", CLOSED: "투표 결과 적용 중", FAILED: "후보 생성 실패", GENERATING: "후보 생성 중", OPEN: "익명 투표 진행", QUEUED: "후보 생성 대기" } as const;
 const costFormatter = new Intl.NumberFormat("ko-KR");
 const inputClassName = "mt-2 min-h-12 w-full rounded-xl border border-line bg-white px-3.5 py-2.5 font-semibold outline-none transition focus:border-brand focus:ring-3 focus:ring-[#5b9f5a22] aria-invalid:border-red-600 disabled:bg-soft disabled:text-[#6f665a]";
 const primaryClassName = "mt-6 inline-flex min-h-12 items-center justify-center rounded-xl bg-[#3c713d] px-6 py-3 font-extrabold text-white transition hover:bg-[#315d32] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
