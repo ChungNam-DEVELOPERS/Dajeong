@@ -1,0 +1,20 @@
+{
+  "config": {
+    "default": true,
+    // Korean prose and Markdown tables are intentionally not hard-wrapped.
+    "MD013": false,
+    // The execution log uses separate quoted paragraphs for readability.
+    "MD028": false,
+    // PR templates and agent pointer files do not require an H1 heading.
+    "MD041": false
+  },
+  "globs": [
+    "**/*.md",
+    "!**/node_modules/**",
+    "!**/.expo/**",
+    "!**/.gradle/**",
+    "!**/.next/**",
+    "!**/build/**",
+    "!**/dist/**"
+  ]
+}

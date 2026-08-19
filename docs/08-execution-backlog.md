@@ -154,7 +154,7 @@ FND-17 → FND-18 clean-room 검증·출구 게이트
 | `DONE` | FND-11 | 웹 health 세로 슬라이스 | 0.25일 | FND-04, FND-10 |
 | `DEFERRED` | FND-12 | 앱 health 세로 슬라이스 | 0.25일 | 웹 MVP 안정화, FND-05, FND-10 |
 | `DONE` | FND-13 | 루트 품질 명령·Turbo 파이프라인 | 0.5일 | FND-03~04, FND-06~11 |
-| `NEXT` | FND-14 | GitHub Actions PR CI | 0.5일 | FND-13 |
+| `DOING` | FND-14 | GitHub Actions PR CI | 0.5일 | FND-13 |
 | `TODO` | FND-15 | CDK staging 기반·synth·diff | 0.5일 | FND-14, EXT-02 |
 | `TODO` | FND-16 | GitHub Actions OIDC 배포 인증 | 0.5일 | FND-15 |
 | `TODO` | FND-17 | 최소 staging 배포·health smoke | 1일 | FND-11, FND-13~16 |
