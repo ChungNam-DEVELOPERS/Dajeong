@@ -1,6 +1,11 @@
 package com.chungnamdevelopers.dajeong.api.system;
 
-public record SystemHealthResponse(Status status, Status database) {
+import io.swagger.v3.oas.annotations.media.Schema;
+
+public record SystemHealthResponse(
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Status status,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Status database
+) {
 
     public static SystemHealthResponse up() {
         return new SystemHealthResponse(Status.UP, Status.UP);

@@ -45,6 +45,10 @@ pnpm api:local
 ./services/api/gradlew -p services/api test
 ./services/api/gradlew -p services/api bootJar
 ./services/api/gradlew -p services/api bootRun --args=--spring.profiles.active=local
+
+# OpenAPI 계약과 공용 TypeScript 클라이언트 생성·검증
+pnpm generate:api-client
+pnpm check:api-client
 ```
 
 애플리케이션이 시작되면 다음 엔드포인트를 확인할 수 있다.
@@ -54,6 +58,8 @@ pnpm api:local
 - 시스템·DB 상태: `http://localhost:8080/api/v1/system/health`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
+
+OpenAPI 계약은 [`packages/api-client`](../../packages/api-client)에서 웹·앱 공용 타입과 health 함수로 생성한다. API 경로나 요청·응답을 변경한 커밋에는 재생성된 `openapi.json`과 `src/generated/schema.d.ts`를 함께 포함해야 한다.
 
 `local` 프로필의 readiness에는 DB 상태가 포함되지만 liveness에는 포함되지 않는다. DB가 중단되면 readiness와 시스템 Health API는 HTTP 503 `DOWN`을 반환하고 liveness는 HTTP 200 `UP`을 유지한다. 시스템 Health API의 응답은 다음 두 형태로 고정한다.
 

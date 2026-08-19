@@ -46,3 +46,20 @@ tasks.withType(JavaCompile).configureEach {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+def generatedOpenApi = layout.buildDirectory.file('generated/openapi/openapi.json')
+
+tasks.register('generateOpenApi', Test) {
+    description = 'Generates the OpenAPI document from the running Spring application context.'
+    group = 'documentation'
+
+    dependsOn tasks.named('testClasses')
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform()
+    filter {
+        includeTestsMatching 'com.chungnamdevelopers.dajeong.api.OpenApiDocumentGenerationTests'
+    }
+    systemProperty 'dajeong.openapi.output', generatedOpenApi.get().asFile.absolutePath
+    outputs.file(generatedOpenApi)
+}
