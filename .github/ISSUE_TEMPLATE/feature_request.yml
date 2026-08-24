@@ -1,0 +1,64 @@
+name: 기능 제안
+description: 새로운 기능이나 개선 아이디어를 제안해 주세요.
+title: "[Feature] "
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: 관련 영역
+      options:
+        - 프론트엔드
+        - 백엔드
+        - 프론트엔드와 백엔드 모두
+        - 개발 환경 또는 배포
+        - 아직 정해지지 않음
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 해결하려는 문제
+      description: 기능 자체보다 먼저, 어떤 사용자 문제나 불편을 해결하려는지 적어 주세요.
+      placeholder: 어떤 상황에서 누가 불편을 겪고 있나요?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 제안하는 해결 방법
+      placeholder: 원하는 동작이나 흐름을 구체적으로 설명해 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: 완료 조건
+      description: 이 기능이 완료되었다고 판단할 수 있는 조건을 적어 주세요.
+      placeholder: |
+        - [ ] 사용자는 ...할 수 있다.
+        - [ ] ...한 경우 ...가 표시된다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 고려한 대안
+      description: 다른 해결 방법이나 현재 사용 중인 우회 방법이 있다면 적어 주세요.
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 추가 자료
+      description: 참고 화면, 디자인, 문서 또는 관련 링크가 있다면 첨부해 주세요.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 확인 사항
+      options:
+        - label: 동일하거나 비슷한 제안이 이미 등록되어 있는지 확인했습니다.
+          required: true
