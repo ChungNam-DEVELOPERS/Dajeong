@@ -1,0 +1,31 @@
+.countdown { background: var(--yellow-pale); color: #5f4918; border-radius: 999px; padding: 10px 15px; display: flex; align-items: center; gap: 7px; font-weight: 800; }
+.vote-grid { display: grid; grid-template-columns: 1fr .85fr; gap: 22px; }
+.vote-options, .vote-results { padding: 28px; }
+.vote-options > h3 { margin-bottom: 17px; }
+.vote-option { width: 100%; min-height: 90px; display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 13px; text-align: left; border: 1.5px solid var(--line); background: white; border-radius: 18px; padding: 16px 18px; cursor: pointer; margin-bottom: 11px; }
+.vote-option.selected { border-color: var(--yellow); background: #fff6ce; }
+.radio { width: 27px; height: 27px; border: 2px solid var(--line); border-radius: 50%; display: grid; place-items: center; }
+.vote-option.selected .radio { border-color: var(--green); background: var(--green); }
+.radio > span { width: 9px; height: 9px; background: white; border-radius: 50%; }
+.vote-option p { margin: 0 0 4px; display: flex; gap: 12px; align-items: center; }
+.vote-option p b { color: var(--green-dark); font-size: 12px; }
+.vote-option p strong { font-size: 17px; }
+.vote-option small { color: var(--muted); }
+.selection-label { display: flex; gap: 4px; align-items: center; color: var(--green-dark); background: white; border-radius: 999px; padding: 7px 10px; font-size: 10px; font-weight: 800; }
+.anonymous-note { display: flex; gap: 8px; align-items: center; margin-top: 17px; color: var(--muted); font-size: 12px; }
+.vote-results .panel-title { padding-bottom: 17px; border-bottom: 1px solid var(--line); }
+.vote-results .panel-title span { color: var(--muted); font-size: 11px; }
+.result-bars { margin: 20px 0; display: grid; gap: 18px; }
+.result-row > div:first-child { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.result-row span { font-weight: 800; }
+.result-track { height: 10px; background: var(--cream); border-radius: 999px; overflow: hidden; }
+.result-track span { height: 100%; display: block; border-radius: inherit; }
+.bar-a { background: #7dba7c; }
+.bar-b { background: var(--yellow); }
+.bar-c { background: #acd4ae; }
+.voter-summary { display: flex; align-items: center; gap: 13px; margin: 21px 0; color: #675f53; }
+.vote-results .fairness-note { margin-bottom: 18px; }
+
+@media (max-width: 1050px) {
+  .vote-grid { grid-template-columns: 1fr; }
+}
