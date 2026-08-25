@@ -1,0 +1,25 @@
+.preference-page { padding-top: 30px; }
+.preference-page .step-header { margin-bottom: 20px; }
+.privacy-banner { background: var(--yellow-pale); border-radius: 18px; padding: 16px 20px; display: flex; align-items: flex-start; gap: 13px; margin-bottom: 20px; }
+.privacy-banner strong { display: block; margin-bottom: 3px; }
+.privacy-banner p { margin: 0; color: #706655; font-size: 12px; }
+.preference-grid { display: grid; grid-template-columns: .92fr 1.08fr; gap: 20px; }
+.sliders-panel, .chips-panel { padding: 26px 30px; }
+.sliders-panel h3, .chips-panel h3 { margin-bottom: 19px; }
+.preference-range { display: block; margin-bottom: 21px; }
+.preference-range > span { display: block; font-size: 13px; font-weight: 800; margin-bottom: 7px; }
+.preference-range > div { display: flex; justify-content: space-between; color: var(--muted); }
+.chip-group + .chip-group { border-top: 1px solid var(--line); margin-top: 21px; padding-top: 20px; }
+.chip-heading { display: flex; justify-content: space-between; align-items: center; }
+.chip-heading h3 { margin: 0; font-size: 17px; }
+.chip-heading span { color: var(--green-dark); font-size: 11px; }
+.choice-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+.choice-chips button { border: 1px solid transparent; border-radius: 999px; background: var(--cream); padding: 10px 17px; color: #71695d; cursor: pointer; }
+.choice-chips button.selected { background: #7dba7c; color: white; font-weight: 800; }
+.private-summary { display: flex; align-items: flex-start; gap: 12px; margin-top: 21px; padding: 14px; background: var(--green-pale); color: var(--green-dark); border-radius: 14px; }
+.private-summary strong { display: block; font-size: 13px; }
+.private-summary p { margin: 4px 0 0; color: #6f746b; font-size: 11px; line-height: 1.55; }
+
+@media (max-width: 1050px) {
+  .preference-grid { grid-template-columns: 1fr; }
+}
