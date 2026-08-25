@@ -50,3 +50,28 @@ export function PageTitle({ eyebrow, title, body, action }: PageTitleProps) {
     </div>
   );
 }
+
+export function StepHeader({ step, title }: { step: number; title: string }) {
+  return (
+    <div className="step-header">
+      <div>
+        <p className="eyebrow">새 여행 만들기</p>
+        <h1>{title}</h1>
+      </div>
+      <div className="step-progress" aria-label={`${step}/3 단계`}>
+        <div className="step-label">
+          <span>STEP {step}</span>
+          <strong>{step} / 3</strong>
+        </div>
+        <div className="step-track">
+          <span style={{ width: `${step * 33.333}%` }} />
+        </div>
+        <div className="step-names">
+          <span className={step >= 1 ? "done" : ""}>여행 정보</span>
+          <span className={step >= 2 ? "done" : ""}>멤버 초대</span>
+          <span className={step >= 3 ? "done" : ""}>나의 선호</span>
+        </div>
+      </div>
+    </div>
+  );
+}
