@@ -1,0 +1,33 @@
+.confirmed-page { min-height: calc(100vh - 78px); display: grid; grid-template-columns: .9fr 1.1fr; gap: 70px; align-items: center; padding-top: 38px; }
+.celebration-copy { position: relative; padding-left: 10px; }
+.success-mascot { width: 220px; height: 190px; background-size: 520px auto; background-position: center -90px; border-radius: 50%; margin-bottom: 16px; }
+.celebration-copy h1 { font-size: 49px; line-height: 1.3; }
+.celebration-copy > p:not(.eyebrow) { color: #726b60; line-height: 1.7; }
+.celebration-actions { display: flex; gap: 11px; margin-top: 26px; }
+.confetti-dots span { position: absolute; width: 13px; height: 13px; border-radius: 50%; background: var(--yellow); }
+.confetti-dots span:nth-child(1) { left: 0; top: 35px; }
+.confetti-dots span:nth-child(2) { left: 250px; top: 0; background: #9dcea0; }
+.confetti-dots span:nth-child(3) { left: 310px; top: 95px; background: #7dba7c; }
+.confetti-dots span:nth-child(4) { left: 38px; top: 165px; background: #ffe8bd; }
+.confetti-dots span:nth-child(5) { left: 350px; top: 35px; background: #ffe59a; }
+.selected-trip { padding: 28px; border: 2px solid #94ca95; }
+.selected-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.selected-head h2 { margin: 0; }
+.vote-winner { padding: 8px 13px; border-radius: 999px; background: var(--yellow-pale); font-weight: 800; }
+.selected-landscape { height: 245px; border-radius: 22px; margin: 20px 0; background-size: 630px auto; background-position: center -375px; }
+.metric-row.large { grid-template-columns: repeat(4, 1fr); padding-bottom: 17px; border-bottom: 1px solid var(--line); }
+.metric-row.large strong { font-size: 17px; }
+.selected-trip .fairness-note { margin-top: 17px; }
+.participants-line { margin-top: 17px; display: flex; align-items: center; gap: 13px; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 1050px) {
+  .confirmed-page { grid-template-columns: 1fr; padding-top: 50px; }
+}
+
+@media (max-width: 760px) {
+  .confirmed-page { padding-top: 30px; gap: 35px; }
+  .celebration-copy h1 { font-size: 37px; }
+  .celebration-actions { flex-direction: column; }
+  .selected-head { display: block; }
+  .vote-winner { display: inline-block; margin-top: 12px; }
+}
